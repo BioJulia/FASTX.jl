@@ -28,10 +28,10 @@
 # The reader and writer for FASTQ formatted files, are found within the
 # `BioSequences.FASTQ` module.
 #
-#md ```@docs
-#md FASTQ.Reader
-#md FASTQ.Writer
-#md ```
+#md # ```@docs
+#md # FASTQ.Reader
+#md # FASTQ.Writer
+#md # ```
 #
 # They can be created with IOStreams:
 
