@@ -1,4 +1,4 @@
-using Documenter, FASTX, BioSequences, BioCore
+using Documenter, FASTX
 
 # Generate manual pages and examples.
 include("generate.jl")
@@ -23,4 +23,13 @@ makedocs(
         ]
     ],
     authors = "Ben J. Ward, The BioJulia Organisation and other contributors."
+)
+
+deploydocs(
+    repo = "github.com/BioJulia/FASTX.jl.git",
+    julia = "1.0",
+    osname = "linux",
+    target = "build",
+    deps = nothing,
+    make = nothing
 )
