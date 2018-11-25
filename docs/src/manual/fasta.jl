@@ -1,3 +1,7 @@
+#md # ```@meta
+#md # CurrentModule = FASTX
+#md # ```
+#
 # # IO - FASTA formatted files
 #
 # FASTA is a text-based file format for representing biological sequences.

@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = FASTX
+```
+
 # FASTQ
 
 ## FASTQ Reader
@@ -25,19 +29,6 @@ FASTQ.ILLUMINA13_QUAL_ENCODING
 FASTQ.ILLUMINA15_QUAL_ENCODING
 FASTQ.ILLUMINA18_QUAL_ENCODING 
 ```
-
-### BioCore methods
-
-The following BioCore methods will work with
-`FASTQ.Record` types.
-
-```@docs
-BioCore.isfilled
-BioCore.seqname
-BioCore.hasseqname
-BioCore.sequence
-BioCore.hassequence
-``` 
 
 ## FASTQ Writer
 

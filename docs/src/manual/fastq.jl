@@ -1,3 +1,7 @@
+#md # ```@meta
+#md # CurrentModule = FASTX
+#md # ```
+#
 # # IO - FASTQ formatted files
 #
 # FASTQ is a text-based file format for representing DNA sequences along with
@@ -31,13 +35,14 @@
 #
 # They can be created with IOStreams:
 
+using FASTX
+
 r = FASTQ.Reader(open("MyInput.fastq", "r"))
 w = FASTQ.Writer(open("MyFile.fastq", "w"))
 
 # Note that `FASTQ.Reader` does not support line-wraps within sequence and quality.
 # Usually sequence records will be read sequentially from a file by iteration.
 
-using FASTX
 reader = FASTQ.Reader(open("hg38.fastq", "r"))
 for record in reader
     ## Do something

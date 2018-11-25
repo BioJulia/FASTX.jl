@@ -7,7 +7,7 @@ include("generate.jl")
 
 makedocs(
     format = :html,
-    modules = [FASTX, BioSequences, BioCore],
+    modules = [FASTX],
     sitename = "FASTX.jl",
     doctest = false,
     strict = false,
