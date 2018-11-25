@@ -10,7 +10,8 @@
 
 ## Description
 
-FASTX provides a Reader for I/O for the FASTA, text based sequence format. 
+FASTX provides I/O and utilities for manipulating FASTA and FASTQ, formatted
+sequence data files.
 
 
 ## Installation
