@@ -1,4 +1,6 @@
 [deps]
+BioCore = "37cfa864-2cd6-5c12-ad9e-b6597d696c81"
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
