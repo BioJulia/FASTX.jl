@@ -185,11 +185,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "manual/generated/fastq/#FASTX.FASTQ.Reader",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.Reader",
+    "category": "type",
+    "text": "FASTQ.Reader(input::IO; fill_ambiguous=nothing)\n\nCreate a data reader of the FASTQ file format.\n\nArguments\n\ninput: data source\nfill_ambiguous=nothing: fill ambiguous symbols with the given symbol\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.Writer",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.Writer",
+    "category": "type",
+    "text": "FASTQ.Writer(output::IO; quality_header=false)\n\nCreate a data writer of the FASTQ file format.\n\nArguments\n\noutput: data sink\nquality_header=false: output the title line at the third line just after \'+\'\n\n\n\n\n\n"
+},
+
+{
     "location": "manual/generated/fastq/#Readers-and-Writers-1",
     "page": "FASTQ formatted files",
     "title": "Readers and Writers",
     "category": "section",
-    "text": "The reader and writer for FASTQ formatted files, are found within the BioSequences.FASTQ module.@docs FASTQ.Reader FASTQ.WriterThey can be created with IOStreams:using FASTX\n\nr = FASTQ.Reader(open(\"MyInput.fastq\", \"r\"))\nw = FASTQ.Writer(open(\"MyFile.fastq\", \"w\"))Note that FASTQ.Reader does not support line-wraps within sequence and quality. Usually sequence records will be read sequentially from a file by iteration.reader = FASTQ.Reader(open(\"hg38.fastq\", \"r\"))\nfor record in reader\n    # Do something\nend\nclose(reader)Reading in a record from a FASTQ formatted file will give you a variable of type FASTQ.Record.@docs FASTQ.RecordVarious getters and setters are available for FASTQ.Records:@docs FASTQ.hasidentifier FASTQ.identifier FASTQ.hasdescription FASTQ.description FASTQ.hassequence FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}]) FASTQ.hasquality FASTQ.qualityTo write a BioSequence to FASTQ file, you first have to create a FASTQ.Record:@docs FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)As always with julia IO types, remember to close your file readers and writer after you are finished.Using open with a do-block can help ensure you close a stream after you are finished.open(FASTQ.Reader, \"hg38.fastq\") do reader\n    for record in reader\n        # Do something\n    end\nend#-This page was generated using Literate.jl."
+    "text": "The reader and writer for FASTQ formatted files, are found within the BioSequences.FASTQ module.FASTQ.Reader\nFASTQ.WriterThey can be created with IOStreams:using FASTX\n\nr = FASTQ.Reader(open(\"MyInput.fastq\", \"r\"))\nw = FASTQ.Writer(open(\"MyFile.fastq\", \"w\"))Note that FASTQ.Reader does not support line-wraps within sequence and quality. Usually sequence records will be read sequentially from a file by iteration.reader = FASTQ.Reader(open(\"hg38.fastq\", \"r\"))\nfor record in reader\n    # Do something\nend\nclose(reader)Reading in a record from a FASTQ formatted file will give you a variable of type FASTQ.Record.@docs FASTQ.RecordVarious getters and setters are available for FASTQ.Records:@docs FASTQ.hasidentifier FASTQ.identifier FASTQ.hasdescription FASTQ.description FASTQ.hassequence FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}]) FASTQ.hasquality FASTQ.qualityTo write a BioSequence to FASTQ file, you first have to create a FASTQ.Record:@docs FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)As always with julia IO types, remember to close your file readers and writer after you are finished.Using open with a do-block can help ensure you close a stream after you are finished.open(FASTQ.Reader, \"hg38.fastq\") do reader\n    for record in reader\n        # Do something\n    end\nend#-This page was generated using Literate.jl."
 },
 
 {
@@ -249,14 +265,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/fastq/#FASTX.FASTQ.Reader",
-    "page": "FASTQ formatted files",
-    "title": "FASTX.FASTQ.Reader",
-    "category": "type",
-    "text": "FASTQ.Reader(input::IO; fill_ambiguous=nothing)\n\nCreate a data reader of the FASTQ file format.\n\nArguments\n\ninput: data source\nfill_ambiguous=nothing: fill ambiguous symbols with the given symbol\n\n\n\n\n\n"
-},
-
-{
     "location": "reference/fastq/#FASTQ-Reader-1",
     "page": "FASTQ formatted files",
     "title": "FASTQ Reader",
@@ -270,14 +278,6 @@ var documenterSearchIndex = {"docs": [
     "title": "FASTQ Record",
     "category": "section",
     "text": "FASTQ.Record\nFASTQ.identifier\nFASTQ.hasidentifier\nFASTQ.description\nFASTQ.hasdescription\nFASTQ.sequence\nFASTQ.hassequence\nFASTQ.quality\nFASTQ.hasquality\nFASTQ.QualityEncoding\nFASTQ.SANGER_QUAL_ENCODING\nFASTQ.SOLEXA_QUAL_ENCODING\nFASTQ.ILLUMINA13_QUAL_ENCODING\nFASTQ.ILLUMINA15_QUAL_ENCODING\nFASTQ.ILLUMINA18_QUAL_ENCODING "
-},
-
-{
-    "location": "reference/fastq/#FASTX.FASTQ.Writer",
-    "page": "FASTQ formatted files",
-    "title": "FASTX.FASTQ.Writer",
-    "category": "type",
-    "text": "FASTQ.Writer(output::IO; quality_header=false)\n\nCreate a data writer of the FASTQ file format.\n\nArguments\n\noutput: data sink\nquality_header=false: output the title line at the third line just after \'+\'\n\n\n\n\n\n"
 },
 
 {
