@@ -56,7 +56,7 @@ close(reader)
 # supports random access to FASTA records, which would be useful when accessing
 # specific parts of a huge genome sequence:
 
-reader = open(FASTAReader, "sacCer.fa", index="sacCer.fa.fai")
+reader = open(FASTA.Reader, "sacCer.fa", index="sacCer.fa.fai")
 chrIV = reader["chrIV"]  # directly read sequences called chrIV.
 close(reader)
 
