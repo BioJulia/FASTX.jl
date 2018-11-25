@@ -1,4 +1,4 @@
-using Documenter, FASTX
+using Documenter, FASTX, BioSequences, BioCore
 
 # Generate manual pages and examples.
 include("generate.jl")
