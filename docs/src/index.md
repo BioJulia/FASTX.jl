@@ -34,7 +34,7 @@ FASTA is tested against Julia `1.X` on Linux, OS X, and Windows.
 
 | **Latest release** | **Latest build status** |
 |:------------------:|:-----------------------:|
-|[![](http://pkg.julialang.org/badges/FASTX_1.0.svg)](http://pkg.julialang.org/?pkg=FASTX) | [![](https://travis-ci.org/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.org/BioJulia/FASTX.jl) [![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)|
+|[![](https://pkg.julialang.org/badges/FASTX_1.0.svg)](https://pkg.julialang.org/?pkg=FASTX) | [![](https://travis-ci.org/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.org/BioJulia/FASTX.jl) [![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)|
 
 
 ## Contributing
