@@ -18,8 +18,8 @@ makedocs(
             "FASTQ formatted files" => "manual/generated/fastq.md"
         ],
         "API Reference" => [
-            "FASTA formatted files" => "manual/reference/fasta.md",
-            "FASTQ formatted files" => "manual/reference/fastq.md"
+            "FASTA formatted files" => "reference/fasta.md",
+            "FASTQ formatted files" => "reference/fastq.md"
         ]
     ],
     authors = "Ben J. Ward, The BioJulia Organisation and other contributors."
