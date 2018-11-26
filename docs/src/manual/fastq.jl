@@ -37,13 +37,18 @@
 
 using FASTX
 
-r = FASTQ.Reader(open("MyInput.fastq", "r"))
-w = FASTQ.Writer(open("MyFile.fastq", "w"))
+r = FASTQ.Reader(open("../my-reads.fastq", "r"))
+w = FASTQ.Writer(open("my-output.fastq", "w"))
+
+# Alternatively, `Base.open` is overloaded with a method for conveinience:
+
+r = open(FASTQ.Reader, "../my-reads.fastq")
+w = open(FASTQ.Writer, "my-out.fastq")
 
 # Note that `FASTQ.Reader` does not support line-wraps within sequence and quality.
 # Usually sequence records will be read sequentially from a file by iteration.
 
-reader = FASTQ.Reader(open("hg38.fastq", "r"))
+reader = open(FASQ.Reader, "../my-reads.fastq")
 for record in reader
     ## Do something
 end
@@ -52,28 +57,28 @@ close(reader)
 # Reading in a record from a FASTQ formatted file will give you a variable of
 # type `FASTQ.Record`.
 
-#md ```@docs
-#md FASTQ.Record
-#md ```
+#md # ```@docs
+#md # FASTQ.Record
+#md # ```
 
 # Various getters and setters are available for `FASTQ.Record`s:
 #
-#md ```@docs
-#md FASTQ.hasidentifier
-#md FASTQ.identifier
-#md FASTQ.hasdescription
-#md FASTQ.description
-#md FASTQ.hassequence
-#md FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])
-#md FASTQ.hasquality
-#md FASTQ.quality
-#md ```
+#md # ```@docs
+#md # FASTQ.hasidentifier
+#md # FASTQ.identifier
+#md # FASTQ.hasdescription
+#md # FASTQ.description
+#md # FASTQ.hassequence
+#md # FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])
+#md # FASTQ.hasquality
+#md # FASTQ.quality
+#md # ```
 #
 # To write a `BioSequence` to FASTQ file, you first have to create a `FASTQ.Record`:
 #
-#md ```@docs
-#md FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
-#md ```
+#md # ```@docs
+#md # FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
+#md # ```
 #
 # As always with julia IO types, remember to close your file readers and writer
 # after you are finished.
@@ -81,7 +86,7 @@ close(reader)
 # Using `open` with a do-block can help ensure you close a stream after you are
 # finished.
 
-open(FASTQ.Reader, "hg38.fastq") do reader
+open(FASTQ.Reader, "../my-reads.fastq") do reader
     for record in reader
         ## Do something
     end
