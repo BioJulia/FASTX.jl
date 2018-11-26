@@ -36,17 +36,17 @@
 
 using FASTX
 
-r = FASTA.Reader(open("MyInput.fasta", "r"))
-w = FASTA.Writer(open("MyFile.fasta", "w"))
+r = FASTA.Reader(open("my-reads.fasta", "r"))
+w = FASTA.Writer(open("my-out.fasta", "w"))
 
 # Alternatively, `Base.open` is overloaded with a method for conveinience:
 
-r = open(FASTA.Reader, "MyInput.fasta")
-w = open(FASTA.Writer, "MyFile.fasta")
+r = open(FASTA.Reader, "my-reads.fasta")
+w = open(FASTA.Writer, "my-out.fasta")
 
 # Usually sequence records will be read sequentially from a file by iteration.
 
-reader = open(FASTA.Reader, "hg38.fa")
+reader = open(FASTA.Reader, "my-reads.fasta")
 for record in reader
     ## Do something
 end
@@ -56,7 +56,7 @@ close(reader)
 # supports random access to FASTA records, which would be useful when accessing
 # specific parts of a huge genome sequence:
 
-reader = open(FASTA.Reader, "sacCer.fa", index="sacCer.fa.fai")
+reader = open(FASTA.Reader, "sacCer.fa", index = "sacCer.fa.fai")
 chrIV = reader["chrIV"]  # directly read sequences called chrIV.
 close(reader)
 
@@ -83,7 +83,7 @@ close(reader)
 using BioSequences
 x = dna"aaaaatttttcccccggggg"
 rec = FASTA.Record("MySeq", x)
-w = open(FASTA.Writer, "MyFile.fasta")
+w = open(FASTA.Writer, "my-out.fasta")
 write(w, rec)
 close(w)
 
@@ -93,7 +93,7 @@ close(w)
 # Using `open` with a do-block can help ensure you close a stream after you are
 # finished.
 
-open(FASTA.Reader, "hg38.fa") do reader
+open(FASTA.Reader, "my-reads.fasta") do reader
     for record in reader
         ## Do something
     end

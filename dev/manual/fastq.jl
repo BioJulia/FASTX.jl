@@ -37,13 +37,18 @@
 
 using FASTX
 
-r = FASTQ.Reader(open("MyInput.fastq", "r"))
-w = FASTQ.Writer(open("MyFile.fastq", "w"))
+r = FASTQ.Reader(open("../my-reads.fastq", "r"))
+w = FASTQ.Writer(open("my-output.fastq", "w"))
+
+# Alternatively, `Base.open` is overloaded with a method for conveinience:
+
+r = open(FASTQ.Reader, "../my-reads.fastq")
+w = open(FASTQ.Writer, "my-out.fastq")
 
 # Note that `FASTQ.Reader` does not support line-wraps within sequence and quality.
 # Usually sequence records will be read sequentially from a file by iteration.
 
-reader = FASTQ.Reader(open("hg38.fastq", "r"))
+reader = open(FASQ.Reader, "../my-reads.fastq")
 for record in reader
     ## Do something
 end
@@ -81,7 +86,7 @@ close(reader)
 # Using `open` with a do-block can help ensure you close a stream after you are
 # finished.
 
-open(FASTQ.Reader, "hg38.fastq") do reader
+open(FASTQ.Reader, "../my-reads.fastq") do reader
     for record in reader
         ## Do something
     end
