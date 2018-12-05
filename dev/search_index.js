@@ -201,11 +201,91 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "manual/generated/fastq/#FASTX.FASTQ.Record",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.Record",
+    "category": "type",
+    "text": "FASTQ.Record()\n\nCreate an unfilled FASTQ record.\n\n\n\n\n\nFASTQ.Record(data::Vector{UInt8})\n\nCreate a FASTQ record object from data.\n\nThis function verifies and indexes fields for accessors. Note that the ownership of data is transferred to a new record object.\n\n\n\n\n\nFASTQ.Record(str::AbstractString)\n\nCreate a FASTQ record object from str.\n\nThis function verifies and indexes fields for accessors.\n\n\n\n\n\nFASTQ.Record(identifier, sequence, quality; offset=33)\n\nCreate a FASTQ record from identifier, sequence and quality.\n\n\n\n\n\nFASTQ.Record(identifier, description, sequence, quality; offset=33)\n\nCreate a FASTQ record from identifier, description, sequence and quality.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.hasidentifier",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.hasidentifier",
+    "category": "function",
+    "text": "hasidentifier(record::Record)\n\nChecks whether or not the record has an identifier.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.identifier",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.identifier",
+    "category": "function",
+    "text": "identifier(record::Record)::String\n\nGet the sequence identifier of record.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.hasdescription",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.hasdescription",
+    "category": "function",
+    "text": "hasdescription(record::Record)\n\nChecks whether or not the record has a description.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.description",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.description",
+    "category": "function",
+    "text": "description(record::Record)::String\n\nGet the description of record.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.hassequence",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.hassequence",
+    "category": "function",
+    "text": "hassequence(record::Record)\n\nChecks whether or not a sequence record contains a sequence.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.sequence-Tuple{FASTX.FASTQ.Record,UnitRange{Int64}}",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.sequence",
+    "category": "method",
+    "text": "sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence\n\nGet the sequence of record.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.hasquality",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.hasquality",
+    "category": "function",
+    "text": "hasquality(record::Record)\n\nCheck whether the given FASTQ record has a quality string.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.quality",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.quality",
+    "category": "function",
+    "text": "quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}\n\nGet the base quality of record.\n\n\n\n\n\nquality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}\n\nGet the base quality of record by decoding with encoding_name.\n\nThe encoding_name can be either :sanger, :solexa, :illumina13, :illumina15, or :illumina18.\n\n\n\n\n\n"
+},
+
+{
+    "location": "manual/generated/fastq/#FASTX.FASTQ.Record-Tuple{AbstractString,Union{Nothing, AbstractString},Any,Array{T,1} where T}",
+    "page": "FASTQ formatted files",
+    "title": "FASTX.FASTQ.Record",
+    "category": "method",
+    "text": "FASTQ.Record(identifier, description, sequence, quality; offset=33)\n\nCreate a FASTQ record from identifier, description, sequence and quality.\n\n\n\n\n\n"
+},
+
+{
     "location": "manual/generated/fastq/#Readers-and-Writers-1",
     "page": "FASTQ formatted files",
     "title": "Readers and Writers",
     "category": "section",
-    "text": "The reader and writer for FASTQ formatted files, are found within the BioSequences.FASTQ module.FASTQ.Reader\nFASTQ.WriterThey can be created with IOStreams:using FASTX\n\nr = FASTQ.Reader(open(\"../my-reads.fastq\", \"r\"))\nw = FASTQ.Writer(open(\"my-output.fastq\", \"w\"))Alternatively, Base.open is overloaded with a method for conveinience:r = open(FASTQ.Reader, \"../my-reads.fastq\")\nw = open(FASTQ.Writer, \"my-out.fastq\")Note that FASTQ.Reader does not support line-wraps within sequence and quality. Usually sequence records will be read sequentially from a file by iteration.reader = open(FASQ.Reader, \"../my-reads.fastq\")\nfor record in reader\n    # Do something\nend\nclose(reader)Reading in a record from a FASTQ formatted file will give you a variable of type FASTQ.Record.@docs FASTQ.RecordVarious getters and setters are available for FASTQ.Records:@docs FASTQ.hasidentifier FASTQ.identifier FASTQ.hasdescription FASTQ.description FASTQ.hassequence FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}]) FASTQ.hasquality FASTQ.qualityTo write a BioSequence to FASTQ file, you first have to create a FASTQ.Record:@docs FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)As always with julia IO types, remember to close your file readers and writer after you are finished.Using open with a do-block can help ensure you close a stream after you are finished.open(FASTQ.Reader, \"../my-reads.fastq\") do reader\n    for record in reader\n        # Do something\n    end\nend#-This page was generated using Literate.jl."
+    "text": "The reader and writer for FASTQ formatted files, are found within the BioSequences.FASTQ module.FASTQ.Reader\nFASTQ.WriterThey can be created with IOStreams:using FASTX\n\nr = FASTQ.Reader(open(\"../my-reads.fastq\", \"r\"))\nw = FASTQ.Writer(open(\"my-output.fastq\", \"w\"))Alternatively, Base.open is overloaded with a method for conveinience:r = open(FASTQ.Reader, \"../my-reads.fastq\")\nw = open(FASTQ.Writer, \"my-out.fastq\")Note that FASTQ.Reader does not support line-wraps within sequence and quality. Usually sequence records will be read sequentially from a file by iteration.reader = open(FASQ.Reader, \"../my-reads.fastq\")\nfor record in reader\n    # Do something\nend\nclose(reader)Reading in a record from a FASTQ formatted file will give you a variable of type FASTQ.Record.FASTQ.RecordVarious getters and setters are available for FASTQ.Records:FASTQ.hasidentifier\nFASTQ.identifier\nFASTQ.hasdescription\nFASTQ.description\nFASTQ.hassequence\nFASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])\nFASTQ.hasquality\nFASTQ.qualityTo write a BioSequence to FASTQ file, you first have to create a FASTQ.Record:FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)As always with julia IO types, remember to close your file readers and writer after you are finished.Using open with a do-block can help ensure you close a stream after you are finished.open(FASTQ.Reader, \"../my-reads.fastq\") do reader\n    for record in reader\n        # Do something\n    end\nend#-This page was generated using Literate.jl."
 },
 
 {

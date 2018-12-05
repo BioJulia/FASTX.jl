@@ -57,28 +57,28 @@ close(reader)
 # Reading in a record from a FASTQ formatted file will give you a variable of
 # type `FASTQ.Record`.
 
-#md ```@docs
-#md FASTQ.Record
-#md ```
+#md # ```@docs
+#md # FASTQ.Record
+#md # ```
 
 # Various getters and setters are available for `FASTQ.Record`s:
 #
-#md ```@docs
-#md FASTQ.hasidentifier
-#md FASTQ.identifier
-#md FASTQ.hasdescription
-#md FASTQ.description
-#md FASTQ.hassequence
-#md FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])
-#md FASTQ.hasquality
-#md FASTQ.quality
-#md ```
+#md # ```@docs
+#md # FASTQ.hasidentifier
+#md # FASTQ.identifier
+#md # FASTQ.hasdescription
+#md # FASTQ.description
+#md # FASTQ.hassequence
+#md # FASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])
+#md # FASTQ.hasquality
+#md # FASTQ.quality
+#md # ```
 #
 # To write a `BioSequence` to FASTQ file, you first have to create a `FASTQ.Record`:
 #
-#md ```@docs
-#md FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
-#md ```
+#md # ```@docs
+#md # FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
+#md # ```
 #
 # As always with julia IO types, remember to close your file readers and writer
 # after you are finished.
