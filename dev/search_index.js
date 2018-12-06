@@ -9,9 +9,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#img-src\"./sticker.svg\"-width\"30%\"-align\"right\"-/-FASTX-1",
+    "location": "#FASTX-1",
     "page": "Home",
-    "title": "<img src=\"./sticker.svg\" width=\"30%\" align=\"right\" /> FASTX",
+    "title": "FASTX",
     "category": "section",
     "text": "(Image: Latest Release) (Image: MIT license)  (Image: Stable documentation) (Image: Latest documentation) (Image: Lifecycle) (Image: Chat on Discord)"
 },
@@ -286,86 +286,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Readers and Writers",
     "category": "section",
     "text": "The reader and writer for FASTQ formatted files, are found within the BioSequences.FASTQ module.FASTQ.Reader\nFASTQ.WriterThey can be created with IOStreams:using FASTX\n\nr = FASTQ.Reader(open(\"../my-reads.fastq\", \"r\"))\nw = FASTQ.Writer(open(\"my-output.fastq\", \"w\"))Alternatively, Base.open is overloaded with a method for conveinience:r = open(FASTQ.Reader, \"../my-reads.fastq\")\nw = open(FASTQ.Writer, \"my-out.fastq\")Note that FASTQ.Reader does not support line-wraps within sequence and quality. Usually sequence records will be read sequentially from a file by iteration.reader = open(FASQ.Reader, \"../my-reads.fastq\")\nfor record in reader\n    # Do something\nend\nclose(reader)Reading in a record from a FASTQ formatted file will give you a variable of type FASTQ.Record.FASTQ.RecordVarious getters and setters are available for FASTQ.Records:FASTQ.hasidentifier\nFASTQ.identifier\nFASTQ.hasdescription\nFASTQ.description\nFASTQ.hassequence\nFASTQ.sequence(record::FASTQ.Record, [part::UnitRange{Int}])\nFASTQ.hasquality\nFASTQ.qualityTo write a BioSequence to FASTQ file, you first have to create a FASTQ.Record:FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)As always with julia IO types, remember to close your file readers and writer after you are finished.Using open with a do-block can help ensure you close a stream after you are finished.open(FASTQ.Reader, \"../my-reads.fastq\") do reader\n    for record in reader\n        # Do something\n    end\nend#-This page was generated using Literate.jl."
-},
-
-{
-    "location": "reference/fasta/#",
-    "page": "FASTA formatted files",
-    "title": "FASTA formatted files",
-    "category": "page",
-    "text": "CurrentModule = FASTX"
-},
-
-{
-    "location": "reference/fasta/#FASTA-1",
-    "page": "FASTA formatted files",
-    "title": "FASTA",
-    "category": "section",
-    "text": ""
-},
-
-{
-    "location": "reference/fasta/#FASTA-Reader-1",
-    "page": "FASTA formatted files",
-    "title": "FASTA Reader",
-    "category": "section",
-    "text": "FASTA.Reader"
-},
-
-{
-    "location": "reference/fasta/#FASTA-Record-1",
-    "page": "FASTA formatted files",
-    "title": "FASTA Record",
-    "category": "section",
-    "text": "FASTA.Record\nFASTA.identifier\nFASTA.hasidentifier\nFASTA.description\nFASTA.hasdescription\nFASTA.sequence"
-},
-
-{
-    "location": "reference/fasta/#FASTA-Writer-1",
-    "page": "FASTA formatted files",
-    "title": "FASTA Writer",
-    "category": "section",
-    "text": "FASTA.Writer"
-},
-
-{
-    "location": "reference/fastq/#",
-    "page": "FASTQ formatted files",
-    "title": "FASTQ formatted files",
-    "category": "page",
-    "text": "CurrentModule = FASTX"
-},
-
-{
-    "location": "reference/fastq/#FASTQ-1",
-    "page": "FASTQ formatted files",
-    "title": "FASTQ",
-    "category": "section",
-    "text": ""
-},
-
-{
-    "location": "reference/fastq/#FASTQ-Reader-1",
-    "page": "FASTQ formatted files",
-    "title": "FASTQ Reader",
-    "category": "section",
-    "text": "FASTQ.Reader"
-},
-
-{
-    "location": "reference/fastq/#FASTQ-Record-1",
-    "page": "FASTQ formatted files",
-    "title": "FASTQ Record",
-    "category": "section",
-    "text": "FASTQ.Record\nFASTQ.identifier\nFASTQ.hasidentifier\nFASTQ.description\nFASTQ.hasdescription\nFASTQ.sequence\nFASTQ.hassequence\nFASTQ.quality\nFASTQ.hasquality\nFASTQ.QualityEncoding\nFASTQ.SANGER_QUAL_ENCODING\nFASTQ.SOLEXA_QUAL_ENCODING\nFASTQ.ILLUMINA13_QUAL_ENCODING\nFASTQ.ILLUMINA15_QUAL_ENCODING\nFASTQ.ILLUMINA18_QUAL_ENCODING "
-},
-
-{
-    "location": "reference/fastq/#FASTQ-Writer-1",
-    "page": "FASTQ formatted files",
-    "title": "FASTQ Writer",
-    "category": "section",
-    "text": "FASTQ.Writer"
 },
 
 ]}
