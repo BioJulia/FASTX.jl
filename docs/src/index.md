@@ -1,4 +1,4 @@
-# FASTX
+# <img src="./sticker.svg" width="30%" align="right" /> FASTX
 
 [![Latest Release](https://img.shields.io/github/release/BioJulia/FASTX.jl.svg?style=flat-square)](https://github.com/BioJulia/FASTX.jl/releases/latest)
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/BioJulia/FASTX.jl/blob/master/LICENSE) 
@@ -10,14 +10,15 @@
 
 ## Description
 
-FASTX provides a Reader for I/O for the FASTA, text based sequence format. 
+FASTX provides I/O and utilities for manipulating FASTA and FASTQ, formatted
+sequence data files.
 
 
 ## Installation
 
 FASTX is bundled into the [Bio.jl](https://github.com/BioJulia/Bio.jl)
 package, so you may not need to install this package explicitly.
-However, if you do, you can install BioSequences from the Julia REPL:
+However, if you do, you can install FASTX from the Julia REPL:
 
 ```julia
 using Pkg
@@ -34,7 +35,7 @@ FASTA is tested against Julia `1.X` on Linux, OS X, and Windows.
 
 | **Latest release** | **Latest build status** |
 |:------------------:|:-----------------------:|
-|[![](https://pkg.julialang.org/badges/FASTX_1.0.svg)](https://pkg.julialang.org/?pkg=FASTX) | [![](https://travis-ci.org/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.org/BioJulia/FASTX.jl) [![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)|
+|[![](http://pkg.julialang.org/badges/FASTX_1.0.svg)](http://pkg.julialang.org/?pkg=FASTX) | [![](https://travis-ci.org/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.org/BioJulia/FASTX.jl) [![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)|
 
 
 ## Contributing
