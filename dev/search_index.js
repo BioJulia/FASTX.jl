@@ -9,9 +9,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#FASTX-1",
+    "location": "#img-src\"./sticker.svg\"-width\"30%\"-align\"right\"-/-FASTX-1",
     "page": "Home",
-    "title": "FASTX",
+    "title": "<img src=\"./sticker.svg\" width=\"30%\" align=\"right\" /> FASTX",
     "category": "section",
     "text": "(Image: Latest Release) (Image: MIT license)  (Image: Stable documentation) (Image: Latest documentation) (Image: Lifecycle) (Image: Chat on Discord)"
 },
@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Description",
     "category": "section",
-    "text": "FASTX provides a Reader for I/O for the FASTA, text based sequence format. "
+    "text": "FASTX provides I/O and utilities for manipulating FASTA and FASTQ, formatted sequence data files."
 },
 
 {
@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installation",
     "category": "section",
-    "text": "FASTX is bundled into the Bio.jl package, so you may not need to install this package explicitly. However, if you do, you can install BioSequences from the Julia REPL:using Pkg\nadd(\"FASTX\")If you are interested in the cutting edge of the development, please check out the master branch to try new features before release."
+    "text": "FASTX is bundled into the Bio.jl package, so you may not need to install this package explicitly. However, if you do, you can install FASTX from the Julia REPL:using Pkg\nadd(\"FASTX\")If you are interested in the cutting edge of the development, please check out the master branch to try new features before release."
 },
 
 {
