@@ -1,6 +1,6 @@
 name = "FASTX"
 uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
-authors = ["Ben J. Ward <ward9250@gmail.com>"]
+authors = ["Ben J. Ward <benjward@protonmail.com>"]
 version = "0.1.0"
 
 [deps]
@@ -9,16 +9,17 @@ BioCore = "37cfa864-2cd6-5c12-ad9e-b6597d696c81"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 BioSymbols = "3c28c6f8-a34d-59c4-9654-267d177fcfa9"
 BufferedStreams = "e1450e63-4bb3-523b-b2a4-4ffa8c0fd77d"
+TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+
+[compat]
+Automa = "0.7"
+BioCore = "2.0.3"
+BioSequences = "1.0"
+BioSymbols = "3.1.0"
+julia = "1.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
-
-[compat]
-julia = "1.0"
-Automa = "0.7"
-BioCore = "2.0.3"
-BioSymbols = "3.1.0"
-BioSequences = "1.0"

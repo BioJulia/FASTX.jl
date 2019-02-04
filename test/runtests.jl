@@ -372,14 +372,14 @@ end
          
     valid_specimens = bio_fmt_specimens("FASTQ", valid_specimen_filter)
     invalid_specimens = bio_fmt_specimens("FASTQ", invalid_specimen_filter)
-    println("testing valid fastqs")
+    #println("testing valid fastqs")
     for specimen in valid_specimens
-        println(specimen)
+        #println(specimen)
         test_fastq_parse(specimen, true)
     end
-    println("testing invalid fastqs")
+    #println("testing invalid fastqs")
     for specimen in invalid_specimens
-        println(specimen)
+        #println(specimen)
         test_fastq_parse(specimen, false)
     end
 

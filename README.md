@@ -16,9 +16,7 @@ sequence data files.
 
 ## Installation
 
-FASTX is bundled into the [Bio.jl](https://github.com/BioJulia/Bio.jl)
-package, so you may not need to install this package explicitly.
-However, if you do, you can install FASTX from the Julia REPL:
+You can install FASTX from the Julia REPL:
 
 ```julia
 using Pkg
