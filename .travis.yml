@@ -7,7 +7,7 @@ julia:
   - nightly
 notifications:
   email:
-      - ward9250@gmail.com
+      - benjward@protonmail.com
 
 branches:
     only:
@@ -16,9 +16,6 @@ branches:
       - trying
       - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
 after_success:
-#  - julia -e 'using Pkg; Pkg.add("Coverage")'
-#  - julia -e 'using Coverage; import FASTX; cd(dirname(dirname(pathof(FASTX)))); Codecov.submit(process_folder())'
-#  - julia -e 'import FASTA; cd(dirname(dirname(pathof(FASTA)))); include(joinpath("docs", "make.jl"))'
    - julia --project=coverage/ -e 'using Pkg; Pkg.instantiate()'
    - julia --project=coverage/ coverage/coverage.jl
   
