@@ -8,6 +8,13 @@ julia:
 notifications:
   email:
       - ward9250@gmail.com
+
+branches:
+    only:
+      - master
+      - staging
+      - trying
+      - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
 after_success:
 #  - julia -e 'using Pkg; Pkg.add("Coverage")'
 #  - julia -e 'using Coverage; import FASTX; cd(dirname(dirname(pathof(FASTX)))); Codecov.submit(process_folder())'
