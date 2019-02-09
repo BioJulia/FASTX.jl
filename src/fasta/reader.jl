@@ -1,19 +1,8 @@
 # FASTA Reader
 # ============
 
-mutable struct AutomaState{S <: TranscodingStream}
-    # Stream
-    stream::S
-    # Machine state
-    state::Int
-    # Line number
-    linenum::Int
-    # Is record filled?
-    filled::Bool
-end
-
-struct Reader{S <: TranscodingStream} <: BioCore.IO.AbstractReader
-    state::AutomaState{S}
+struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    state::State{S}
     index::Union{Index, Nothing}
 end
 
@@ -35,14 +24,14 @@ function Reader(input::IO; index = nothing)
     if !(input isa TranscodingStream)
         stream = TranscodingStreams.NoopStream(input)
     end
-    return Reader(AutomaState(stream, 1, 1, false), index)
+    return Reader(State(stream, 1, 1, false), index)
 end
 
 function Base.eltype(::Type{<:Reader})
     return Record
 end
 
-function BioCore.IO.stream(reader::Reader)
+function BioGenerics.IO.stream(reader::Reader)
     return reader.state.stream
 end
 

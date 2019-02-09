@@ -1,8 +1,9 @@
 using Test
 using FASTX
+import BioGenerics
+import BioGenerics.Testing: intempdir
 import BioCore
 import BioCore.Testing.bio_fmt_specimens
-import BioCore.Testing.intempdir
 import BioSequences:
     @dna_str,
     @rna_str,
@@ -17,17 +18,17 @@ import BioSequences:
 @testset "FASTA" begin
     @testset "Record" begin
         record = FASTA.Record()
-        @test !BioCore.isfilled(record)
+        @test !BioGenerics.isfilled(record)
         @test_throws ArgumentError FASTA.identifier(record)
 
         record = FASTA.Record(">foo\nACGT\n")
-        @test BioCore.isfilled(record)
-        @test BioCore.hasseqname(record)
+        @test BioGenerics.isfilled(record)
+        @test BioGenerics.hasseqname(record)
         @test FASTA.hasidentifier(record)
-        @test BioCore.seqname(record) == FASTA.identifier(record) == "foo"
+        @test BioGenerics.seqname(record) == FASTA.identifier(record) == "foo"
         @test !FASTA.hasdescription(record)
-        @test_throws BioCore.Exceptions.MissingFieldException FASTA.description(record)
-        @test BioCore.hassequence(record)
+        @test_throws BioGenerics.Exceptions.MissingFieldException FASTA.description(record)
+        @test BioGenerics.hassequence(record)
         @test FASTA.hassequence(record)
         @test FASTA.sequence(record) == dna"ACGT"
         @test FASTA.sequence(record, 2:3) == dna"CG"
@@ -40,7 +41,7 @@ import BioSequences:
         SCWSFSTTGNVEGQHFISQNKL
         VSLSEQNLVDCDHECMEYEGE
         """)
-        @test BioCore.isfilled(record)
+        @test BioGenerics.isfilled(record)
         @test FASTA.identifier(record) == "CYS1_DICDI"
         @test FASTA.description(record) == "fragment"
         @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"

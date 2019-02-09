@@ -3,7 +3,7 @@ os:
   - linux
   - osx
 julia:
-  - 1.0
+  - 1.1
   - nightly
 notifications:
   email:
@@ -15,6 +15,13 @@ branches:
       - staging
       - trying
       - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
+
+script:
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
+    - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/BioJulia/BioJuliaRegistry.git"))'
+    - julia -e 'using Pkg; Pkg.build(); Pkg.test("FASTX", coverage = true)'
+
 after_success:
    - julia --project=coverage/ -e 'using Pkg; Pkg.instantiate()'
    - julia --project=coverage/ coverage/coverage.jl
@@ -22,10 +29,11 @@ after_success:
 jobs:
     include:
         - stage: "Documentation"
-          julia: 1.0
+          julia: 1.1
           os: linux
           script:
-            - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
-                                        Pkg.develop(PackageSpec(path=pwd()))'
+            - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/BioJulia/BioJuliaRegistry.git"))'
+            - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
+            - julia --project=docs/ -e 'using Pkg; Pkg.instantiate(); Pkg.develop(PackageSpec(path=pwd()))'
             - julia --project=docs/ docs/make.jl
           after_success: skip
