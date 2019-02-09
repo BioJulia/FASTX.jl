@@ -1,5 +1,6 @@
 using Test
 using FASTX
+using FormatSpecimens
 import BioGenerics
 import BioGenerics.Testing: intempdir
 import BioCore
@@ -139,14 +140,17 @@ import BioSequences:
         valid = get(specimen, "valid", true)
         return !valid && !occursin("comments", tags)
     end
-         
-    valid_specimens = bio_fmt_specimens("FASTA", valid_specimen_filter)
-    invalid_specimens = bio_fmt_specimens("FASTA", invalid_specimen_filter)
+    
+    fasta_folder = path_of_format("FASTA")     
+    valid_specimens = list_valid_specimens("FASTA") do specimen
+        !hastag(specimen, "comments")
+    end
+    invalid_specimens = list_invalid_specimens("FASTA")
     for specimen in valid_specimens
-        test_fasta_parse(specimen, true)
+        test_fasta_parse(joinpath(fasta_folder, filename(specimen)), true)
     end
     for specimen in invalid_specimens
-        test_fasta_parse(specimen, false)
+        test_fasta_parse(joinpath(fasta_folder, filename(specimen)), false)
     end
 
     @testset "Faidx" begin
