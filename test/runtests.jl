@@ -374,18 +374,19 @@ end
         valid = get(specimen, "valid", true)
         return !valid
     end
-         
-    valid_specimens = bio_fmt_specimens("FASTQ", valid_specimen_filter)
-    invalid_specimens = bio_fmt_specimens("FASTQ", invalid_specimen_filter)
-    #println("testing valid fastqs")
-    for specimen in valid_specimens
-        #println(specimen)
-        test_fastq_parse(specimen, true)
+    
+    fastq_folder = path_of_format("FASTQ")
+    valid_specimens = list_valid_specimens("FASTQ") do specimen
+        spec_tags = hastags(specimen) ? sort(tags(specimen)) : String[]
+        invalid_tags = sort!(["gaps", "rna", "comments", "linewrap"])
+        return isempty(intersect(spec_tags, invalid_tags))    
     end
-    #println("testing invalid fastqs")
+    invalid_specimens = list_invalid_specimens("FASTQ")
+    for specimen in valid_specimens
+        test_fastq_parse(joinpath(fastq_folder, filename(specimen)), true)
+    end
     for specimen in invalid_specimens
-        #println(specimen)
-        test_fastq_parse(specimen, false)
+        test_fastq_parse(joinpath(fastq_folder, filename(specimen)), false)
     end
 
     @testset "invalid quality encoding" begin
