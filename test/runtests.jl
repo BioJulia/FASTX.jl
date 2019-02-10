@@ -4,7 +4,6 @@ using FormatSpecimens
 import BioGenerics
 import BioGenerics.Testing: intempdir
 import BioCore
-import BioCore.Testing.bio_fmt_specimens
 import BioSequences:
     @dna_str,
     @rna_str,
@@ -82,7 +81,7 @@ import BioSequences:
 
     function test_fasta_parse(filename, valid)
         # Reading from a stream
-        stream = open(FASTA.Reader, filename)
+        stream = open(FASTA.Reader, joinpath(path_of_format("FASTA"), filename))
         @test eltype(stream) == FASTA.Record
         if valid
             for seqrec in stream end
@@ -129,19 +128,7 @@ import BioSequences:
         @test expected_entries == read_entries
         @test expected_entries == read_entriesB
     end
-
-    function valid_specimen_filter(specimen)
-        tags = specimen["tags"]
-        valid = get(specimen, "valid", true)
-        return valid && !occursin("comments", tags)
-    end
-    function invalid_specimen_filter(specimen)
-        tags = specimen["tags"]
-        valid = get(specimen, "valid", true)
-        return !valid && !occursin("comments", tags)
-    end
-    
-    fasta_folder = path_of_format("FASTA")     
+     
     valid_specimens = list_valid_specimens("FASTA") do specimen
         !hastag(specimen, "comments")
     end
@@ -312,7 +299,7 @@ end
 
     function test_fastq_parse(filename, valid)
         # Reading from a reader
-        reader = open(FASTQ.Reader, filename)
+        reader = open(FASTQ.Reader, joinpath(path_of_format("FASTQ"), filename))
         @test eltype(reader) == FASTQ.Record
         if valid
             for record in reader end
@@ -357,25 +344,7 @@ end
 
         return test_records(expected_entries, read_entries)
     end
-
-    function valid_specimen_filter(specimen)
-        tags = split(get(specimen, "tags", ""))
-        if any(t ∈ tags for t in ["gaps", "rna", "comments", "linewrap"])
-            return false
-        end
-        valid = get(specimen, "valid", true)
-        return valid
-    end
-    function invalid_specimen_filter(specimen)
-        tags = split(get(specimen, "tags", ""))
-        if any(t ∈ tags for t in ["gaps", "rna", "comments", "linewrap"])
-            return false
-        end
-        valid = get(specimen, "valid", true)
-        return !valid
-    end
     
-    fastq_folder = path_of_format("FASTQ")
     valid_specimens = list_valid_specimens("FASTQ") do specimen
         spec_tags = hastags(specimen) ? sort(tags(specimen)) : String[]
         invalid_tags = sort!(["gaps", "rna", "comments", "linewrap"])
@@ -383,10 +352,10 @@ end
     end
     invalid_specimens = list_invalid_specimens("FASTQ")
     for specimen in valid_specimens
-        test_fastq_parse(joinpath(fastq_folder, filename(specimen)), true)
+        test_fastq_parse(filename(specimen), true)
     end
     for specimen in invalid_specimens
-        test_fastq_parse(joinpath(fastq_folder, filename(specimen)), false)
+        test_fastq_parse(filename(specimen), false)
     end
 
     @testset "invalid quality encoding" begin
