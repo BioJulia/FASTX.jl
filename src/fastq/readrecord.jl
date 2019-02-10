@@ -62,7 +62,7 @@ end
 function is_same_mem(data, pos1, pos2, len)
     checkbounds(data, 1:pos1+len-1)
     checkbounds(data, 1:pos2+len-1)
-    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), pointer(data, pos1), pointer(data, pos2), len) == 0
+    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), pointer(data, pos1), pointer(data, pos2), len) == 0
 end
 
 actions = Dict(
