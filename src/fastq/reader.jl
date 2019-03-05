@@ -4,10 +4,6 @@
 struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
     state::State{S}
     seq_transform::Union{Function, Nothing}
-
-    function Reader(input::BufferedInputStream, seq_transform)
-        return new(BioCore.Ragel.State(file_machine.start_state, input), seq_transform)
-    end
 end
 
 """
@@ -31,7 +27,7 @@ function Reader(input::IO; fill_ambiguous = nothing)
     return Reader(State(stream, 1, 1, false), seq_transform)
 end
 
-function Base.eltype(::Type{Reader})
+function Base.eltype(::Type{<:Reader})
     return Record
 end
 
@@ -40,7 +36,7 @@ function BioGenerics.IO.stream(reader::Reader)
 end
 
 function Base.read!(rdr::Reader, rec::Record)
-    rdr.state.state == 0 && throw(EOFError())
+    eof(BioGenerics.IO.stream(rdr)) && throw(EOFError())
     cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum), rdr.seq_transform)
     rdr.state.state = cs
     rdr.state.linenum = ln

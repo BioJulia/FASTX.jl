@@ -69,8 +69,17 @@ end
 function index!(record::Record)
     stream = TranscodingStreams.NoopStream(IOBuffer(record.data))
     cs, linenum, found = readrecord!(stream, record, (1, 1))
-    if cs != 0
+    if !found || !allspace(stream)
         throw(ArgumentError("invalid FASTA record"))
     end
     return record
+end
+
+function allspace(stream)
+    while !eof(stream)
+        if !isspace(read(stream, Char))
+            return false
+        end
+    end
+    return true
 end

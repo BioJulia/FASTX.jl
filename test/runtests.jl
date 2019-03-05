@@ -80,8 +80,9 @@ import BioSequences:
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
 
     function test_fasta_parse(filename, valid)
+        filepath = joinpath(path_of_format("FASTA"), filename)
         # Reading from a stream
-        stream = open(FASTA.Reader, joinpath(path_of_format("FASTA"), filename))
+        stream = open(FASTA.Reader, filepath)
         @test eltype(stream) == FASTA.Record
         if valid
             for seqrec in stream end
@@ -95,7 +96,7 @@ import BioSequences:
         end
 
         # in-place parsing
-        stream = open(FASTA.Reader, filename)
+        stream = open(FASTA.Reader, filepath)
         entry = eltype(stream)()
         while !eof(stream)
             read!(stream, entry)
@@ -107,7 +108,7 @@ import BioSequences:
         outputB = IOBuffer()
         writerB = FASTA.Writer(outputB, width = -1)
         expected_entries = Any[]
-        for seqrec in open(FASTA.Reader, filename)
+        for seqrec in open(FASTA.Reader, filepath)
             write(writer, seqrec)
             write(writerB, seqrec)
             push!(expected_entries, seqrec)
@@ -134,10 +135,10 @@ import BioSequences:
     end
     invalid_specimens = list_invalid_specimens("FASTA")
     for specimen in valid_specimens
-        test_fasta_parse(joinpath(fasta_folder, filename(specimen)), true)
+        test_fasta_parse(filename(specimen), true)
     end
     for specimen in invalid_specimens
-        test_fasta_parse(joinpath(fasta_folder, filename(specimen)), false)
+        test_fasta_parse(filename(specimen), false)
     end
 
     @testset "Faidx" begin
@@ -253,7 +254,7 @@ end
 
     @testset "Record" begin
         record = FASTQ.Record()
-        @test !BioCore.isfilled(record)
+        @test !BioGenerics.isfilled(record)
 
         record = FASTQ.Record("""
         @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
@@ -261,14 +262,14 @@ end
         +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
         @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
         """)
-        @test BioCore.isfilled(record)
-        @test FASTQ.hasidentifier(record) == BioCore.hasseqname(record) == true
-        @test FASTQ.identifier(record) == BioCore.seqname(record) == "SRR1238088.1.1"
+        @test BioGenerics.isfilled(record)
+        @test FASTQ.hasidentifier(record) == BioGenerics.hasseqname(record) == true
+        @test FASTQ.identifier(record) == BioGenerics.seqname(record) == "SRR1238088.1.1"
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
-        @test FASTQ.hassequence(record) == BioCore.hassequence(record) == true
+        @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(DNASequence, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
-        @test FASTQ.sequence(record) == BioCore.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        @test FASTQ.sequence(record) == BioGenerics.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
@@ -279,7 +280,7 @@ end
         +
         @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
         """)
-        @test BioCore.isfilled(record)
+        @test BioGenerics.isfilled(record)
         @test !FASTQ.hasdescription(record)
     end
 
@@ -299,7 +300,8 @@ end
 
     function test_fastq_parse(filename, valid)
         # Reading from a reader
-        reader = open(FASTQ.Reader, joinpath(path_of_format("FASTQ"), filename))
+        filepath = joinpath(path_of_format("FASTQ"), filename)
+        reader = open(FASTQ.Reader, filepath)
         @test eltype(reader) == FASTQ.Record
         if valid
             for record in reader end
@@ -313,7 +315,7 @@ end
         end
 
         # in-place parsing
-        reader = open(FASTQ.Reader, filename)
+        reader = open(FASTQ.Reader, filepath)
         record = eltype(reader)()
         try
             while true
@@ -330,7 +332,8 @@ end
         output = IOBuffer()
         writer = FASTQ.Writer(output)
         expected_entries = FASTQ.Record[]
-        for record in open(FASTQ.Reader, filename)
+        for record in open(FASTQ.Reader, filepath)
+            println(BioGenerics.isfilled(record))
             write(writer, record)
             push!(expected_entries, record)
         end
@@ -352,6 +355,7 @@ end
     end
     invalid_specimens = list_invalid_specimens("FASTQ")
     for specimen in valid_specimens
+        println(filename(specimen))
         test_fastq_parse(filename(specimen), true)
     end
     for specimen in invalid_specimens

@@ -55,7 +55,7 @@ function appendfrom!(dst, dpos, src, spos, n)
     if length(dst) < dpos + n - 1
         resize!(dst, dpos + n - 1)
     end
-    copy!(dst, dpos, src, spos, n)
+    copyto!(dst, dpos, src, spos, n)
     return dst
 end
 
@@ -79,7 +79,7 @@ actions = Dict(
         record.filled = 1:(p-@markpos)
         found = true
         @escape
-    end
+    end,
 )
 
 initcode = quote

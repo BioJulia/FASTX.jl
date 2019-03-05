@@ -33,7 +33,7 @@ machine = (function ()
     
     sequence = re.opt(re.cat(letters, re.rep(re.cat(re.rep1(re.alt(hspace, newline)), letters))))
     
-    record = re.cat(header, re.rep1(newline), sequence, re.rep1(newline))
+    record = re.cat(header, newline, sequence, re.rep1(newline))
     record.actions[:exit] = [:record]
     
     record_trailing = re.cat(header, re.rep1(newline), sequence)
@@ -43,6 +43,9 @@ machine = (function ()
     
     Automa.compile(fasta)
 end)()
+
+#write("fasta.dot", Automa.machine2dot(machine))
+#run(`dot -Tsvg -o fasta.svg fasta.dot`)
 
 actions = Dict(
     :mark => :(@mark),
