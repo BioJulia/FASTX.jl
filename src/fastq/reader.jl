@@ -36,11 +36,11 @@ function BioGenerics.IO.stream(reader::Reader)
 end
 
 function Base.read!(rdr::Reader, rec::Record)
-    eof(BioGenerics.IO.stream(rdr)) && throw(EOFError())
     cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum), rdr.seq_transform)
     rdr.state.state = cs
     rdr.state.linenum = ln
     rdr.state.filled = f
+    !f && cs == 0 && throw(EOFError())
     return rec
 end
 
