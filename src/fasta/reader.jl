@@ -40,7 +40,10 @@ function Base.read!(rdr::Reader, rec::Record)
     rdr.state.state = cs
     rdr.state.linenum = ln
     rdr.state.filled = f
-    !f && cs == 0 && throw(EOFError())
+    if !f
+        cs == 0 && throw(EOFError())
+        throw(ArgumentError("malformed FASTA file"))
+    end    
     return rec
 end
 

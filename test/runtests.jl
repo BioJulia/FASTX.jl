@@ -3,7 +3,6 @@ using FASTX
 using FormatSpecimens
 import BioGenerics
 import BioGenerics.Testing: intempdir
-import BioCore
 import BioSequences:
     @dna_str,
     @rna_str,
@@ -333,12 +332,10 @@ end
         writer = FASTQ.Writer(output)
         expected_entries = FASTQ.Record[]
         for record in open(FASTQ.Reader, filepath)
-            println(BioGenerics.isfilled(record))
             write(writer, record)
             push!(expected_entries, record)
         end
         flush(writer)
-
         seekstart(output)
         read_entries = FASTQ.Record[]
         for record in FASTQ.Reader(output)
@@ -355,7 +352,6 @@ end
     end
     invalid_specimens = list_invalid_specimens("FASTQ")
     for specimen in valid_specimens
-        println(filename(specimen))
         test_fastq_parse(filename(specimen), true)
     end
     for specimen in invalid_specimens
