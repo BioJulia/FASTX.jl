@@ -138,7 +138,7 @@ function initialize!(record::Record)
     return record
 end
 
-function BioCore.isfilled(record::Record)
+function BioGenerics.isfilled(record::Record)
     return !isempty(record.filled)
 end
 
@@ -172,11 +172,11 @@ function hasidentifier(record)
     return isfilled(record) && !isempty(record.identifier)
 end
 
-function BioCore.seqname(record::Record)
+function BioGenerics.seqname(record::Record)
     return identifier(record)
 end
 
-function BioCore.hasseqname(record::Record)
+function BioGenerics.hasseqname(record::Record)
     return hasidentifier(record)
 end
 
@@ -252,15 +252,15 @@ function hassequence(record::Record)
     return isfilled(record)
 end
 
-function BioCore.sequence(record::Record)
+function BioGenerics.sequence(record::Record)
     return sequence(record)
 end
 
-function BioCore.sequence(::Type{S}, record::Record) where S <: BioSequences.BioSequence
+function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.BioSequence
     return sequence(S, record)
 end
 
-function BioCore.hassequence(record::Record)
+function BioGenerics.hassequence(record::Record)
     return hassequence(record)
 end
 

@@ -1,12 +1,12 @@
 # FASTQ Writer
 # ============
 
-struct Writer <: BioCore.IO.AbstractWriter
+struct Writer <: BioGenerics.IO.AbstractWriter
     output::IO
     quality_header::Bool
 end
 
-function BioCore.IO.stream(writer::Writer)
+function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 

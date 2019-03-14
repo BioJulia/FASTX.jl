@@ -1,13 +1,9 @@
 # FASTQ Reader
 # ============
 
-struct Reader <: BioCore.IO.AbstractReader
-    state::BioCore.Ragel.State
+struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    state::State{S}
     seq_transform::Union{Function, Nothing}
-
-    function Reader(input::BufferedInputStream, seq_transform)
-        return new(BioCore.Ragel.State(file_machine.start_state, input), seq_transform)
-    end
 end
 
 """
@@ -19,21 +15,43 @@ Create a data reader of the FASTQ file format.
 * `input`: data source
 * `fill_ambiguous=nothing`: fill ambiguous symbols with the given symbol
 """
-function Reader(input::IO; fill_ambiguous=nothing)
+function Reader(input::IO; fill_ambiguous = nothing)
     if fill_ambiguous === nothing
         seq_transform = nothing
     else
         seq_transform = generate_fill_ambiguous(fill_ambiguous)
     end
-    return Reader(BufferedInputStream(input), seq_transform)
+    if !(input isa TranscodingStream)
+        stream = TranscodingStreams.NoopStream(input)
+    end
+    return Reader(State(stream, 1, 1, false), seq_transform)
 end
 
-function Base.eltype(::Type{Reader})
+function Base.eltype(::Type{<:Reader})
     return Record
 end
 
-function BioCore.IO.stream(reader::Reader)
+function BioGenerics.IO.stream(reader::Reader)
     return reader.state.stream
+end
+
+function Base.read!(rdr::Reader, rec::Record)
+    cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum), rdr.seq_transform)
+    rdr.state.state = cs
+    rdr.state.linenum = ln
+    rdr.state.filled = f
+    if !f
+        cs == 0 && throw(EOFError())
+        throw(ArgumentError("malformed FASTQ file"))
+    end    
+    return rec
+end
+
+function Base.close(reader::Reader)
+    if reader.state.stream isa IO
+        close(reader.state.stream)
+    end
+    return nothing
 end
 
 function generate_fill_ambiguous(symbol::BioSymbols.DNA)
@@ -49,6 +67,26 @@ function generate_fill_ambiguous(symbol::BioSymbols.DNA)
         return data
     end
 end
+
+function index!(record::Record)
+    stream = TranscodingStreams.NoopStream(IOBuffer(record.data))
+    cs, linenum, found = readrecord!(stream, record, (1, 1), nothing)
+    if !found || !allspace(stream)
+        throw(ArgumentError("invalid FASTQ record"))
+    end
+    return record
+end
+
+function allspace(stream)
+    while !eof(stream)
+        if !isspace(read(stream, Char))
+            return false
+        end
+    end
+    return true
+end
+
+#=
 
 # NOTE: This does not support line-wraps within sequence and quality.
 isinteractive() && @info "Compiling FASTQ parser..."
@@ -171,3 +209,5 @@ eval(
             end,
             :countline => :(linenum += 1),
             :anchor => :(BioCore.ReaderHelper.anchor!(stream, p); offset = p - 1)))))
+
+=#
