@@ -18,8 +18,7 @@ branches:
 
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
-    - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/BioJulia/BioJuliaRegistry.git"))'
+    - julia ci_prep.jl
     - julia -e 'using Pkg; Pkg.build(); Pkg.test("FASTX", coverage = true)'
 
 after_success:
