@@ -27,13 +27,13 @@ end
 Create a FASTQ record object from `data`.
 
 This function verifies and indexes fields for accessors.
-Note that the ownership of `data` is transferred to a new record object.
+
+!!! warning
+    Note that the ownership of `data` is transferred to a new record object.
+    Editing the input data will edit the record, and is not advised after 
+    construction of the record.
 """
 function Record(data::Vector{UInt8})
-    return convert(Record, data)
-end
-
-function Base.convert(::Type{Record}, data::Vector{UInt8})
     record = Record(data, 1:0, 1:0, 1:0, 1:0, 1:0)
     index!(record)
     return record
@@ -49,6 +49,8 @@ This function verifies and indexes fields for accessors.
 function Record(str::AbstractString)
     return Record(Vector{UInt8}(str))
 end
+
+Base.parse(::Record, str::AbstractString) = Record(str)
 
 """
     FASTQ.Record(identifier, sequence, quality; offset=33)
@@ -79,10 +81,6 @@ function Record(identifier::AbstractString, description::Union{AbstractString,No
     ascii_quality = convert(Vector{UInt8}, quality .+ offset)
     write(buf, ascii_quality, '\n')
     return Record(take!(buf))
-end
-
-function Base.convert(::Type{Record}, str::AbstractString)
-    return convert(Record, convert(Vector{UInt8}, str))
 end
 
 function Base.copy(record::Record)
@@ -135,14 +133,17 @@ end
 # ------------------
 
 """
-    identifier(record::Record)::String
+    identifier(record::Record)::Union{String,Nothing}
 
 Get the sequence identifier of `record`.
+
+!!! note
+    Returns `nothing` if the record has no identifier.
 """
-function identifier(record::Record)::String
+function identifier(record::Record)::Union{String,Nothing}
     checkfilled(record)
     if !hasidentifier(record)
-        missingerror(:identifier)
+        return nothing
     end
     return String(record.data[record.identifier])
 end
@@ -156,15 +157,19 @@ function hasidentifier(record::Record)
     return isfilled(record)
 end
 
+
 """
-    description(record::Record)::String
+    description(record::Record)::Union{String, Nothing}
 
 Get the description of `record`.
+
+!!! note
+    Returns `nothing` if `record` has no description.
 """
-function description(record::Record)::String
+function description(record::Record)::Union{String, Nothing}
     checkfilled(record)
     if !hasdescription(record)
-        missingerror(:description)
+        nothing
     end
     return String(record.data[record.description])
 end
@@ -179,7 +184,7 @@ function hasdescription(record)
 end
 
 """
-    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
+    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])
 
 Get the sequence of `record`.
 
@@ -188,28 +193,26 @@ If `part` argument is given, it returns the specified part of the sequence.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.BioSequence
     checkfilled(record)
-    if !hassequence(record)
-        missingerror(:sequence)
-    end
     seqpart = record.sequence[part]
     return S(record.data, first(seqpart), last(seqpart))
 end
 
+"""
+    sequence(::Type{String}, record::Record, [part::UnitRange{Int}])::String
+
+Get the sequence of `record` as a String.
+If `part` argument is given, it returns the specified part of the sequence.
+"""
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
     checkfilled(record)
-    if !hassequence(record)
-        missingerror(:sequence)
-    end
     return String(record.data[record.sequence[part]])
 end
 
 """
     sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
-
 Get the sequence of `record`.
 """
 function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.DNASequence
-    checkfilled(record)
     return sequence(BioSequences.DNASequence, record, part)
 end
 
@@ -217,6 +220,9 @@ end
     hassequence(record::Record)
 
 Checks whether or not a sequence record contains a sequence.
+
+!!! note
+    Zero-length sequences are allowed in records.
 """
 function hassequence(record::Record)
     # zero-length sequence may exist
@@ -244,6 +250,9 @@ end
 Get the base quality of `record` by decoding with `encoding_name`.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
+
+!!! note
+    Returns `nothing` if the record has no quality string.
 """
 function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
     checkfilled(record)

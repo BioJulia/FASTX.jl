@@ -26,15 +26,15 @@ end
 Create a FASTA record object from `data`.
 
 This function verifies and indexes fields for accessors.
-Note that the ownership of `data` is transferred to a new record object.
+
+!!! warning
+    Note that the ownership of `data` is transferred to a new record object.
+    Editing the input data will edit the record, and is not advised after 
+    construction of the record.
 """
 function Record(data::Vector{UInt8})
-    return convert(Record, data)
-end
-
-function Base.convert(::Type{Record}, data::Vector{UInt8})
     record = Record(data, 1:0, 1:0, 1:0, 1:0)
-    index!(record)
+    index!(record) 
     return record
 end
 
@@ -45,17 +45,9 @@ Create a FASTA record object from `str`.
 
 This function verifies and indexes fields for accessors.
 """
-function Record(str::AbstractString)
-    return Record(Vector{UInt8}(str))
-end
+Record(str::AbstractString) = Record(Vector{UInt8}(str))
 
-function Base.convert(::Type{Record}, str::AbstractString)
-    return Record(Vector{UInt8}(str))
-end
-
-function Base.convert(::Type{String}, record::Record)
-    return String(record.data[record.filled])
-end
+Base.parse(::Record, str::AbstractString) = Record(str)
 
 """
     FASTA.Record(identifier, sequence)
@@ -151,14 +143,17 @@ end
 # ------------------
 
 """
-    identifier(record::Record)::String
+    identifier(record::Record)::Union{String, Nothing}
 
 Get the sequence identifier of `record`.
+
+!!! note
+    Returns nothing if the record has no identifier.
 """
-function identifier(record::Record)::String
+function identifier(record::Record)::Union{String, Nothing}
     checkfilled(record)
     if !hasidentifier(record)
-        missingerror(:identifier)
+        return nothing
     end
     return String(record.data[record.identifier])
 end
@@ -181,14 +176,17 @@ function BioGenerics.hasseqname(record::Record)
 end
 
 """
-    description(record::Record)::String
+    description(record::Record)::Union{String, Nothing}
 
 Get the description of `record`.
+
+!!! note
+    Returns `nothing` if record has no description.
 """
-function description(record::Record)::String
+function description(record::Record)::Union{String, Nothing}
     checkfilled(record)
     if !hasdescription(record)
-        missingerror(:description)
+        return nothing
     end
     return String(record.data[record.description])
 end
@@ -212,18 +210,12 @@ If `part` argument is given, it returns the specified part of the sequence.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.BioSequence
     checkfilled(record)
-    if !hassequence(record)
-        missingerror(:sequence)
-    end
     seqpart = record.sequence[part]
     return S(record.data, first(seqpart), last(seqpart))
 end
 
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
     checkfilled(record)
-    if !hassequence(record)
-        missingerror(:sequence)
-    end
     return String(record.data[record.sequence[part]])
 end
 

@@ -19,6 +19,8 @@ import BioSequences:
         record = FASTA.Record()
         @test !BioGenerics.isfilled(record)
         @test_throws ArgumentError FASTA.identifier(record)
+        @test_throws ArgumentError FASTA.description(record)
+        @test_throws ArgumentError FASTA.sequence(record)
 
         record = FASTA.Record(">foo\nACGT\n")
         @test BioGenerics.isfilled(record)
@@ -26,7 +28,7 @@ import BioSequences:
         @test FASTA.hasidentifier(record)
         @test BioGenerics.seqname(record) == FASTA.identifier(record) == "foo"
         @test !FASTA.hasdescription(record)
-        @test_throws BioGenerics.Exceptions.MissingFieldException FASTA.description(record)
+        @test FASTA.description(record) === nothing
         @test BioGenerics.hassequence(record)
         @test FASTA.hassequence(record)
         @test FASTA.sequence(record) == dna"ACGT"
