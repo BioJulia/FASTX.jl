@@ -27,12 +27,10 @@ tcagTTAAGATGGGAT
 ## Readers and Writers
 
 The reader and writer for FASTQ formatted files, are found within the
-`BioSequences.FASTQ` module.
+FASTQ module of FASTX.
 
-```@docs
-FASTQ.Reader
-FASTQ.Writer
-```
+- [`FASTQ.Reader`](@ref)
+- [`FASTQ.Writer`](@ref)
 
 They can be created with IOStreams:
 
@@ -46,11 +44,11 @@ w = FASTQ.Writer(open("my-output.fastq", "w"))
 Alternatively, `Base.open` is overloaded with a method for conveinience:
 
 ```jlcon
-r = open(FASTQ.Reader, "/my-reads.fastq")
+r = open(FASTQ.Reader, "my-reads.fastq")
 w = open(FASTQ.Writer, "my-out.fastq")
 ```
 
-Note that `FASTQ.Reader` does not support line-wraps within sequence and quality.
+Note that [`FASTQ.Reader`](@ref) does not support line-wraps within sequence and quality.
 Usually sequence records will be read sequentially from a file by iteration.
 
 ```jlcon
@@ -73,30 +71,20 @@ end
 ```
 
 Reading in a record from a FASTQ formatted file will give you a variable of
-type `FASTQ.Record`.
+type [`FASTQ.Record`](@ref).
 
-```@docs
-FASTQ.Record
-```
+Various getters and setters are available for [`FASTQ.Record`](@ref)s:
 
-Various getters and setters are available for `FASTQ.Record`s:
+- [`FASTQ.hasidentifier`](@ref)
+- [`FASTQ.identifier`](@ref)
+- [`FASTQ.hasdescription`](@ref)
+- [`FASTQ.description`](@ref)
+- [`FASTQ.hassequence`](@ref)
+- [`FASTQ.sequence`](@ref)
+- [`FASTQ.hasquality`](@ref)
+- [`FASTQ.quality`](@ref)
 
-```@docs
-FASTQ.hasidentifier
-FASTQ.identifier
-FASTQ.hasdescription
-FASTQ.description
-FASTQ.hassequence
-FASTQ.sequence
-FASTQ.hasquality
-FASTQ.quality
-```
-
-To write a `BioSequence` to FASTQ file, you first have to create a `FASTQ.Record`:
-
-```@docs
-FASTQ.Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
-```
+To write a `BioSequence` to FASTQ file, you first have to create a [`FASTQ.Record`](@ref):
 
 As always with julia IO types, remember to close your file readers and writer
 after you are finished.
@@ -120,11 +108,9 @@ quality encodings. These can be used with a [`FASTQ.quality`](@ref) method, to
 ensure the correct quality score values are extracted from your FASTQ quality
 strings. 
 
-```@docs
-FASTQ.SANGER_QUAL_ENCODING
-FASTQ.SOLEXA_QUAL_ENCODING
-FASTQ.ILLUMINA13_QUAL_ENCODING
-FASTQ.ILLUMINA15_QUAL_ENCODING
-FASTQ.ILLUMINA18_QUAL_ENCODING
-```
+- [`FASTQ.SANGER_QUAL_ENCODING`](@ref)
+- [`FASTQ.SOLEXA_QUAL_ENCODING`](@ref)
+- [`FASTQ.ILLUMINA13_QUAL_ENCODING`](@ref)
+- [`FASTQ.ILLUMINA15_QUAL_ENCODING`](@ref)
+- [`FASTQ.ILLUMINA18_QUAL_ENCODING`](@ref)
 

@@ -25,12 +25,10 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 ## Readers and Writers
 The reader and writer for FASTA formatted files, are found within the
-`BioSequences.FASTA` submodule.
+FASTA submodule of FASTX.
 
-```@docs
-FASTA.Reader
-FASTA.Writer
-```
+- [`FASTA.Reader`](@ref)
+- [`FASTA.Writer`](@ref)
 
 They can be created with IOStreams.
 
@@ -80,24 +78,18 @@ close(reader)
 ```
 
 Reading in a sequence from a FASTA formatted file will give you a variable of
-type `FASTA.Record`.
+type [`FASTA.Record`](@ref).
 
-```@docs
-FASTA.Record
-```
+Various getters and setters are available for [`FASTA.Record`](@ref)s:
 
-Various getters and setters are available for `FASTA.Record`s:
+- [`FASTA.hasidentifier`](@ref)
+- [`FASTA.identifier`](@ref)
+- [`FASTA.hasdescription`](@ref)
+- [`FASTA.description`](@ref)
+- [`FASTA.hassequence`](@ref)
+- [`FASTA.sequence`](@ref)
 
-```@docs
-FASTA.hasidentifier
-FASTA.identifier
-FASTA.hasdescription
-FASTA.description
-FASTA.hassequence
-FASTA.sequence
-```
-
-To write a `BioSequence` to FASTA file, you first have to create a `FASTA.Record`:
+To write a `BioSequence` to FASTA file, you first have to create a [`FASTA.Record`](@ref):
 
 ```jlcon
 using BioSequences

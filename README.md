@@ -4,7 +4,7 @@
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/FASTX.jl/blob/master/LICENSE) 
 [![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/FASTX.jl/stable)
 [![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://biojulia.github.io/FASTX.jl/latest/)
-[![Pkg Status](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
+[![Pkg Status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Chat](https://img.shields.io/gitter/room/BioJulia/FASTX.svg)](https://gitter.im/BioJulia/FASTX.jl)
 
 
@@ -16,19 +16,21 @@ sequence data files.
 
 ## Installation
 
-First make sure that you have the BioJulia package registry set up on your julia
-installation:
+FASTX is made available to install through BioJulia's package registry.
+
+Julia by default only watches the "General" package registry, so before you start, you should add the BioJulia package registry.
+
+Start a julia terminal, hit the ] key to enter pkg mode (you should see the prompt change from julia> to pkg> ), then enter the following command:
 
 ```julia
-using Pkg.Registry
-Registry.add("git@github.com:BioJulia/BioJuliaRegistry.git")
+registry add https://github.com/BioJulia/BioJuliaRegistry.git
 ```
 
-Then, you can install FASTX from the Julia REPL:
+After you've added the registry, you can install FASTX from the julia REPL.
+Press `]` to enter pkg mode again, and enter the following:
 
 ```julia
-using Pkg
-add("FASTX")
+add FASTX
 ```
 
 If you are interested in the cutting edge of the development, please check out

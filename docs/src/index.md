@@ -1,11 +1,11 @@
 # FASTX
 
-[![Latest Release](https://img.shields.io/github/release/BioJulia/FASTX.jl.svg?style=flat-square)](https://github.com/BioJulia/FASTX.jl/releases/latest)
-[![MIT license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/BioJulia/FASTX.jl/blob/master/LICENSE) 
-[![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg?style=flat-square)](https://biojulia.github.io/FASTX.jl/stable)
-[![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://biojulia.github.io/FASTX.jl/latest/)
-![Lifecycle](https://img.shields.io/badge/lifecycle-maturing-orange.svg?style=flat-square)
-[![Chat on Discord](https://img.shields.io/badge/discord-chat-blue.svg?style=flat-square&logo=discord&colorB=%237289DA)](https://discord.gg/z73YNFz)
+[![Latest Release](https://img.shields.io/github/release/BioJulia/FASTX.jl.svg)](https://github.com/BioJulia/FASTX.jl/releases/latest)
+[![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/FASTX.jl/blob/master/LICENSE) 
+[![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/FASTX.jl/stable)
+[![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://biojulia.github.io/FASTX.jl/latest/)
+[![Pkg Status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Chat](https://img.shields.io/gitter/room/BioJulia/FASTX.svg)](https://gitter.im/BioJulia/FASTX.jl)
 
 
 ## Description
@@ -16,11 +16,21 @@ sequence data files.
 
 ## Installation
 
-You can install FASTX from the Julia REPL:
+FASTX is made available to install through BioJulia's package registry.
+
+Julia by default only watches the "General" package registry, so before you start, you should add the BioJulia package registry.
+
+Start a julia terminal, hit the ] key to enter pkg mode (you should see the prompt change from julia> to pkg> ), then enter the following command:
 
 ```julia
-using Pkg
-add("FASTX")
+registry add https://github.com/BioJulia/BioJuliaRegistry.git
+```
+
+After you've added the registry, you can install FASTX from the julia REPL.
+Press `]` to enter pkg mode again, and enter the following:
+
+```julia
+add FASTX
 ```
 
 If you are interested in the cutting edge of the development, please check out
@@ -29,11 +39,13 @@ the master branch to try new features before release.
 
 ## Testing
 
-FASTA is tested against Julia `1.X` on Linux, OS X, and Windows.
+FASTX is tested against Julia `1.X` on Linux, OS X, and Windows.
 
-| **Latest release** | **Latest build status** |
-|:------------------:|:-----------------------:|
-|[![](https://pkg.julialang.org/badges/FASTX_1.0.svg)](https://pkg.julialang.org/?pkg=FASTX) | [![](https://travis-ci.org/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.org/BioJulia/FASTX.jl) [![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)|
+**Latest build status:**
+
+[![](https://travis-ci.com/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.com/BioJulia/FASTX.jl)
+[![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)
+[![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)
 
 
 ## Contributing
@@ -41,9 +53,8 @@ FASTA is tested against Julia `1.X` on Linux, OS X, and Windows.
 We appreciate contributions from users including reporting bugs, fixing
 issues, improving performance and adding new features.
 
-Take a look at the [CONTRIBUTING](https://github.com/BioJulia/FASTX.jl/blob/master/CONTRIBUTING.md) file provided with
-every BioJulia package package for detailed contributor and maintainer
-guidelines.
+Take a look at the [contributing files](https://github.com/BioJulia/Contributing)
+detailed contributor and maintainer guidelines, and code of conduct.
 
 
 ### Financial contributions
@@ -82,5 +93,5 @@ Your logo will show up here with a link to your website.
 ## Questions?
 
 If you have a question about contributing or using BioJulia software, come
-on over and chat to us on [Discord](https://discord.gg/z73YNFz), or you can try the
+on over and chat to us on [Gitter](https://gitter.im/BioJulia/General), or you can try the
 [Bio category of the Julia discourse site](https://discourse.julialang.org/c/domain/bio).

@@ -13,6 +13,9 @@ makedocs(
         "Manual" => [
             "FASTA formatted files" => "manual/fasta.md",
             "FASTQ formatted files" => "manual/fastq.md"
+        ],
+        "Library" => [
+            "Public" => "lib/public.md"
         ]
     ],
     authors = "Ben J. Ward, The BioJulia Organisation and other contributors."
