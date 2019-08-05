@@ -244,6 +244,32 @@ function hassequence(record::Record)
     return isfilled(record)
 end
 
+"""
+    Base.copyto!(dest::BioSequences.BioSequence, src::Record)
+
+Copy all of the sequence data from the fasta record `src` to a biological
+sequence `dest`. `dest` must have a length greater or equal to the length of
+the sequence represented in the fastq record. The first n elements of `dest` are
+overwritten, the other elements are left untouched.
+"""
+function Base.copyto!(dest::BioSequences.BioSequence, src::Record)
+    return copyto!(dest, 1, src, 1, length(src.sequence))
+end
+
+"""
+    Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
+
+Copy an N long block of sequence data from the fasta record `src`, starting at
+position `soff`, to the `BioSequence` dest, starting at position `doff`. 
+"""
+function Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
+    checkfilled(src)
+    if !hassequence(src)
+        missingerror(:sequence)
+    end
+    return BioSequences.encode_copy!(dest, doff, src.data, src.sequence[soff], N)
+end
+
 function BioGenerics.sequence(record::Record)
     return sequence(record)
 end
