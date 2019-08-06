@@ -75,10 +75,12 @@ import BioSequences:
     @test FASTA.identifier(record) == "seqA"
     @test FASTA.description(record) == "some description"
     @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
+    @test copyto!(LongAminoAcidSeq(BioGenerics.seqlen(record)), record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
     @test read!(reader, record) === record
     @test FASTA.identifier(record) == "seqB"
     @test !FASTA.hasdescription(record)
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
+    @test copyto!(LongAminoAcidSeq(BioGenerics.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -263,14 +265,18 @@ end
         +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
         @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
         """)
+        
+        seq = dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        
         @test BioGenerics.isfilled(record)
         @test FASTQ.hasidentifier(record) == BioGenerics.hasseqname(record) == true
         @test FASTQ.identifier(record) == BioGenerics.seqname(record) == "SRR1238088.1.1"
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
-        @test FASTQ.sequence(LongDNASeq, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
-        @test FASTQ.sequence(record) == BioGenerics.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        @test FASTQ.sequence(LongDNASeq, record) == seq1
+        @test copyto!(LongDNASeq(BioGenerics.seqlen(record)), record) == seq
+        @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
