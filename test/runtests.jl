@@ -82,6 +82,7 @@ import BioSequences:
     @test !FASTA.hasdescription(record)
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
     @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
+    @test_throws copyto!(LongAminoAcidSeq(10), FASTA.Record())
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -277,6 +278,7 @@ end
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(LongDNASeq, record) == seq
         @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
+        @test_throws copyto!(LongDNASeq(10), FASTQ.Record())
         @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
