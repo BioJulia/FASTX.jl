@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- `Base.copyto!` methods for copying record data to LongSequences.
+- `FASTA.seqlen` & `FASTQ.seqlen` for getting the length of a sequence in a record.
+
+### Changed
+- Use BioSequence.jl v2.0 or higher.
+- Use TranscodingStreams v0.9.5.
+
 ## [1.0.0] - 2019-06-30
 ### Added
 - FASTA submodule.
