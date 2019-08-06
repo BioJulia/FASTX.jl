@@ -208,7 +208,7 @@ Get the sequence of `record`.
 `S` can be either a subtype of `BioSequences.BioSequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
 """
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.BioSequence
+function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
     seqpart = record.sequence[part]
     return S(record.data, first(seqpart), last(seqpart))
@@ -252,7 +252,7 @@ sequence `dest`. `dest` must have a length greater or equal to the length of
 the sequence represented in the fastq record. The first n elements of `dest` are
 overwritten, the other elements are left untouched.
 """
-function Base.copyto!(dest::BioSequences.BioSequence, src::Record)
+function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
     return copyto!(dest, 1, src, 1, length(src.sequence))
 end
 
@@ -262,7 +262,7 @@ end
 Copy an N long block of sequence data from the fasta record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`. 
 """
-function Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
+function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
     checkfilled(src)
     if !hassequence(src)
         missingerror(:sequence)
@@ -274,7 +274,7 @@ function BioGenerics.sequence(record::Record)
     return sequence(record)
 end
 
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.BioSequence
+function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
     return sequence(S, record)
 end
 
@@ -319,11 +319,11 @@ function predict_seqtype(seq::Vector{UInt8}, range)
     # the threshold (= 0.95) is somewhat arbitrary
     if (a + c + g + t + u + n) / alpha > 0.95
         if t ≥ u
-            return BioSequences.DNASequence
+            return BioSequences.LongDNASeq
         else
-            return BioSequences.RNASequence
+            return BioSequences.LongRNASeq
         end
     else
-        return BioSequences.AminoAcidSequence
+        return BioSequences.LongAminoAcidSeq
     end
 end

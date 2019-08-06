@@ -184,24 +184,24 @@ function hasdescription(record)
 end
 
 """
-    Base.copyto!(dest::BioSequences.BioSequence, src::Record)
+    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
 
 Copy all of the sequence data from the fastq record `src` to a biological
 sequence `dest`. `dest` must have a length greater or equal to the length of
 the sequence represented in the fastq record. The first n elements of `dest` are
 overwritten, the other elements are left untouched.
 """
-function Base.copyto!(dest::BioSequences.BioSequence, src::Record)
+function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
     return copyto!(dest, 1, src, 1, length(src.sequence))
 end
 
 """
-    Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
+    Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
 
 Copy an N long block of sequence data from the fastq record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`. 
 """
-function Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
+function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
     checkfilled(src)
     if !hassequence(src)
         missingerror(:sequence)
@@ -214,10 +214,10 @@ end
 
 Get the sequence of `record`.
 
-`S` can be either a subtype of `BioSequences.BioSequence` or `String`.
+`S` can be either a subtype of `BioSequences.LongSequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
 """
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.BioSequence
+function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
     seqpart = record.sequence[part]
     return S(record.data, first(seqpart), last(seqpart))
@@ -238,8 +238,8 @@ end
     sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
 Get the sequence of `record`.
 """
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.DNASequence
-    return sequence(BioSequences.DNASequence, record, part)
+function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNASeq
+    return sequence(BioSequences.LongDNASeq, record, part)
 end
 
 """
@@ -319,7 +319,7 @@ function BioGenerics.sequence(record::Record)
     return sequence(record)
 end
 
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.BioSequence
+function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
     return sequence(S, record)
 end
 
