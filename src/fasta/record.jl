@@ -207,6 +207,11 @@ Get the sequence of `record`.
 
 `S` can be either a subtype of `BioSequences.BioSequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fasta record, you can use `Base.copyto!`.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
@@ -227,6 +232,11 @@ Get the sequence of `record`.
 This function infers the sequence type from the data. When it is wrong or
 unreliable, use `sequence(::Type{S}, record::Record)`.  If `part` argument is
 given, it returns the specified part of the sequence.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fasta record, you can use `Base.copyto!`.
 """
 function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))
     checkfilled(record)
@@ -243,6 +253,9 @@ function hassequence(record::Record)
     # zero-length sequence may exist
     return isfilled(record)
 end
+
+"Get the length of the fasta record's sequence."
+@inline seqlen(record::Record) = length(record.sequence)
 
 """
     Base.copyto!(dest::BioSequences.BioSequence, src::Record)

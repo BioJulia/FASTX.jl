@@ -75,12 +75,12 @@ import BioSequences:
     @test FASTA.identifier(record) == "seqA"
     @test FASTA.description(record) == "some description"
     @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
-    @test copyto!(LongAminoAcidSeq(BioGenerics.seqlen(record)), record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
+    @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
     @test read!(reader, record) === record
     @test FASTA.identifier(record) == "seqB"
     @test !FASTA.hasdescription(record)
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
-    @test copyto!(LongAminoAcidSeq(BioGenerics.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
+    @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -275,7 +275,7 @@ end
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(LongDNASeq, record) == seq1
-        @test copyto!(LongDNASeq(BioGenerics.seqlen(record)), record) == seq
+        @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
         @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)

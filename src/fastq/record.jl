@@ -216,6 +216,11 @@ Get the sequence of `record`.
 
 `S` can be either a subtype of `BioSequences.LongSequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fastq record, you can use `Base.copyto!`.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
@@ -236,7 +241,13 @@ end
 
 """
     sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
+
 Get the sequence of `record`.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fastq record, you can use `Base.copyto!`.
 """
 function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNASeq
     return sequence(BioSequences.LongDNASeq, record, part)
@@ -254,6 +265,9 @@ function hassequence(record::Record)
     # zero-length sequence may exist
     return isfilled(record)
 end
+
+"Get the length of the fastq record's sequence."
+@inline seqlen(record::Record) = length(record.sequence)
 
 """
     quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
