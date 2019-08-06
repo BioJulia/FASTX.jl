@@ -8,6 +8,7 @@ import BioSequences:
     @rna_str,
     @aa_str,
     LongDNASeq,
+    LongAminoAcidSeq,
     LongSequence,
     DNAAlphabet,
     DNA_N,
