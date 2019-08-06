@@ -184,14 +184,45 @@ function hasdescription(record)
 end
 
 """
+    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
+
+Copy all of the sequence data from the fastq record `src` to a biological
+sequence `dest`. `dest` must have a length greater or equal to the length of
+the sequence represented in the fastq record. The first n elements of `dest` are
+overwritten, the other elements are left untouched.
+"""
+function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
+    return copyto!(dest, 1, src, 1, length(src.sequence))
+end
+
+"""
+    Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
+
+Copy an N long block of sequence data from the fastq record `src`, starting at
+position `soff`, to the `BioSequence` dest, starting at position `doff`. 
+"""
+function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
+    checkfilled(src)
+    if !hassequence(src)
+        missingerror(:sequence)
+    end
+    return BioSequences.encode_copy!(dest, doff, src.data, src.sequence[soff], N)
+end
+
+"""
     sequence(::Type{S}, record::Record, [part::UnitRange{Int}])
 
 Get the sequence of `record`.
 
-`S` can be either a subtype of `BioSequences.BioSequence` or `String`.
+`S` can be either a subtype of `BioSequences.LongSequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fastq record, you can use `Base.copyto!`.
 """
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.BioSequence
+function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
     seqpart = record.sequence[part]
     return S(record.data, first(seqpart), last(seqpart))
@@ -210,10 +241,16 @@ end
 
 """
     sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
+
 Get the sequence of `record`.
+
+!!! note
+    This method makes a new sequence object every time.
+    If you have a sequence already and want to fill it with the sequence
+    data contained in a fastq record, you can use `Base.copyto!`.
 """
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.DNASequence
-    return sequence(BioSequences.DNASequence, record, part)
+function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNASeq
+    return sequence(BioSequences.LongDNASeq, record, part)
 end
 
 """
@@ -228,6 +265,9 @@ function hassequence(record::Record)
     # zero-length sequence may exist
     return isfilled(record)
 end
+
+"Get the length of the fastq record's sequence."
+@inline seqlen(record::Record) = length(record.sequence)
 
 """
     quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
@@ -293,7 +333,7 @@ function BioGenerics.sequence(record::Record)
     return sequence(record)
 end
 
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.BioSequence
+function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
     return sequence(S, record)
 end
 

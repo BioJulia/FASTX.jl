@@ -34,6 +34,7 @@ FASTA.hasdescription
 FASTA.description
 FASTA.hassequence
 FASTA.sequence
+FASTA.seqlen
 ```
 
 ## FASTQ API
@@ -53,6 +54,7 @@ FASTQ.hasdescription
 FASTQ.description
 FASTQ.hassequence
 FASTQ.sequence
+FASTQ.seqlen
 FASTQ.hasquality
 FASTQ.quality
 FASTQ.SANGER_QUAL_ENCODING

@@ -7,8 +7,9 @@ import BioSequences:
     @dna_str,
     @rna_str,
     @aa_str,
-    DNASequence,
-    BioSequence,
+    LongDNASeq,
+    LongAminoAcidSeq,
+    LongSequence,
     DNAAlphabet,
     DNA_N,
     DNA_A,
@@ -75,10 +76,13 @@ import BioSequences:
     @test FASTA.identifier(record) == "seqA"
     @test FASTA.description(record) == "some description"
     @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
+    @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
     @test read!(reader, record) === record
     @test FASTA.identifier(record) == "seqB"
     @test !FASTA.hasdescription(record)
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
+    @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
+    @test_throws ArgumentError copyto!(LongAminoAcidSeq(10), FASTA.Record())
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -263,14 +267,19 @@ end
         +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
         @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
         """)
+        
+        seq = dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        
         @test BioGenerics.isfilled(record)
         @test FASTQ.hasidentifier(record) == BioGenerics.hasseqname(record) == true
         @test FASTQ.identifier(record) == BioGenerics.seqname(record) == "SRR1238088.1.1"
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
-        @test FASTQ.sequence(DNASequence, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
-        @test FASTQ.sequence(record) == BioGenerics.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        @test FASTQ.sequence(LongDNASeq, record) == seq
+        @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
+        @test_throws ArgumentError copyto!(LongDNASeq(10), FASTQ.Record())
+        @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
@@ -395,7 +404,7 @@ end
         seekstart(input)
         @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_N)))   == dna"ACGTNNACGTNN"
         seekstart(input)
-        @test FASTQ.sequence(BioSequence{DNAAlphabet{2}}, first(FASTQ.Reader(input, fill_ambiguous=DNA_A))) == dna"ACGTAAACGTAA"
+        @test FASTQ.sequence(LongSequence{DNAAlphabet{2}}, first(FASTQ.Reader(input, fill_ambiguous=DNA_A))) == dna"ACGTAAACGTAA"
     end
 end
 
