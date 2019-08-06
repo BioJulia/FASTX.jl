@@ -1,7 +1,7 @@
 name = "FASTX"
 uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 authors = ["Ben J. Ward <benjward@protonmail.com>"]
-version = "1.0.1"
+version = "1.1.0"
 
 [deps]
 Automa = "67c07d97-cdcb-5c2c-af73-a7f9c32a568b"
