@@ -275,7 +275,7 @@ end
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
-        @test FASTQ.sequence(LongDNASeq, record) == seq1
+        @test FASTQ.sequence(LongDNASeq, record) == seq
         @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
         @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
