@@ -23,8 +23,10 @@ function Reader(input::IO; fill_ambiguous = nothing)
     end
     if !(input isa TranscodingStream)
         stream = TranscodingStreams.NoopStream(input)
+        return Reader(State(stream, 1, 1, false), seq_transform)
+    else
+        return Reader(State(input, 1, 1, false), seq_transform)
     end
-    return Reader(State(stream, 1, 1, false), seq_transform)
 end
 
 function Base.eltype(::Type{<:Reader})
