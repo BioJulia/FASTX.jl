@@ -355,6 +355,11 @@ function BioGenerics.hassequence(record::Record)
     return hassequence(record)
 end
 
+function Base.hash(record::Record, h::UInt)
+    return hash(identifier(record), hash(description(record), hash(sequence(record),
+                hash(quality(record), h))))
+end
+
 
 # Helper functions
 # ----------------
