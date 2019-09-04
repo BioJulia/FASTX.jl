@@ -49,6 +49,18 @@ import BioSequences:
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
+        @test FASTA.Record("id", "AGCT") != FASTA.Record("id2", "AGCT")
+        @test FASTA.Record("id", "AGCT") != FASTA.Record("id", "TAGC")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "AGCT")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc", "TAGC")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc2", "AGCT")
+
+        @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id2", "AGCT"))
+        @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id", "TAGC"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "AGCT"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc", "TAGC"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc2", "AGCT"))
+
         record = FASTA.Record("""
         >CYS1_DICDI fragment
         SCWSFSTTGNVEGQHFISQNKL
@@ -306,6 +318,20 @@ end
         @test record1 == record2
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id2", "AAGCT", collect("@BCFF"))
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AGTCA", collect("@BCFF"))
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AAGCT", collect("@BCFG"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AAGCT", collect("@BCFF"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "desc", "AGTCA", collect("@BCFF"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "desc2", "AAGCT", collect("@BCFF"))
+
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id2", "AAGCT", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AGTCA", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AAGCT", collect("@BCFG")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AAGCT", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "desc", "AGTCA", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "desc2", "AAGCT", collect("@BCFF")))
 
         record = FASTQ.Record("""
         @SRR1238088.1.1
