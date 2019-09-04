@@ -340,3 +340,7 @@ function predict_seqtype(seq::Vector{UInt8}, range)
         return BioSequences.LongAminoAcidSeq
     end
 end
+
+function Base.hash(record::Record, h::UInt)
+    return hash(identifier(record), hash(description(record), hash(sequence(record), h)))
+end

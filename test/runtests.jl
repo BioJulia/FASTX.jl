@@ -36,7 +36,32 @@ import BioSequences:
         @test FASTA.sequence(record, 2:3) == dna"CG"
         @test FASTA.sequence(String, record) == "ACGT"
         @test FASTA.sequence(String, record, 2:3) == "CG"
-        @test record == FASTA.Record(">foo\nACGT\n")
+
+        record1 = FASTA.Record("id", "desc", "AGCT")
+        record2 = FASTA.Record("id", "desc", "AGCT")
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        record1 = FASTA.Record("id", "AGCT")
+        record2 = FASTA.Record("id", "AGCT")
+        @test record1 == record2
+        @test FASTA.Record() == FASTA.Record()
+        @test FASTA.Record() != record1
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        @test FASTA.Record("id", "AGCT") != FASTA.Record("id2", "AGCT")
+        @test FASTA.Record("id", "AGCT") != FASTA.Record("id", "TAGC")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "AGCT")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc", "TAGC")
+        @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc2", "AGCT")
+
+        @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id2", "AGCT"))
+        @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id", "TAGC"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "AGCT"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc", "TAGC"))
+        @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc2", "AGCT"))
 
         record = FASTA.Record("""
         >CYS1_DICDI fragment
@@ -283,6 +308,34 @@ end
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
+
+        record1 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        record2 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        record1 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
+        record2 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
+        @test record1 == record2
+        @test FASTQ.Record() == FASTQ.Record()
+        @test FASTQ.Record() != record1
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id2", "AAGCT", collect("@BCFF"))
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AGTCA", collect("@BCFF"))
+        @test FASTQ.Record("id", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AAGCT", collect("@BCFG"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "AAGCT", collect("@BCFF"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "desc", "AGTCA", collect("@BCFF"))
+        @test FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF")) != FASTQ.Record("id", "desc2", "AAGCT", collect("@BCFF"))
+
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id2", "AAGCT", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AGTCA", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AAGCT", collect("@BCFG")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "AAGCT", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "desc", "AGTCA", collect("@BCFF")))
+        @test hash(FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))) != hash(FASTQ.Record("id", "desc2", "AAGCT", collect("@BCFF")))
 
         record = FASTQ.Record("""
         @SRR1238088.1.1
