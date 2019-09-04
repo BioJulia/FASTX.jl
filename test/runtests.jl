@@ -43,6 +43,12 @@ import BioSequences:
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
+        record1 = FASTA.Record("id", "AGCT")
+        record2 = FASTA.Record("id", "AGCT")
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
         record = FASTA.Record("""
         >CYS1_DICDI fragment
         SCWSFSTTGNVEGQHFISQNKL
@@ -291,6 +297,12 @@ end
 
         record1 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
         record2 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
+
+        record1 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
+        record2 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
         @test record1 == record2
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
