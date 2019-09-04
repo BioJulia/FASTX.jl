@@ -46,6 +46,8 @@ import BioSequences:
         record1 = FASTA.Record("id", "AGCT")
         record2 = FASTA.Record("id", "AGCT")
         @test record1 == record2
+        @test FASTA.Record() == FASTA.Record()
+        @test FASTA.Record() != record1
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
@@ -316,6 +318,8 @@ end
         record1 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
         record2 = FASTQ.Record("id", "AAGCT", collect("@BCFF"))
         @test record1 == record2
+        @test FASTQ.Record() == FASTQ.Record()
+        @test FASTQ.Record() != record1
         @test hash(record1) == hash(record2)
         @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
