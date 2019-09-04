@@ -289,7 +289,7 @@ end
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
 
-        record = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        record1 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
         record2 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
         @test record1 == record2
         @test hash(record1) == hash(record2)
