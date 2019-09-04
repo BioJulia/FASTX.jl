@@ -36,7 +36,12 @@ import BioSequences:
         @test FASTA.sequence(record, 2:3) == dna"CG"
         @test FASTA.sequence(String, record) == "ACGT"
         @test FASTA.sequence(String, record, 2:3) == "CG"
-        @test record == FASTA.Record(">foo\nACGT\n")
+
+        record1 = FASTA.Record("id", "desc", "AGCT")
+        record2 = FASTA.Record("id", "desc", "AGCT")
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
         record = FASTA.Record("""
         >CYS1_DICDI fragment
@@ -283,6 +288,12 @@ end
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
+
+        record = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        record2 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
+        @test record1 == record2
+        @test hash(record1) == hash(record2)
+        @test unique([record1, record1, record2, record2]) == [record1] == [record2]
 
         record = FASTQ.Record("""
         @SRR1238088.1.1
