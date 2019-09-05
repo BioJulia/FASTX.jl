@@ -8,7 +8,7 @@ import BioSequences
 import BioGenerics: BioGenerics, isfilled
 import BioGenerics.Automa: State
 import TranscodingStreams: TranscodingStreams, TranscodingStream
-import ..FASTX: identifier, description, sequence, quality
+import ..FASTX: identifier, description, sequence
 
 include("quality.jl")
 include("record.jl")
