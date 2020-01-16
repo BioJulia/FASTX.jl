@@ -9,6 +9,8 @@ w = FASTA.Writer(open(&quot;my-out.fasta&quot;, &quot;w&quot;))</code></pre><p>A
 w = open(FASTA.Writer, &quot;my-out.fasta&quot;)</code></pre><p>Usually sequence records will be read sequentially from a file by iteration.</p><pre><code class="language-jlcon">reader = open(FASTA.Reader, &quot;my-seqs.fasta&quot;)
 for record in reader
     ## Do something
+    # like showing the identifiers
+    @show FASTA.identifier(record)
 end
 close(reader)</code></pre><p>You can also overwrite records in a while loop to avoid excessive memory allocation.</p><pre><code class="language-jlcon">reader = open(FASTA.Reader, &quot;my-seqs.fasta&quot;)
 record = FASTA.Record()
