@@ -11,9 +11,7 @@ import BioGenerics.Exceptions: missingerror
 import BioGenerics.Automa: State
 import BioSequences
 import TranscodingStreams: TranscodingStreams, TranscodingStream
-
-export description,
-       identifier
+import ..FASTX: identifier, description, sequence
 
 include("record.jl")
 include("index.jl")
