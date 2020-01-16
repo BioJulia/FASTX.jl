@@ -52,6 +52,8 @@ Usually sequence records will be read sequentially from a file by iteration.
 reader = open(FASTA.Reader, "my-seqs.fasta")
 for record in reader
     ## Do something
+    # like showing the identifiers
+    @show FASTA.identifier(record)
 end
 close(reader)
 ```

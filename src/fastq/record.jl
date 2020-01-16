@@ -83,6 +83,16 @@ function Record(identifier::AbstractString, description::Union{AbstractString,No
     return Record(take!(buf))
 end
 
+function Base.:(==)(record1::Record, record2::Record)
+    if isfilled(record1) == isfilled(record2) == true
+        r1 = record1.filled
+        r2 = record2.filled
+        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
+    else
+        return isfilled(record1) == isfilled(record2) == false
+    end
+end
+
 function Base.copy(record::Record)
     return Record(
         record.data[record.filled],
@@ -126,6 +136,10 @@ end
 
 function BioGenerics.isfilled(record::Record)
     return !isempty(record.filled)
+end
+
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
+    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
 end
 
 
@@ -339,6 +353,11 @@ end
 
 function BioGenerics.hassequence(record::Record)
     return hassequence(record)
+end
+
+function Base.hash(record::Record, h::UInt)
+    return hash(identifier(record), hash(description(record), hash(sequence(record),
+                hash(quality(record), h))))
 end
 
 
