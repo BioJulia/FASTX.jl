@@ -59,6 +59,17 @@ end
 close(reader)
 ```
 
+Gzip compressed files can be streamed to the `Reader`
+using the [CodecZlib.jl](https://github.com/JuliaIO/CodecZlib.jl) package.
+
+```jlcon
+reader = FASTQ.Reader(GzipDecompressorStream(open("my-reads.fastq.gz")))
+for record in reader
+    ## do something
+end
+close(reader)
+```
+
 You can also overwrite records in a while loop to avoid excessive memory allocation.
 
 ```jlcon
@@ -106,11 +117,10 @@ FASTQ records have a quality string which have platform dependent encodings.
 The FASTQ submodule has encoding and decoding support for the following
 quality encodings. These can be used with a [`FASTQ.quality`](@ref) method, to
 ensure the correct quality score values are extracted from your FASTQ quality
-strings. 
+strings.
 
 - [`FASTQ.SANGER_QUAL_ENCODING`](@ref)
 - [`FASTQ.SOLEXA_QUAL_ENCODING`](@ref)
 - [`FASTQ.ILLUMINA13_QUAL_ENCODING`](@ref)
 - [`FASTQ.ILLUMINA15_QUAL_ENCODING`](@ref)
 - [`FASTQ.ILLUMINA18_QUAL_ENCODING`](@ref)
-

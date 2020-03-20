@@ -58,6 +58,17 @@ end
 close(reader)
 ```
 
+Gzip compressed files can be streamed to the `Reader`
+using the [CodecZlib.jl](https://github.com/JuliaIO/CodecZlib.jl) package.
+
+```jlcon
+reader = FASTA.Reader(GzipDecompressorStream(open("my-reads.fasta.gz")))
+for record in reader
+    ## do something
+end
+close(reader)
+```
+
 You can also overwrite records in a while loop to avoid excessive memory allocation.
 
 ```jlcon
