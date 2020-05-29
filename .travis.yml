@@ -12,7 +12,6 @@ notifications:
 
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia ci_prep.jl
     - julia -e 'using Pkg; Pkg.build(); Pkg.test("FASTX", coverage = true)'
 
 after_success:
@@ -25,8 +24,6 @@ jobs:
           julia: 1.1
           os: linux
           script:
-            - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/BioJulia/BioJuliaRegistry.git"))'
-            - julia -e 'using Pkg.Registry; Registry.add(Registry.RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
             - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
             - julia --project=docs/ docs/make.jl
           after_success: skip
