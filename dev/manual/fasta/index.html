@@ -12,6 +12,10 @@ for record in reader
     # like showing the identifiers
     @show FASTA.identifier(record)
 end
+close(reader)</code></pre><p>Gzip compressed files can be streamed to the <code>Reader</code> using the <a href="https://github.com/JuliaIO/CodecZlib.jl">CodecZlib.jl</a> package.</p><pre><code class="language-jlcon">reader = FASTA.Reader(GzipDecompressorStream(open(&quot;my-reads.fasta.gz&quot;)))
+for record in reader
+    ## do something
+end
 close(reader)</code></pre><p>You can also overwrite records in a while loop to avoid excessive memory allocation.</p><pre><code class="language-jlcon">reader = open(FASTA.Reader, &quot;my-seqs.fasta&quot;)
 record = FASTA.Record()
 while !eof(reader)
