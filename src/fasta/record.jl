@@ -29,12 +29,12 @@ This function verifies and indexes fields for accessors.
 
 !!! warning
     Note that the ownership of `data` is transferred to a new record object.
-    Editing the input data will edit the record, and is not advised after 
+    Editing the input data will edit the record, and is not advised after
     construction of the record.
 """
 function Record(data::Vector{UInt8})
     record = Record(data, 1:0, 1:0, 1:0, 1:0)
-    index!(record) 
+    index!(record)
     return record
 end
 
@@ -255,7 +255,12 @@ function hassequence(record::Record)
 end
 
 "Get the length of the fasta record's sequence."
-@inline seqlen(record::Record) = length(record.sequence)
+@inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
+
+function Base.copy!(dest::BioSequences.LongSequence, src::Record)
+    resize!(dest, seqlen(src) % UInt)
+    copyto!(dest, 1, src, 1, seqlen(src))
+end
 
 """
     Base.copyto!(dest::BioSequences.BioSequence, src::Record)
@@ -266,21 +271,21 @@ the sequence represented in the fastq record. The first n elements of `dest` are
 overwritten, the other elements are left untouched.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, length(src.sequence))
+    return copyto!(dest, 1, src, 1, seqlen(src))
 end
 
 """
     Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
 
 Copy an N long block of sequence data from the fasta record `src`, starting at
-position `soff`, to the `BioSequence` dest, starting at position `doff`. 
+position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
     checkfilled(src)
     if !hassequence(src)
         missingerror(:sequence)
     end
-    return BioSequences.encode_copy!(dest, doff, src.data, src.sequence[soff], N)
+    return copyto!(dest, doff, src.data, src.sequence[soff], N)
 end
 
 function BioGenerics.sequence(record::Record)
