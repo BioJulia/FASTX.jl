@@ -33,8 +33,8 @@ FASTX is tested against Julia `1.X` on Linux, OS X, and Windows.
 
 **Latest build status:**
 
-[![](https://travis-ci.com/BioJulia/FASTX.jl.svg?branch=master)](https://travis-ci.com/BioJulia/FASTX.jl)
-[![](https://ci.appveyor.com/api/projects/status/jcluuycn0763hnea/branch/master?svg=true)](https://ci.appveyor.com/project/BenJWard/fastx-jl/branch/master)
+[![Unit tests](https://github.com/BioJulia/FASTX.jl/workflows/Unit%20tests/badge.svg?branch=master)](https://github.com/BioJulia/FASTX.jl/actions?query=workflow%3A%22Unit+tests%22+branch%3Amaster)
+[![Documentation](https://github.com/BioJulia/FASTX.jl/workflows/Documentation/badge.svg?branch=master)](https://github.com/BioJulia/FASTX.jl/actions?query=workflow%3ADocumentation+branch%3Amaster)
 [![](https://codecov.io/gh/BioJulia/FASTX.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/FASTX.jl)
 
 
