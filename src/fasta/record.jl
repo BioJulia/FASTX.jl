@@ -285,6 +285,9 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
     if !hassequence(src)
         missingerror(:sequence)
     end
+    
+    # This check is here to prevent boundserror when indexing src.sequence
+    iszero(N) && return dest
     return copyto!(dest, doff, src.data, src.sequence[soff], N)
 end
 
