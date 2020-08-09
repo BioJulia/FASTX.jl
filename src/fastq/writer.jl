@@ -1,8 +1,8 @@
 # FASTQ Writer
 # ============
 
-struct Writer <: BioGenerics.IO.AbstractWriter
-    output::IO
+struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
+    output::S
     quality_header::Bool
 end
 
@@ -10,6 +10,7 @@ function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 
+Writer(output::IO; quality_header::Bool=false) = Writer(output, quality_header)
 """
     FASTQ.Writer(output::IO; quality_header=false)
 
@@ -19,8 +20,13 @@ Create a data writer of the FASTQ file format.
 * `output`: data sink
 * `quality_header=false`: output the title line at the third line just after '+'
 """
-function Writer(output::IO; quality_header::Bool=false)
-    return Writer(output, quality_header)
+function Writer(output::IO, quality_header::Bool)
+    if output isa TranscodingStream
+        return Writer{typeof(output)}(output, quality_header)
+    else
+        stream = TranscodingStreams.NoopStream(output)
+        return Writer{typeof(stream)}(stream, quality_header)
+    end
 end
 
 function Base.write(writer::Writer, record::Record)
