@@ -43,7 +43,7 @@ machine = (function ()
     record.actions[:enter] = [:mark]
     record.actions[:exit] = [:record]
     
-    fastq = re.rep(re.cat(record, newline))
+    fastq = re.rep(re.cat(record, newline)) * re.opt(record)
     
     Automa.compile(fastq)
 end)()
