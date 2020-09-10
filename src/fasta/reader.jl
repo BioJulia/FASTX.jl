@@ -71,6 +71,35 @@ function Base.getindex(reader::Reader, name::AbstractString)
     return record
 end
 
+function extract(reader::Reader, A::BioSequences.Alphabet, name::AbstractString, range::UnitRange)
+    index = reader.index
+    if index == nothing
+        throw(ArgumentError("no index attached"))
+    end
+    i = index[name]
+
+    # Seek to first base of range within the sequence
+    offset = index.offsets[i]
+    len = index.lengths[i]
+    last(range) > len && throw(ArgumentError("Sequence not long enough"))
+    linebase = index.linebases[i]
+    linewidth = index.linewidths[i]
+    len_newline = linewidth - linebase
+    skip_lines = fld(first(range) - 1, linebase)
+    seek(reader.state.stream, offset + (first(range) - 1) + (len_newline * skip_lines))
+
+    # Now fill in data
+    buffer = Vector{UInt8}(undef, length(range))
+    filled = 0
+    while filled < length(buffer)
+        line = readline(reader.state.stream)
+        len = min(ncodeunits(line), length(buffer) - filled)
+        unsafe_copyto!(pointer(buffer, filled+1), pointer(line), len)
+        filled += len
+    end
+    return BioSequences.LongSequence{typeof(A)}(buffer)
+end
+
 function index!(record::Record)
     stream = TranscodingStreams.NoopStream(IOBuffer(record.data))
     cs, linenum, found = readrecord!(stream, record, (1, 1))
