@@ -103,6 +103,24 @@ function Base.copy(record::Record)
         record.quality)
 end
 
+"""
+     Base.getindex(record::Record, i::UnitRange{Int})
+Subset a FASTQ record using string syntax. Eg. rec[3:7]
+"""
+function Base.getindex(record::Record, i::UnitRange{Int})
+    return Record(
+        record.data,
+        record.filled,
+        record.identifier,
+        record.description,
+        record.sequence[i],
+        record.quality[i]
+    )
+end
+function Base.getindex(record::Record, i::Int)
+    record[i:i]
+end
+
 function Base.write(io::IO, record::Record)
     return unsafe_write(io, pointer(record.data, first(record.filled)), length(record.filled))
 end
