@@ -15,5 +15,6 @@ include("record.jl")
 include("readrecord.jl")
 include("reader.jl")
 include("writer.jl")
+include("fastqread.jl")
 
 end

@@ -462,6 +462,25 @@ end
         seekstart(input)
         @test FASTQ.sequence(LongSequence{DNAAlphabet{2}}, first(FASTQ.Reader(input, fill_ambiguous=DNA_A))) == dna"ACGTAAACGTAA"
     end
+
+    @testset "Reads" begin
+        record = FASTQ.Record("""
+                   @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+                   +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+                   """)
+        r1 = FASTQ.Read(record,33)
+        @test String(r1.sequence) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        @test Int64.(r1.quality)[1:5] == [31, 33, 34, 37, 37]
+        @test length(r1) == 45
+        @test String(sequence(r1)) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+        @test Int64.(quality(r1))[1:5] == [31, 33, 34, 37, 37]
+        @test String(r1[3:6].sequence) == "GCTC"
+        @test Int64.(r1[3:6].quality) == [34,37,37,37]
+        @test String(r1[3].sequence) == "G"
+    end
+    
 end
 
 @testset "Quality scores" begin
@@ -520,5 +539,6 @@ end
                     Int8[0, 2, 3, 4, 5, 40, 93],
                     UInt8['!', '#', '$', '%', '&', 'I', '~'])
     end
+
 end
 
