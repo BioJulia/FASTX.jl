@@ -215,8 +215,7 @@ If `part` argument is given, it returns the specified part of the sequence.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
-    seqpart = record.sequence[part]
-    return S(record.data, first(seqpart), last(seqpart))
+    return S(view(record.data, record.sequence[part]))
 end
 
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
