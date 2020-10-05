@@ -3,10 +3,10 @@
 #
 # Design discussions in https://github.com/BioJulia/FASTX.jl/pull/35
 
-mutable struct FASTQRead
+struct FASTQRead{A <: BioSequences.Alphabet}
     identifier::String
     description::String
-    sequence::BioSequences.LongDNASeq
+    sequence::BioSequences.LongSequence{A}
     quality::Vector{UInt8} # in raw PHRED scores, not offset
 end
 
