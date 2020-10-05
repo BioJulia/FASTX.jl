@@ -24,7 +24,7 @@ function Read(record::FASTQ.Record, offset::Integer=33)
     FASTQRead(
         identifier(record),
         description(record),
-        sequence(BioSequences.LongDNASeq, record),
+        sequence(record),
         quality(record, offset)
     )
 end
