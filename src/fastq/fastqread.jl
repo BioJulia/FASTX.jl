@@ -41,7 +41,7 @@ function Base.length(read::FASTQ.FASTQRead)
     length(read.sequence)
 end
 
-function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{Int})
+function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
     return FASTQRead(
         read.identifier,
         read.description,
@@ -50,7 +50,7 @@ function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{Int})
     )
 end
 
-function Base.getindex(read::FASTQRead, i::Int)
+function Base.getindex(read::FASTQRead, i::Integer)
     read[i:i]
 end
 
