@@ -41,6 +41,10 @@ function Base.length(read::FASTQ.FASTQRead)
     length(read.sequence)
 end
 
+"""
+     Base.getindex(record::Record, i::UnitRange{Int})
+Subset a FASTQRead using string syntax. Eg. read[3:7]
+"""
 function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
     return FASTQRead(
         read.identifier,

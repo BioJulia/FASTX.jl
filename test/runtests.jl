@@ -308,9 +308,6 @@ end
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
-        @test FASTQ.sequence(String, record[3:6]) == "GCTC"
-        @test FASTQ.sequence(String, record[3]) == "G"
-        @test FASTQ.quality(record[3:6]) == b"CFFF" .- 33
 
         record1 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
         record2 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
