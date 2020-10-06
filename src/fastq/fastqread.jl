@@ -17,7 +17,7 @@ Create a FASTQ read object from a FASTQ.Record.
 The FASTQ.Read has fields: 
     identifier::String
     description::String
-    sequence::BioSequences.LongDNASeq
+    sequence::BioSequences.LongSequence
     quality::Vector{UInt8} # in raw PHRED scores, not offset
 """
 function Read(record::FASTQ.Record, offset::Integer=33)
@@ -29,21 +29,33 @@ function Read(record::FASTQ.Record, offset::Integer=33)
     )
 end
 
+"""
+    sequence(read::FASTQ.FASTQRead)
+Get the sequence of a FASTQ read. Same as read.sequence
+"""
 function sequence(read::FASTQ.FASTQRead)
     read.sequence
 end
 
+"""
+    quality(read::FASTQ.FASTQRead)
+Get the quality of a FASTQ read (Vector{UInt8}). Same as read.quality
+"""
 function quality(read::FASTQ.FASTQRead)
     read.quality
 end
 
+"""
+    length(read::FASTQ.FASTQRead)
+Get the length of a FASTQ read.
+"""
 function Base.length(read::FASTQ.FASTQRead)
     length(read.sequence)
 end
 
 """
      Base.getindex(record::Record, i::UnitRange{Int})
-Subset a FASTQRead using string syntax. Eg. read[3:7]
+Subset a FASTQRead using string syntax. Eg. read[3:7] or read[3]
 """
 function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
     return FASTQRead(
