@@ -124,3 +124,45 @@ strings.
 - [`FASTQ.ILLUMINA13_QUAL_ENCODING`](@ref)
 - [`FASTQ.ILLUMINA15_QUAL_ENCODING`](@ref)
 - [`FASTQ.ILLUMINA18_QUAL_ENCODING`](@ref)
+
+## FASTQ Reads
+
+The FASTQ Record data structure is very close to the FASTQ file-format, and stores all data in a data vector.
+The FASTQ Read data structure is better suited for sequence manipulations:
+
+- Identifier and description are Strings.
+- Sequence is stored as a `BioSequence` and not just as ASCII characters.
+- The quality is stored as raw PHRED-score (Integer), and there is no offset to worry about.
+
+A FASTQ Read record also allows for convenient sub-setting using normal range syntax as for Arrays and Strings:
+
+```jlcon
+using FASTX
+
+read = FASTQ.Read(first(FASTQ.Reader(open("my-reads.fastq", "r"))),33)
+# FASTX.FASTQ.FASTQRead{BioSequences.DNAAlphabet{4}}:
+#    identifier: SEQ_ID
+#   description: 
+#      sequence: GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
+#       quality: [0, 6, 6, 9, 7, 7, 7, 7, 9, 9  …  29, 34, 34, 34, 34, 34, 34, 34, 21, 20]
+
+length(read)
+# 60
+
+read[3:12]
+# FASTX.FASTQ.FASTQRead{BioSequences.DNAAlphabet{4}}:
+#    identifier: SEQ_ID
+#   description: 
+#      sequence: TTTGGGGTTC
+#       quality: [6, 9, 7, 7, 7, 7, 9, 9, 9, 10]
+
+read[3:12].sequence
+# 10nt DNA Sequence:
+# TTTGGGGTTC
+
+read[1:3].quality
+# 3-element Array{UInt8,1}:
+#  0x00
+#  0x06
+#  0x06
+```
