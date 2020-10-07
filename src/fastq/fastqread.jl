@@ -12,6 +12,7 @@ end
 
 """
     FASTQ.Read(record::FASTQ.Record, offset::Integer=33)
+    FASTQ.Read(record::FASTQ.Record, encoding_name::Symbol)
 
 Create a FASTQ read object from a FASTQ.Record.
 The FASTQ.Read has fields: 
@@ -26,6 +27,15 @@ function Read(record::FASTQ.Record, offset::Integer=33)
         description(record),
         sequence(record),
         quality(record, offset)
+    )
+end
+
+function Read(record::FASTQ.Record, encoding_name::Symbol)
+    FASTQRead(
+        identifier(record),
+        description(record),
+        sequence(record),
+        quality(record, encoding_name)
     )
 end
 

@@ -132,14 +132,14 @@ The FASTQ Read data structure is better suited for sequence manipulations:
 
 - Identifier and description are Strings.
 - Sequence is stored as a `BioSequence` and not just as ASCII characters.
-- The quality is stored as raw PHRED-score (Integer), and there is no offset to worry about.
+- The quality is stored as raw PHRED-score (Integer), and there is no offset to worry about after the conversion.
 
 A FASTQ Read record also allows for convenient sub-setting using normal range syntax as for Arrays and Strings:
 
 ```jlcon
 using FASTX
 
-read = FASTQ.Read(first(FASTQ.Reader(open("my-reads.fastq", "r"))),33)
+read = FASTQ.Read(first(FASTQ.Reader(open("my-reads.fastq", "r"))))
 # FASTX.FASTQ.FASTQRead{BioSequences.DNAAlphabet{4}}:
 #    identifier: SEQ_ID
 #   description: 
@@ -166,3 +166,16 @@ read[1:3].quality
 #  0x06
 #  0x06
 ```
+
+When defining the FASTQ.Read object, the quality can be given as an integer offset or encoding symbol.
+
+```jlcon
+rec = first(FASTQ.Reader(open("my-reads.fastq", "r")));
+r1 = FASTQ.FASTQ.Read(rec, 33);
+r2 = FASTQ.FASTQ.Read(rec, :illumina18);
+r1.quality == r2.quality
+# true
+```
+
+The platform specific quality encodings are described on [wikipedia](https://en.wikipedia.org/wiki/FASTQ_format#Encoding).
+

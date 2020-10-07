@@ -467,7 +467,9 @@ end
                    +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
                    @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
                    """)
-        r1 = FASTQ.Read(record,33)
+        r1 = FASTQ.Read(record)
+        r2 = FASTQ.Read(record,:sanger)
+        @test r1.quality == r2.quality
         @test String(r1.sequence) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test Int64.(r1.quality)[1:5] == [31, 33, 34, 37, 37]
         @test length(r1) == 45
