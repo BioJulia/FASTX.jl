@@ -69,8 +69,8 @@ Subset a FASTQRead using string syntax. Eg. read[3:7] or read[3]
 """
 function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
     return FASTQRead(
-        read.identifier,
-        read.description,
+        join([read.identifier,string(i[1],"..",i[end])],"_"),
+        join([read.description,string(i[1],"..",i[end])]," "),
         read.sequence[i],
         read.quality[i]
     )
