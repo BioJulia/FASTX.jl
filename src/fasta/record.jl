@@ -201,6 +201,18 @@ function hasdescription(record)
 end
 
 """
+    header(record::Record)::Union{String, Nothing}
+
+Returns the stripped header line of `record`, or `nothing` if it was empty.
+"""
+function header(record::Record)
+    hasidentifier(record) || return nothing
+    id, desc = record.identifier, record.description
+    range = first(id) : max(last(id), last(desc))
+    return String(record.data[range])
+end
+
+"""
     sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
 
 Get the sequence of `record`.

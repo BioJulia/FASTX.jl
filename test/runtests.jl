@@ -71,6 +71,7 @@ import BioSequences:
         @test BioGenerics.isfilled(record)
         @test FASTA.identifier(record) == "CYS1_DICDI"
         @test FASTA.description(record) == "fragment"
+        @test FASTA.header(record) == "CYS1_DICDI fragment"
         @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
         @test FASTA.sequence(record, 10:15) == aa"NVEGQH"
     end
@@ -100,6 +101,7 @@ import BioSequences:
     @test read!(reader, record) === record
     @test FASTA.identifier(record) == "seqA"
     @test FASTA.description(record) == "some description"
+    @test FASTA.header(record) == "seqA some description"
     @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
     @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
     @test read!(reader, record) === record
@@ -300,6 +302,7 @@ end
         @test FASTQ.identifier(record) == BioGenerics.seqname(record) == "SRR1238088.1.1"
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
+        @test FASTQ.header(record) == FASTQ.identifier(record) * " " * FASTA.description(record)
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(LongDNASeq, record) == seq
         @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
