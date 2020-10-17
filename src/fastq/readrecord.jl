@@ -38,12 +38,15 @@ machine = (function ()
         lf.actions[:enter] = [:countline]
         re.cat(re.opt('\r'), lf)
     end
+
+    sep = re.opt('\r') * re"\n"
+    sep.actions[:exit] = [:sep, :countline]
     
     record = re.cat(header1, newline, sequence, newline, header2, newline, quality)
     record.actions[:enter] = [:mark]
     record.actions[:exit] = [:record]
     
-    fastq = re.rep(re.cat(record, newline))
+    fastq = re.rep(re.cat(record, sep)) * re.opt(record)
     
     Automa.compile(fastq)
 end)()
@@ -74,11 +77,11 @@ actions = Dict(
     :sequence => :(record.sequence = pos:@relpos(p-1)),
     :header2 => :(second_header_pos = pos+1; second_header_len = @relpos(p)-(pos+1)),
     :quality => :(record.quality = pos:@relpos(p-1)),
+    :sep => :(@escape),
     :record => quote
         appendfrom!(record.data, 1, data, @markpos, p-@markpos)
         record.filled = 1:(p-@markpos)
         found = true
-        @escape
     end,
 )
 

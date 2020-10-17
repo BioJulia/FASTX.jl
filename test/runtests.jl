@@ -283,6 +283,14 @@ end
     +2 high quality
     IJN
     """
+    
+    # Test issue 25
+    lines = ["@A", "A", "+", "F", "@B", "CA", "+", "CF"]
+    io = reader = FASTQ.Reader(IOBuffer(join(lines, "\r\n") * "\r\n"))
+    record = FASTQ.Record()
+    read!(reader, record)
+    read!(reader, record)
+    @test eof(reader)    
 
     @testset "Record" begin
         record = FASTQ.Record()
