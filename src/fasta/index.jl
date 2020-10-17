@@ -43,28 +43,23 @@ end
 
 # Set the reading position of `input` to the starting position of the record `name`.
 function seekrecord(input::IO, index::Index, name::AbstractString)
-    i = findfirst(x -> x == name, index.names)
-    if i == 0
+    i = findfirst(isequal(name), index.names)
+    if i === nothing
         throw(ArgumentError("sequence \"$(name)\" is not in the index"))
+    elseif i == 1
+        offset = 0
+    # Else, we go to the previous one and calculate the length of the previous
+    # sequence in bytes, then seek to right after that one.
+    else
+        prev_offset = index.offsets[i - 1]
+        prev_len = index.lengths[i - 1]
+        prev_linebase = index.linebases[i - 1]
+        prev_linewidth = index.linewidths[i - 1]
+
+        newline_len = prev_linewidth - prev_linebase
+        len = cld(prev_len, prev_linebase) * newline_len + prev_len
+        offset = prev_offset + len
     end
-    offset = index.offsets[i]
-    n_back = 100
-    @label seekback
-    seek(input, max(offset - n_back, 0))
-    data = UInt8[]
-    while position(input) < offset
-        push!(data, read(input, UInt8))
-    end
-    for j in lastindex(data):-1:1
-        if data[j] == UInt8('>') && (offset ≤ n_back || (j ≥ 2 && data[j-1] == UInt8('\n')))
-            seek(input, offset - (lastindex(data) - j + 1))
-            return
-        end
-    end
-    if n_back ≥ offset
-        # reached the starting position of the input
-        error("failed to find the starting position of the record")
-    end
-    n_back *= 2
-    @goto seekback
+    seek(input, offset)
+    return nothing
 end
