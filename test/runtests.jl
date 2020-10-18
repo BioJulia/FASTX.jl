@@ -175,12 +175,13 @@ import BioSequences:
     end
 
     @testset "Faidx" begin
+        # Need to make sure it can handle mixed Unix and Windows newlines
         fastastr = """
         >chr1
         CCACACCACACCCACACACC
         >chr2
-        ATGCATGCATGCAT
-        GCATGCATGCATGC
+        ATGCATGCATGCAT\r
+        GCATGCATGCATGC\r
         >chr3
         AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
         TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
@@ -190,9 +191,9 @@ import BioSequences:
         # generated with `samtools faidx`
         faistr = """
         chr1	20	6	20	21
-        chr2	28	33	14	15
-        chr3	100	69	50	51
-        chr4	5	177	5	6
+        chr2	28	33	14	16
+        chr3	100	71	50	51
+        chr4	5	179	5	6
         """
         mktempdir() do dir
             filepath = joinpath(dir, "test.fa")
