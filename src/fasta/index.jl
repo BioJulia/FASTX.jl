@@ -8,6 +8,7 @@
 
 # http://www.htslib.org/doc/faidx.html
 struct Index
+    # offset for the record's sequence by header: See above specification
     names::Dict{String, Int}
     lengths::Vector{Int}
     offsets::Vector{Int}
@@ -50,6 +51,7 @@ function Base.getindex(index::Index, name::AbstractString)
 end
 
 # Set the reading position of `input` to the starting position of the record `name`.
+# TODO: Return the seek position to be consistent with Base?
 function seekrecord(input::IO, index::Index, name::AbstractString)
     i = index[name]
     if i == 1
@@ -62,6 +64,8 @@ function seekrecord(input::IO, index::Index, name::AbstractString)
         prev_linebase = index.linebases[i - 1]
         prev_linewidth = index.linewidths[i - 1]
 
+        # Note: newline_len may differ between sequences in the same file, as per
+        # the specification.
         newline_len = prev_linewidth - prev_linebase
         len = cld(prev_len, prev_linebase) * newline_len + prev_len
         offset = prev_offset + len

@@ -71,6 +71,12 @@ function Base.getindex(reader::Reader, name::AbstractString)
     return record
 end
 
+"""
+    extract(reader::Reader, Alphabet, name::AbstractString, range::UnitRange)
+
+Extract a subsequence given by index `range` from the sequence `named` in a
+`Reader` with an index. Returns a `LongSequence` with the given `Alphabet`.   
+"""
 function extract(reader::Reader, A::BioSequences.Alphabet, name::AbstractString, range::UnitRange)
     index = reader.index
     if index == nothing

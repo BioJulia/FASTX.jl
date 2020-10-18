@@ -10,10 +10,12 @@ import BioSequences:
     LongDNASeq,
     LongAminoAcidSeq,
     LongSequence,
+    AminoAcidAlphabet,
     DNAAlphabet,
     DNA_N,
     DNA_A,
-    DNA_G
+    DNA_G,
+    Alphabet
 
 @testset "FASTA" begin
     @testset "Record" begin
@@ -108,6 +110,7 @@ import BioSequences:
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
     @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
     @test_throws ArgumentError copyto!(LongAminoAcidSeq(10), FASTA.Record())
+    @test_throws ArgumentError FASTA.extract(reader, AminoAcidAlphabet(), "seqA", 2:3)
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -202,6 +205,10 @@ import BioSequences:
                 AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
                 TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
                 """
+
+                seq = FASTA.extract(reader, DNAAlphabet{2}(), "chr2", 10:20)
+                @test seq == dna"TGCATGCATGC"
+                @test Alphabet(seq) == DNAAlphabet{2}()
 
                 chr2 = reader["chr2"]
                 @test FASTA.identifier(chr2) == "chr2"
