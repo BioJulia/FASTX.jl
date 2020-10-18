@@ -46,6 +46,19 @@ function Base.getindex(index::Index, name::AbstractString)
     i = get(index.names, convert(String, name), nothing)
     if i === nothing
         throw(ArgumentError("sequence \"$(name)\" is not in the index"))
+    elseif i == 1
+        offset = 0
+    # Else, we go to the previous one and calculate the length of the previous
+    # sequence in bytes, then seek to right after that one.
+    else
+        prev_offset = index.offsets[i - 1]
+        prev_len = index.lengths[i - 1]
+        prev_linebase = index.linebases[i - 1]
+        prev_linewidth = index.linewidths[i - 1]
+
+        newline_len = prev_linewidth - prev_linebase
+        len = cld(prev_len, prev_linebase) * newline_len + prev_len
+        offset = prev_offset + len
     end
     return i
 end

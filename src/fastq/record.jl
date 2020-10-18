@@ -203,6 +203,18 @@ function Base.copy!(dest::BioSequences.LongSequence, src::Record)
 end
 
 """
+    header(record::Record)::Union{String, Nothing}
+
+Returns the stripped header line of `record`, or `nothing` if it was empty.
+"""
+function header(record::Record)
+    hasidentifier(record) || return nothing
+    id, desc = record.identifier, record.description
+    range = first(id) : max(last(id), last(desc))
+    return String(record.data[range])
+end
+
+"""
     Base.copyto!(dest::BioSequences.LongSequence, src::Record)
 
 Copy all of the sequence data from the fastq record `src` to a biological
