@@ -10,8 +10,8 @@ Create a data writer of the FASTA file format.
 * `output`: data sink
 * `width=70`: wrapping width of sequence characters
 """
-struct Writer <: BioGenerics.IO.AbstractWriter
-    output::IO
+struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
+    output::S
     # maximum sequence width (no limit when width ≤ 0)
     width::Int
 end
@@ -20,8 +20,18 @@ function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 
-function Writer(output::IO; width::Integer = 70)
-    return Writer(output, width)
+# This constructor should not be here - previously, constructing a Writer
+# unintentionally used the default constructor instead of the manually crafted one.
+# This allowed a signature that should not have been allowed, so we keep it here.
+Writer(output::IO; width::Integer=70) = Writer(output, width)
+
+function Writer(output::IO, width::Integer)
+    if output isa TranscodingStream
+        return Writer{typeof(output)}(output, width)
+    else
+        stream = TranscodingStreams.NoopStream(output)
+        return Writer{typeof(stream)}(stream, width)
+    end
 end
 
 function Base.write(writer::Writer, record::Record)
