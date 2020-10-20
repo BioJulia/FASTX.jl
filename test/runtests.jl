@@ -10,10 +10,12 @@ import BioSequences:
     LongDNASeq,
     LongAminoAcidSeq,
     LongSequence,
+    AminoAcidAlphabet,
     DNAAlphabet,
     DNA_N,
     DNA_A,
-    DNA_G
+    DNA_G,
+    Alphabet
 
 @testset "FASTA" begin
     @testset "Record" begin
@@ -110,6 +112,7 @@ import BioSequences:
     @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
     @test copyto!(LongAminoAcidSeq(FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
     @test_throws ArgumentError copyto!(LongAminoAcidSeq(10), FASTA.Record())
+    @test_throws ArgumentError FASTA.extract(reader, AminoAcidAlphabet(), "seqA", 2:3)
 
     function test_fasta_parse(filename, valid)
         filepath = joinpath(path_of_format("FASTA"), filename)
@@ -174,12 +177,13 @@ import BioSequences:
     end
 
     @testset "Faidx" begin
+        # Need to make sure it can handle mixed Unix and Windows newlines
         fastastr = """
         >chr1
         CCACACCACACCCACACACC
         >chr2
-        ATGCATGCATGCAT
-        GCATGCATGCATGC
+        ATGCATGCATGCAT\r
+        GCATGCATGCATGC\r
         >chr3
         AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
         TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
@@ -189,9 +193,9 @@ import BioSequences:
         # generated with `samtools faidx`
         faistr = """
         chr1	20	6	20	21
-        chr2	28	33	14	15
-        chr3	100	69	50	51
-        chr4	5	177	5	6
+        chr2	28	33	14	16
+        chr3	100	71	50	51
+        chr4	5	179	5	6
         """
         mktempdir() do dir
             filepath = joinpath(dir, "test.fa")
@@ -204,6 +208,10 @@ import BioSequences:
                 AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
                 TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
                 """
+
+                seq = FASTA.extract(reader, DNAAlphabet{2}(), "chr2", 10:20)
+                @test seq == dna"TGCATGCATGC"
+                @test Alphabet(seq) == DNAAlphabet{2}()
 
                 chr2 = reader["chr2"]
                 @test FASTA.identifier(chr2) == "chr2"
