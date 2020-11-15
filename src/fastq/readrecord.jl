@@ -40,7 +40,7 @@ machine = (function ()
     end
 
     sep = re.opt('\r') * re"\n"
-    sep.actions[:exit] = [:sep, :countline]
+    sep.actions[:exit] = [:countline, :sep]
     
     record = re.cat(header1, newline, sequence, newline, header2, newline, quality)
     record.actions[:enter] = [:mark]
