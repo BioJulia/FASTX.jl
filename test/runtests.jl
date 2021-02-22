@@ -76,6 +76,11 @@ import BioSequences:
         @test FASTA.header(record) == "CYS1_DICDI fragment"
         @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
         @test FASTA.sequence(record, 10:15) == aa"NVEGQH"
+
+        # PR 37
+        s = ">A \nTAG\n"
+        rec = first(iterate(FASTA.Reader(IOBuffer(s))))
+        @test isempty(rec.description)
     end
 
     output = IOBuffer()
@@ -291,6 +296,11 @@ end
     +2 high quality
     IJN
     """
+
+    # PR 37
+    s = "@A \nTAG\n+\nJJJ\n"
+    rec = first(iterate(FASTQ.Reader(IOBuffer(s))))
+    @test isempty(rec.description)
     
     # Test issue 25
     lines = ["@A", "A", "+", "F", "@B", "CA", "+", "CF"]

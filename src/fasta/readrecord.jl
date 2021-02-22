@@ -12,11 +12,11 @@ machine = (function ()
     identifier.actions[:enter] = [:pos]
     identifier.actions[:exit]  = [:identifier]
     
-    description = re.cat(re.any() \ hspace, re"[^\r\n]*")
+    description = re.cat(re.any() \ re.space(), re"[^\n\r]*")
     description.actions[:enter] = [:pos]
     description.actions[:exit]  = [:description]
-    
-    header = re.cat('>', identifier, re.opt(re.cat(re.rep1(hspace), description)))
+
+    header = re">" * identifier * re.opt(re.rep1(hspace) * re.opt(description))
     header.actions[:enter] = [:mark]
     header.actions[:exit]  = [:header]
     

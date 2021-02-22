@@ -10,11 +10,11 @@ machine = (function ()
         identifier.actions[:enter] = [:pos]
         identifier.actions[:exit]  = [:header1_identifier]
         
-        description = re.cat(re.any() \ hspace, re"[^\r\n]*")
+        description = re.cat(re.any() \ re.space(), re"[^\r\n]*")
         description.actions[:enter] = [:pos]
         description.actions[:exit]  = [:header1_description]
         
-        re.cat('@', identifier, re.opt(re.cat(re.rep1(hspace), description)))
+        re.cat('@', identifier, re.opt(re.cat(re.rep1(hspace), re.opt(description))))
     end
     
     sequence = re"[A-z]*"
