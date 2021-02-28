@@ -301,20 +301,26 @@ end
 @inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
 
 """
+    quality_iter(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
+
+Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
+"""
+function quality_iter(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))
+    checkfilled(record)
+    offs = convert(UInt8, offset)
+    part = record.quality[part]
+    data = record.data
+    return (@inbounds(data[i]) - offs for i in part)
+end
+
+"""
     quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
 
 Get the base quality of `record`.
 """
 function quality(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
-    checkfilled(record)
-    quality = record.data[record.quality[part]]
-    for i in 1:lastindex(part)
-        # TODO: Checked arithmetic?
-        @inbounds quality[i] -= offset
-    end
-    return quality
+    collect(quality_iter(record, offset, part))
 end
-
 """
     quality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}
 
