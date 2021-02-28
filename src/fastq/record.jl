@@ -241,6 +241,21 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
 end
 
 """
+    sequence_iter(T, record::Record)
+
+Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
+through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
+Mutating the record will corrupt the iterator.
+"""
+function sequence_iter(::Type{T}, record::Record,
+    part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
+    checkfilled(record)
+    seqpart = record.sequence[part]
+    data = record.data
+    return (T(Char(@inbounds (data[i]))) for i in seqpart)
+end
+
+"""
     sequence(::Type{S}, record::Record, [part::UnitRange{Int}])
 
 Get the sequence of `record`.
