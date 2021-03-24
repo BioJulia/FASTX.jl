@@ -38,6 +38,7 @@ using FASTX
 r = FASTA.Reader(open("my-seqs.fasta", "r"))
 w = FASTA.Writer(open("my-out.fasta", "w"))
 ```
+
 As always with julia IO types, remember to close your file readers and writer
 after you are finished.
 
@@ -48,8 +49,6 @@ finished. `Base.open` is overloaded with a method for this purpose.
 r = open(FASTA.Reader, "my-seqs.fasta")
 w = open(FASTA.Writer, "my-out.fasta")
 ```
-
-
 
 Usually sequence records will be read sequentially from a file by iteration.
 
