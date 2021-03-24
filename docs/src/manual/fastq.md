@@ -97,6 +97,16 @@ Various getters and setters are available for [`FASTQ.Record`](@ref)s:
 
 To write a `BioSequence` to FASTQ file, you first have to create a [`FASTQ.Record`](@ref):
 
+```jlcon
+using BioSequences
+x = dna"aaaaatttttcccccggggg"
+q = fill(1, length(x))
+rec = FASTQ.Record("MySeq", x, q)
+open(FASTQ.Writer, "my-out.fastq") do
+    write(w, rec)
+end
+```
+
 As always with julia IO types, remember to close your file readers and writer
 after you are finished.
 
