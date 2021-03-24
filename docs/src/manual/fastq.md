@@ -41,7 +41,11 @@ r = FASTQ.Reader(open("my-reads.fastq", "r"))
 w = FASTQ.Writer(open("my-output.fastq", "w"))
 ```
 
-Alternatively, `Base.open` is overloaded with a method for conveinience:
+As always with julia IO types, remember to close your file readers and writer
+after you are finished.
+
+Using `open` with a do-block can help ensure you close a stream after you are
+finished. `Base.open` is overloaded with a method for this purpose.
 
 ```jlcon
 r = open(FASTQ.Reader, "my-reads.fastq")
@@ -52,11 +56,11 @@ Note that [`FASTQ.Reader`](@ref) does not support line-wraps within sequence and
 Usually sequence records will be read sequentially from a file by iteration.
 
 ```jlcon
-reader = open(FASTQ.Reader, "my-reads.fastq")
-for record in reader
-    ## Do something
+open(FASTQ.Reader, "my-reads.fastq") do reader
+    for record in reader
+        ## Do something
+    end
 end
-close(reader)
 ```
 
 Gzip compressed files can be streamed to the `Reader`
@@ -73,11 +77,12 @@ close(reader)
 You can also overwrite records in a while loop to avoid excessive memory allocation.
 
 ```jlcon
-reader = open(FASTQ.Reader, "my-reads.fastq")
-record = FASTQ.Record()
-while !eof(reader)
-    read!(reader, record)
-    ## Do something.
+open(FASTQ.Reader, "my-reads.fastq") do reader
+    record = FASTQ.Record()
+    while !eof(reader)
+        read!(reader, record)
+        ## Do something.
+    end
 end
 ```
 
@@ -96,20 +101,6 @@ Various getters and setters are available for [`FASTQ.Record`](@ref)s:
 - [`FASTQ.quality`](@ref)
 
 To write a `BioSequence` to FASTQ file, you first have to create a [`FASTQ.Record`](@ref):
-
-As always with julia IO types, remember to close your file readers and writer
-after you are finished.
-
-Using `open` with a do-block can help ensure you close a stream after you are
-finished.
-
-```jlcon
-open(FASTQ.Reader, "my-reads.fastq") do reader
-    for record in reader
-        ## Do something
-    end
-end
-```
 
 ## Quality encodings
 
@@ -178,4 +169,3 @@ r1.quality == r2.quality
 ```
 
 The platform specific quality encodings are described on [wikipedia](https://en.wikipedia.org/wiki/FASTQ_format#Encoding).
-
