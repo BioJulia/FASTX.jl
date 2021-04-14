@@ -66,7 +66,7 @@ end
 
 Create a FASTQ record from `identifier`, `description`, `sequence` and `quality`.
 """
-function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
+function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence::Union{BioSequences.BioSequence, AbstractString}, quality::Vector; offset=33)
     if length(sequence) != length(quality)
         throw(ArgumentError("the length of sequence doesn't match the length of quality"))
     end

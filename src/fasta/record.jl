@@ -63,7 +63,7 @@ end
 
 Create a FASTA record object from `identifier`, `description` and `sequence`.
 """
-function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence)
+function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence::Union{BioSequences.BioSequence, AbstractString})
     buf = IOBuffer()
     print(buf, '>', strip(identifier))
     if description != nothing
