@@ -207,10 +207,10 @@ end
 
 Returns the stripped header line of `record`, or `nothing` if it was empty.
 """
-function header(record::Record)
-    hasidentifier(record) || return nothing
-    id, desc = record.identifier, record.description
-    range = first(id) : max(last(id), last(desc))
+function header(record::Record)::Union{String, Nothing}
+    id, de = record.identifier, record.description
+    isempty(id) && isempty(de) && return nothing
+    range = isempty(de) ? id : (isempty(id) ? de : first(id):last(de))
     return String(record.data[range])
 end
 
