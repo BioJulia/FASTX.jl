@@ -105,7 +105,8 @@ loopcode = quote
         if first_header_len != second_header_len || !is_same_mem(record.data, first_header_pos, second_header_pos, first_header_len)
             throw(ArgumentError("mismatched headers"))
         end
-    elseif found && transform != nothing
+    end
+    if found && transform != nothing
         transform(record.data, record.sequence)
     end
     found && @goto __return__
