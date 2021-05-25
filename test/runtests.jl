@@ -1,6 +1,7 @@
 using Test
 using FASTX
 using FormatSpecimens
+using BioSymbols
 import BioGenerics
 import BioGenerics.Testing: intempdir
 import BioSequences:
@@ -35,7 +36,8 @@ import BioSequences:
         @test BioGenerics.hassequence(record)
         @test FASTA.hassequence(record)
         @test FASTA.sequence(record) == dna"ACGT"
-        @test FASTA.sequence(record, 2:3) == dna"CG"
+        @test collect(FASTA.sequence_iter(DNA, record)) == [DNA_A, DNA_C, DNA_G, DNA_T] 
+        @test FASTA.sequence(record, 2:3) == LongDNASeq(collect(FASTA.sequence_iter(DNA, record, 2:3))) == dna"CG"
         @test FASTA.sequence(String, record) == "ACGT"
         @test FASTA.sequence(String, record, 2:3) == "CG"
 
@@ -76,6 +78,11 @@ import BioSequences:
         @test FASTA.header(record) == "CYS1_DICDI fragment"
         @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
         @test FASTA.sequence(record, 10:15) == aa"NVEGQH"
+
+        # PR 37
+        s = ">A \nTAG\n"
+        rec = first(iterate(FASTA.Reader(IOBuffer(s))))
+        @test isempty(rec.description)
     end
 
     output = IOBuffer()
@@ -291,6 +298,11 @@ end
     +2 high quality
     IJN
     """
+
+    # PR 37
+    s = "@A \nTAG\n+\nJJJ\n"
+    rec = first(iterate(FASTQ.Reader(IOBuffer(s))))
+    @test isempty(rec.description)
     
     # Test issue 25
     lines = ["@A", "A", "+", "F", "@B", "CA", "+", "CF"]
@@ -321,6 +333,8 @@ end
         @test FASTQ.header(record) == FASTQ.identifier(record) * " " * FASTA.description(record)
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(LongDNASeq, record) == seq
+        @test LongDNASeq(collect(FASTQ.sequence_iter(DNA, record))) == seq
+        @test LongDNASeq(collect(FASTQ.sequence_iter(DNA, record, 3:7))) == dna"GCTCA"
         @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
         @test_throws ArgumentError copyto!(LongDNASeq(10), FASTQ.Record())
         @test FASTQ.sequence(record) == BioGenerics.sequence(record) == seq

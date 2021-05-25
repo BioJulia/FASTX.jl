@@ -205,11 +205,26 @@ end
 
 Returns the stripped header line of `record`, or `nothing` if it was empty.
 """
-function header(record::Record)
-    hasidentifier(record) || return nothing
-    id, desc = record.identifier, record.description
-    range = first(id) : max(last(id), last(desc))
+function header(record::Record)::Union{String, Nothing}
+    id, de = record.identifier, record.description
+    isempty(id) && isempty(de) && return nothing
+    range = isempty(de) ? id : (isempty(id) ? de : first(id):last(de))
     return String(record.data[range])
+end
+
+"""
+    sequence_iter(T, record::Record)
+
+Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
+through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
+Mutating the record will corrupt the iterator.
+"""
+function sequence_iter(::Type{T}, record::Record,
+    part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
+    checkfilled(record)
+    seqpart = record.sequence[part]
+    data = record.data
+    return (T(Char(@inbounds (data[i]))) for i in seqpart)
 end
 
 """
