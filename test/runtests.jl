@@ -310,7 +310,12 @@ end
     record = FASTQ.Record()
     read!(reader, record)
     read!(reader, record)
-    @test eof(reader)    
+    @test eof(reader)
+
+    # Test issue # 48 - allow trailing whitespace
+    reader = FASTQ.Reader(IOBuffer("@A\nTA\n+\nFF\n\n\n"))
+    @test length(collect(reader)) == 1
+    close(reader)
 
     @testset "Record" begin
         record = FASTQ.Record()
