@@ -30,8 +30,11 @@ machine = (function ()
         lf.actions[:enter] = [:countline]
         re.cat(re.opt('\r'), lf)
     end
-    
-    sequence = re.opt(re.cat(letters, re.rep(re.cat(re.rep1(re.alt(hspace, newline)), letters))))
+
+    # Sequence: A sequence can be any free combination of newline, letters and hspace
+    # It cannot be re.rep(letters | hspace | newline), because back-to-back repeated
+    # letters would cause an FSM ambiguity between nothing and [:letters, :mark]
+    sequence = re.rep(re.opt(letters) * (newline | hspace)) * re.opt(letters)
     
     record = re.cat(header, newline, sequence, re.rep1(newline))
     record.actions[:exit] = [:record]
