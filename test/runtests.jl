@@ -183,6 +183,11 @@ import BioSequences:
         test_fasta_parse(filename(specimen), false)
     end
 
+    # Test trailing whitespace
+    reader = FASTA.Reader(IOBuffer(">A\nTA \n>B C\nCA \nCC \n"))
+    @test length(collect(reader)) == 2
+    close(reader)
+
     @testset "Faidx" begin
         # Need to make sure it can handle mixed Unix and Windows newlines
         fastastr = """
