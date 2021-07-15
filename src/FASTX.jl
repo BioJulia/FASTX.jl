@@ -7,7 +7,7 @@ export
     description,
     sequence,
     quality,
-    transcode
+    transcribe
 
 # Generic methods
 function identifier end
@@ -30,11 +30,11 @@ function FASTA.Record(record::FASTQ.Record)
 end
 
 """
-    transcode(in::FASTQ.Reader, out::FASTA.Writer)
+    transcribe(in::FASTQ.Reader, out::FASTA.Writer)
 
 Convert a FASTQ file to a FASTA file.
 """
-function transcode(in::FASTQ.Reader, out::FASTA.Writer)
+function transcribe(in::FASTQ.Reader, out::FASTA.Writer)
     buff_record = FASTQ.Record()
     while !eof(in)
         read!(in, buff_record)

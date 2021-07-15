@@ -452,6 +452,23 @@ end
         return test_records(expected_entries, read_entries)
     end
     
+    function test_fastq_fasta_translation(filename)
+        ST = LongSequence{DNAAlphabet{4}}
+        
+        filepath = joinpath(path_of_format("FASTQ"), filename)
+        reader = open(FASTQ.Reader, filepath)
+        tmpfile = tempname()
+        writer = open(FASTA.Writer, tmpfile)
+        transcribe(reader, writer)
+        close(reader)
+        close(writer)
+        fqrecords = open(rdr -> collect(rdr), FASTQ.Reader, filepath)
+        farecords = open(rdr -> collect(rdr), FASTA.Reader, tmpfile)
+        
+        return all(identifier.(fqrecords) .== identifier.(farecords)) &&
+               all(sequence.(ST, fqrecords) .== sequence.(ST, farecords))
+    end
+    
     valid_specimens = list_valid_specimens("FASTQ") do specimen
         spec_tags = hastags(specimen) ? sort(tags(specimen)) : String[]
         invalid_tags = sort!(["gaps", "rna", "comments", "linewrap"])
@@ -460,6 +477,9 @@ end
     invalid_specimens = list_invalid_specimens("FASTQ")
     for specimen in valid_specimens
         test_fastq_parse(filename(specimen), true)
+        if filename(specimen) != "zero_length.fastq"
+            @test test_fastq_fasta_translation(filename(specimen))
+        end
     end
     for specimen in invalid_specimens
         test_fastq_parse(filename(specimen), false)
