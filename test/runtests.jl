@@ -524,6 +524,17 @@ end
         @test sprint(show, r1) == "FASTX.FASTQ.FASTQRead{DNAAlphabet{4}}:\n   identifier: SRR1238088.1.1\n  description: HWI-ST499:111:D0G94ACXX:1:1101:1173:2105\n     sequence: AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA\n      quality: [31, 33, 34, 37, 37, 37, 35, 37, 39, 39, 39, 39, 39, 41, 41, 41, 40, 41, 40, 41, 41, 40, 41, 41, 41, 41, 41, 41, 41, 41, 40, 41, 41, 41, 41, 40, 40, 40, 41, 41, 41, 40, 41, 41, 41]"
     end
     
+    @testset "Conversion to FASTA" begin
+        fqrecord = FASTQ.Record("""
+                   @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+                   +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+                   """)
+        @test sequence(FASTA.Record(fqrecord)) == sequence(fqrecord)
+        @test identifier(FASTA.Record(fqrecord)) == identifier(fqrecord)
+    end
+    
 end
 
 @testset "Quality scores" begin
@@ -584,4 +595,3 @@ end
     end
 
 end
-
