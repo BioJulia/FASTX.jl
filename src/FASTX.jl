@@ -6,7 +6,8 @@ export
     identifier,
     description,
     sequence,
-    quality
+    quality,
+    transcode
 
 # Generic methods
 function identifier end
@@ -20,7 +21,13 @@ import .FASTA
 import .FASTQ
 import .FASTQ: quality
 
-FASTA.Record(fqrec::FASTQ.Record) = FASTA.Record(deleteat!(copy(fqrec.data), fqrec.quality))
+function FASTA.Record(record::FASTQ.Record)
+    FASTQ.checkfilled(record)
+    slice = (first(record.identifier) - 1):last(record.sequence)
+    newdata = @inbounds record.data[slice]
+    newdata[1] = 0x3E
+    FASTA.Record(newdata)
+end
 
 """
     transcode(in::FASTQ.Reader, out::FASTA.Writer)
