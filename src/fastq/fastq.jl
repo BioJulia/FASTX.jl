@@ -17,4 +17,15 @@ include("reader.jl")
 include("writer.jl")
 include("fastqread.jl")
 
+function interleave(R1::Reader, R2::Reader, out::Writer)
+    R1_buff = FASTQ.Record()
+    R2_buff = FASTQ.Record()
+    while !eof(R1) && !eof(R2)
+        read!(x, R1_buff)
+        read!(y, R2_buff)
+        write(out, R1_buff)
+        write(out, R2_buff)
+    end
+end
+
 end

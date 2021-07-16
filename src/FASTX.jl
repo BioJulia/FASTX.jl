@@ -6,7 +6,8 @@ export
     identifier,
     description,
     sequence,
-    quality
+    quality,
+    interleave
 
 # Generic methods
 function identifier end
@@ -18,6 +19,6 @@ include("fastq/fastq.jl")
 
 import .FASTA
 import .FASTQ
-import .FASTQ: quality
+import .FASTQ: quality, interleave
 
 end # module
