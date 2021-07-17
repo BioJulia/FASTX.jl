@@ -452,6 +452,23 @@ end
         return test_records(expected_entries, read_entries)
     end
     
+    function test_fastq_fasta_translation(filename)
+        ST = LongSequence{DNAAlphabet{4}}
+        
+        filepath = joinpath(path_of_format("FASTQ"), filename)
+        reader = open(FASTQ.Reader, filepath)
+        tmpfile = tempname()
+        writer = open(FASTA.Writer, tmpfile)
+        transcribe(reader, writer)
+        close(reader)
+        close(writer)
+        fqrecords = open(rdr -> collect(rdr), FASTQ.Reader, filepath)
+        farecords = open(rdr -> collect(rdr), FASTA.Reader, tmpfile)
+        
+        return all(identifier.(fqrecords) .== identifier.(farecords)) &&
+               all(sequence.(ST, fqrecords) .== sequence.(ST, farecords))
+    end
+    
     valid_specimens = list_valid_specimens("FASTQ") do specimen
         spec_tags = hastags(specimen) ? sort(tags(specimen)) : String[]
         invalid_tags = sort!(["gaps", "rna", "comments", "linewrap"])
@@ -460,6 +477,9 @@ end
     invalid_specimens = list_invalid_specimens("FASTQ")
     for specimen in valid_specimens
         test_fastq_parse(filename(specimen), true)
+        if filename(specimen) != "zero_length.fastq"
+            @test test_fastq_fasta_translation(filename(specimen))
+        end
     end
     for specimen in invalid_specimens
         test_fastq_parse(filename(specimen), false)
@@ -524,6 +544,17 @@ end
         @test sprint(show, r1) == "FASTX.FASTQ.FASTQRead{DNAAlphabet{4}}:\n   identifier: SRR1238088.1.1\n  description: HWI-ST499:111:D0G94ACXX:1:1101:1173:2105\n     sequence: AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA\n      quality: [31, 33, 34, 37, 37, 37, 35, 37, 39, 39, 39, 39, 39, 41, 41, 41, 40, 41, 40, 41, 41, 40, 41, 41, 41, 41, 41, 41, 41, 41, 40, 41, 41, 41, 41, 40, 40, 40, 41, 41, 41, 40, 41, 41, 41]"
     end
     
+    @testset "Conversion to FASTA" begin
+        fqrecord = FASTQ.Record("""
+                   @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+                   +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+                   @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+                   """)
+        @test sequence(FASTA.Record(fqrecord)) == sequence(fqrecord)
+        @test identifier(FASTA.Record(fqrecord)) == identifier(fqrecord)
+    end
+    
 end
 
 @testset "Quality scores" begin
@@ -584,4 +615,3 @@ end
     end
 
 end
-
