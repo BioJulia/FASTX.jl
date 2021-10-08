@@ -36,7 +36,7 @@ machine = (function ()
     # letters would cause an FSM ambiguity between nothing and [:letters, :mark]
     sequence = re.rep(re.opt(letters) * (newline | hspace)) * re.opt(letters)
     
-    record = re.cat(header, newline, sequence, re.rep1(newline))
+    record = re.cat(header, re.opt(re.cat(newline, sequence)), re.rep1(newline))
     record.actions[:exit] = [:record]
     
     record_trailing = re.cat(header, re.rep1(newline), sequence)

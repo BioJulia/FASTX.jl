@@ -98,6 +98,9 @@ import BioSequences:
     N
     """
 
+    # Test empty records
+    @test length(collect(FASTA.Reader(IOBuffer(">A\n>B\nTAG\n>C\nAA")))) == 3
+
     reader = FASTA.Reader(IOBuffer(
     """
     >seqA some description
