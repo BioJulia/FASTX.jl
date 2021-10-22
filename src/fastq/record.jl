@@ -193,7 +193,7 @@ end
 
 Checks whether or not the `record` has a description.
 """
-function hasdescription(record)
+function hasdescription(record::Record)
     return isfilled(record) && record.description != 1:0
 end
 
