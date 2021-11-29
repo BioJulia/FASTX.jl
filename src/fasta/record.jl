@@ -252,26 +252,6 @@ function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastind
 end
 
 """
-    sequence(record::Record, [part::UnitRange{Int}])
-
-Get the sequence of `record`.
-
-This function infers the sequence type from the data. When it is wrong or
-unreliable, use `sequence(::Type{S}, record::Record)`.  If `part` argument is
-given, it returns the specified part of the sequence.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fasta record, you can use `Base.copyto!`.
-"""
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))
-    checkfilled(record)
-    S = predict_seqtype(record.data, record.sequence)
-    return sequence(S, record, part)
-end
-
-"""
     hassequence(record::Record)
 
 Checks whether or not a sequence record contains a sequence.
@@ -316,10 +296,6 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
     # This check is here to prevent boundserror when indexing src.sequence
     iszero(N) && return dest
     return copyto!(dest, doff, src.data, src.sequence[soff], N)
-end
-
-function BioGenerics.sequence(record::Record)
-    return sequence(record)
 end
 
 function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
@@ -377,5 +353,8 @@ function predict_seqtype(seq::Vector{UInt8}, range)
 end
 
 function Base.hash(record::Record, h::UInt)
-    return hash(identifier(record), hash(description(record), hash(sequence(record), h)))
+	isempty(record.identifier) || (h = hash(view(record.data, record.identifier), h))
+	isempty(record.description) || (h = hash(view(record.data, record.description), h))
+	isempty(record.sequence) || (h = hash(view(record.data, record.sequence), h))
+	h
 end
