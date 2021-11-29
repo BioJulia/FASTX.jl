@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Removed
+* The method `FASTA.sequence(::FASTA.Record)` has been removed, since the auto-detection of sequence
+  type chould not be made reliable enough.
+
 ## [1.2.0] - 2021-07-13
 ### Added:
 * `header(::Union{FASTA.Record, FASTQ.Record})` returns the full header line.
@@ -18,8 +23,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Various small fixes to the internal parsing regex
 * Writers are now parametric and buffered for increased writing speed
 * Fixed a bug where Windows-style newlines would break the parser
-
-## Unreleased
 
 ## [1.1.0] - 2019-08-07
 ### Added

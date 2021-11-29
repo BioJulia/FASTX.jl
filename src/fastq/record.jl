@@ -288,7 +288,7 @@ end
 """
     sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
 
-Get the sequence of `record`.
+Get the sequence of `record` as a DNA sequence.
 
 !!! note
     This method makes a new sequence object every time.
@@ -394,8 +394,11 @@ function BioGenerics.hassequence(record::Record)
 end
 
 function Base.hash(record::Record, h::UInt)
-    return hash(identifier(record), hash(description(record), hash(sequence(record),
-                hash(quality(record), h))))
+	isempty(record.identifier) || (h = hash(view(record.data, record.identifier), h))
+	isempty(record.description) || (h = hash(view(record.data, record.description), h))
+	isempty(record.sequence) || (h = hash(view(record.data, record.sequence), h))
+	isempty(record.quality) || (h = hash(view(record.data, record.quality), h))
+	h
 end
 
 
