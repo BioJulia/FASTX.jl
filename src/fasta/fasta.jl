@@ -12,7 +12,9 @@ import BioGenerics.Automa: State
 import BioSequences
 import BioSymbols
 import TranscodingStreams: TranscodingStreams, TranscodingStream
-import ..FASTX: identifier, description, sequence
+import ..FASTX: identifier, hasidentifier,
+    description, hasdescription, header,
+    sequence, hassequence
 
 include("record.jl")
 include("index.jl")
