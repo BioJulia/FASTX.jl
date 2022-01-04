@@ -143,9 +143,11 @@ end
 # ------------------
 
 """
-    identifier(record::Record)::Union{String, Nothing}
+    identifier(record::Record)::Union{StringView, Nothing}
 
 Get the sequence identifier of `record`.
+Returns an `AbstractString` view into the record. If the record is overwritten,
+the string data will be corrupted.
 
 !!! note
     Returns nothing if the record has no identifier.
@@ -176,9 +178,11 @@ function BioGenerics.hasseqname(record::Record)
 end
 
 """
-    description(record::Record)::Union{String, Nothing}
+    description(record::Record)::Union{StringView, Nothing}
 
 Get the description of `record`.
+Returns an `AbstractString` view into the record. If the record is overwritten,
+the string data will be corrupted.
 
 !!! note
     Returns `nothing` if record has no description.
@@ -201,9 +205,11 @@ function hasdescription(record::Record)
 end
 
 """
-    header(record::Record)::Union{String, Nothing}
+    header(record::Record)::Union{StringView, Nothing}
 
 Returns the stripped header line of `record`, or `nothing` if it was empty.
+Returns an `AbstractString` view into the record. If the record is overwritten,
+the string data will be corrupted.
 """
 function header(record::Record)::Union{String, Nothing}
     id, de = record.identifier, record.description
