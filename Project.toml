@@ -11,6 +11,7 @@ Automa = "67c07d97-cdcb-5c2c-af73-a7f9c32a568b"
 BioGenerics = "47718e42-2ac5-11e9-14af-e5595289c2ea"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 BioSymbols = "3c28c6f8-a34d-59c4-9654-267d177fcfa9"
+StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 
 [compat]
@@ -18,6 +19,7 @@ Automa = "0.7, 0.8"
 BioGenerics = "0.1"
 BioSequences = "3"
 BioSymbols = "5"
+StringViews = "1"
 TranscodingStreams = "0.9.5"
 julia = "1.6" # LTS
 

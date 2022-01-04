@@ -11,6 +11,7 @@ import BioGenerics.Exceptions: missingerror
 import BioGenerics.Automa: State
 import BioSequences
 import BioSymbols
+import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier, hasidentifier,
     description, hasdescription, header,
