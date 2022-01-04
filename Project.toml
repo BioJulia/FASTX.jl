@@ -1,6 +1,9 @@
 name = "FASTX"
 uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
-authors = ["Ben J. Ward <benjward@protonmail.com>"]
+authors = [
+    "Sabrina J. Ward <sabrinajward@protonmail.com>",
+    "Jakob N. Nissen <jakobnybonissen@gmail.com>"
+]
 version = "1.2.0"
 
 [deps]
