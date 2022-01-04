@@ -41,6 +41,8 @@ import BioSequences:
         @test FASTA.sequence(String, record) == "ACGT"
         @test FASTA.sequence(String, record, 2:3) == "CG"
 
+        @test_throws MethodError FASTA.Record("header", nothing)
+
         record1 = FASTA.Record("id", "desc", "AGCT")
         record2 = FASTA.Record("id", "desc", "AGCT")
         @test record1 == record2
