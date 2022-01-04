@@ -155,7 +155,7 @@ function identifier(record::Record)::Union{String, Nothing}
     if !hasidentifier(record)
         return nothing
     end
-    return String(record.data[record.identifier])
+    return StringView(view(record.data, record.identifier))
 end
 
 """
@@ -188,7 +188,7 @@ function description(record::Record)::Union{String, Nothing}
     if !hasdescription(record)
         return nothing
     end
-    return String(record.data[record.description])
+    return StringView(view(record.data, record.description))
 end
 
 """
@@ -209,7 +209,7 @@ function header(record::Record)::Union{String, Nothing}
     id, de = record.identifier, record.description
     isempty(id) && isempty(de) && return nothing
     range = isempty(de) ? id : (isempty(id) ? de : first(id):last(de))
-    return String(record.data[range])
+    return StringView(view(record.data, range))
 end
 
 """

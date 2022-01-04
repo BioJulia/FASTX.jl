@@ -7,6 +7,7 @@ import BioSymbols
 import BioSequences
 import BioGenerics: BioGenerics, isfilled
 import BioGenerics.Automa: State
+import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier, hasidentifier,
     description, hasdescription, header,
