@@ -243,7 +243,7 @@ If `part` argument is given, it returns the specified part of the sequence.
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
     seqpart = record.sequence[part]
-    return S(record.data, first(seqpart), last(seqpart))
+    return S(@view(record.data[seqpart]))
 end
 
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
@@ -343,12 +343,12 @@ function predict_seqtype(seq::Vector{UInt8}, range)
     # the threshold (= 0.95) is somewhat arbitrary
     if (a + c + g + t + u + n) / alpha > 0.95
         if t ≥ u
-            return BioSequences.LongDNASeq
+            return BioSequences.LongDNA{4}
         else
-            return BioSequences.LongRNASeq
+            return BioSequences.LongRNA{4}
         end
     else
-        return BioSequences.LongAminoAcidSeq
+        return BioSequences.LongAA
     end
 end
 
