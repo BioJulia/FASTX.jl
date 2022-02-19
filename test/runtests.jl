@@ -8,8 +8,8 @@ import BioSequences:
     @dna_str,
     @rna_str,
     @aa_str,
-    LongDNASeq,
-    LongAminoAcidSeq,
+    LongDNA,
+    LongAA,
     LongSequence,
     AminoAcidAlphabet,
     DNAAlphabet,
@@ -37,7 +37,7 @@ import BioSequences:
         @test FASTA.hassequence(record)
         @test FASTA.sequence(LongDNASeq, record) == dna"ACGT"
         @test collect(FASTA.sequence_iter(DNA, record)) == [DNA_A, DNA_C, DNA_G, DNA_T] 
-        @test FASTA.sequence(LongDNASeq, record, 2:3) == LongDNASeq(collect(FASTA.sequence_iter(DNA, record, 2:3))) == dna"CG"
+        @test FASTA.sequence(record, 2:3) == LongDNA{4}(collect(FASTA.sequence_iter(DNA, record, 2:3))) == dna"CG"
         @test FASTA.sequence(String, record) == "ACGT"
         @test FASTA.sequence(String, record, 2:3) == "CG"
 

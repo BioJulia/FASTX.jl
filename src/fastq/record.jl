@@ -271,7 +271,7 @@ If `part` argument is given, it returns the specified part of the sequence.
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
     checkfilled(record)
     seqpart = record.sequence[part]
-    return S(record.data, first(seqpart), last(seqpart))
+    return S(@view(record.data[seqpart]))
 end
 
 """
@@ -295,8 +295,8 @@ Get the sequence of `record` as a DNA sequence.
     If you have a sequence already and want to fill it with the sequence
     data contained in a fastq record, you can use `Base.copyto!`.
 """
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNASeq
-    return sequence(BioSequences.LongDNASeq, record, part)
+function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNA{4}
+    return sequence(BioSequences.LongDNA{4}, record, part)
 end
 
 """
