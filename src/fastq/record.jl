@@ -18,7 +18,7 @@ end
 Create an unfilled FASTQ record.
 """
 function Record()
-    return Record(UInt8[], 1:0, 1:0, 1:0, 1:0, 1:0)
+    return Record(collect(codeunits("@A\nA\n+\nA")), 1:8, 2:2, 1:0, 4:4, 8:8)
 end
 
 """
@@ -72,7 +72,7 @@ function Record(identifier::AbstractString, description::Union{AbstractString,No
     end
     buf = IOBuffer()
     print(buf, '@', identifier)
-    if description != nothing
+    if description !== nothing
         print(buf, ' ', description)
     end
     print(buf, '\n')
@@ -84,13 +84,10 @@ function Record(identifier::AbstractString, description::Union{AbstractString,No
 end
 
 function Base.:(==)(record1::Record, record2::Record)
-    if isfilled(record1) == isfilled(record2) == true
-        r1 = record1.filled
-        r2 = record2.filled
-        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
-    else
-        return isfilled(record1) == isfilled(record2) == false
-    end
+    r1 = record1.filled
+    r2 = record2.filled
+    r1 == r2 || return false
+    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(1)), length(r1)) == 0
 end
 
 function Base.copy(record::Record)
@@ -113,16 +110,11 @@ function Base.print(io::IO, record::Record)
 end
 
 function Base.show(io::IO, record::Record)
-    print(io, summary(record), ':')
-    if isfilled(record)
-        println(io)
-        println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
-        println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-        println(io, "     sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
-          print(io, "      quality: ", hasquality(record) ? quality(record) : "<missing>")
-    else
-        print(io, " <not filled>")
-    end
+    println(io)
+    println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
+    println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
+    println(io, "     sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
+    print(io,   "      quality: ", hasquality(record) ? quality(record) : "<missing>")
 end
 
 function initialize!(record::Record)
@@ -134,8 +126,8 @@ function initialize!(record::Record)
     return record
 end
 
-function BioGenerics.isfilled(record::Record)
-    return !isempty(record.filled)
+function BioGenerics.isfilled(::Record)
+    return true # for backwards compatibility
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
@@ -163,8 +155,8 @@ end
 
 Checks whether or not the `record` has an identifier.
 """
-function hasidentifier(record::Record)
-    return isfilled(record)
+function hasidentifier(::Record)
+    return true
 end
 
 
@@ -179,7 +171,6 @@ the string data will be corrupted.
     Returns `nothing` if `record` has no description.
 """
 function description(record::Record)::Union{StringView, Nothing}
-    checkfilled(record)
     if !hasdescription(record)
         nothing
     end
@@ -192,7 +183,7 @@ end
 Checks whether or not the `record` has a description.
 """
 function hasdescription(record::Record)
-    return isfilled(record) && record.description != 1:0
+    return record.description != 1:0
 end
 
 function Base.copy!(dest::BioSequences.LongSequence, src::Record)
@@ -240,7 +231,6 @@ Copy an N long block of sequence data from the fastq record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    checkfilled(src)
     if !hassequence(src)
         missingerror(:sequence)
     end
@@ -256,7 +246,6 @@ Mutating the record will corrupt the iterator.
 """
 function sequence_iter(::Type{T}, record::Record,
     part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
-    checkfilled(record)
     seqpart = record.sequence[part]
     data = record.data
     return (T(Char(@inbounds (data[i]))) for i in seqpart)
@@ -276,7 +265,6 @@ If `part` argument is given, it returns the specified part of the sequence.
     data contained in a fastq record, you can use `Base.copyto!`.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
-    checkfilled(record)
     seqpart = record.sequence[part]
     return S(@view(record.data[seqpart]))
 end
@@ -288,7 +276,6 @@ Get the sequence of `record` as a String.
 If `part` argument is given, it returns the specified part of the sequence.
 """
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
-    checkfilled(record)
     return String(record.data[record.sequence[part]])
 end
 
@@ -315,8 +302,7 @@ Checks whether or not a sequence record contains a sequence.
     Zero-length sequences are allowed in records.
 """
 function hassequence(record::Record)
-    # zero-length sequence may exist
-    return isfilled(record)
+    true
 end
 
 "Get the length of the fastq record's sequence."
@@ -328,7 +314,6 @@ end
 Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
 """
 function quality_iter(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))
-    checkfilled(record)
     offs = convert(UInt8, offset)
     part = record.quality[part]
     data = record.data
@@ -354,7 +339,6 @@ The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumin
     Returns `nothing` if the record has no quality string.
 """
 function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
-    checkfilled(record)
     encoding = (
         encoding_name == :sanger     ?     SANGER_QUAL_ENCODING :
         encoding_name == :solexa     ?     SOLEXA_QUAL_ENCODING :
@@ -375,9 +359,12 @@ end
     hasquality(record::Record)
 
 Check whether the given FASTQ `record` has a quality string.
+
+!!! note
+    Zero-length sequences are considered to have an empty quality.
 """
-function hasquality(record::Record)
-    return isfilled(record)
+function hasquality(::Record)
+    return true
 end
 
 function BioGenerics.seqname(record::Record)
@@ -413,7 +400,5 @@ end
 # ----------------
 
 function checkfilled(record)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled FASTQ record"))
-    end
+    nothing # for backward compatibility
 end
