@@ -143,20 +143,14 @@ end
 # ------------------
 
 """
-    identifier(record::Record)::Union{StringView, Nothing}
+    identifier(record::Record)::StringView
 
-Get the sequence identifier of `record`.
+Get the sequence identifier of `record`. The identifier is the header
+before any whitespace. If the identifier is missing, return an empty string.
 Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
-
-!!! note
-    Returns nothing if the record has no identifier.
 """
-function identifier(record::Record)::Union{String, Nothing}
-    checkfilled(record)
-    if !hasidentifier(record)
-        return nothing
-    end
+function identifier(record::Record)::StringView
     return StringView(view(record.data, record.identifier))
 end
 
@@ -205,16 +199,23 @@ function hasdescription(record::Record)
 end
 
 """
-    header(record::Record)::Union{StringView, Nothing}
+    header(record::Record)::StringView
 
-Returns the stripped header line of `record`, or `nothing` if it was empty.
+Returns the stripped header line of `record`. If the header is empty, return an empty string.
 Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
 """
-function header(record::Record)::Union{String, Nothing}
+function header(record::Record)::StringView
     id, de = record.identifier, record.description
-    isempty(id) && isempty(de) && return nothing
-    range = isempty(de) ? id : (isempty(id) ? de : first(id):last(de))
+    range = if isempty(id) && isempty(de)
+        1:0
+    elseif isempty(de)
+        id
+    elseif isempty(id)
+        de
+    else
+        first(id):last(de)
+    end
     return StringView(view(record.data, range))
 end
 
