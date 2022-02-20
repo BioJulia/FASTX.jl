@@ -25,13 +25,9 @@ import BioSequences:
 
         record = FASTA.Record(">foo\nACGT\n")
         @test BioGenerics.isfilled(record)
-        @test BioGenerics.hasseqname(record)
-        @test FASTA.hasidentifier(record)
         @test BioGenerics.seqname(record) == FASTA.identifier(record) == "foo"
         @test !FASTA.hasdescription(record)
         @test FASTA.description(record) === nothing
-        @test BioGenerics.hassequence(record)
-        @test FASTA.hassequence(record)
         @test FASTA.sequence(LongDNA{4}, record) == dna"ACGT"
         @test collect(FASTA.sequence_iter(DNA, record)) == [DNA_A, DNA_C, DNA_G, DNA_T] 
         @test FASTA.sequence(LongDNA{4}, record, 2:3) == LongDNA{4}(collect(FASTA.sequence_iter(DNA, record, 2:3))) == dna"CG"
@@ -334,19 +330,16 @@ end
         seq = dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         
         @test BioGenerics.isfilled(record)
-        @test FASTQ.hasidentifier(record) == BioGenerics.hasseqname(record) == true
         @test FASTQ.identifier(record) == BioGenerics.seqname(record) == "SRR1238088.1.1"
         @test FASTQ.hasdescription(record)
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.header(record) == FASTQ.identifier(record) * " " * FASTA.description(record)
-        @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
         @test FASTQ.sequence(LongDNA{4}, record) == seq
         @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record))) == seq
         @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record, 3:7))) == dna"GCTCA"
         @test copyto!(LongDNA{4}(undef, FASTQ.seqlen(record)), record) == seq
         @test FASTQ.sequence(LongDNA{4}, record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
-        @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
 
         record1 = FASTQ.Record("id", "desc", "AAGCT", collect("@BCFF"))
