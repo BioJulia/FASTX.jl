@@ -4,7 +4,7 @@
 mutable struct Record
     # data and filled range
     data::Vector{UInt8}
-    filled::UnitRange{Int}
+    filled::Int
     # indexes
     identifier::UnitRange{Int}
     description::UnitRange{Int}
@@ -18,7 +18,7 @@ end
 Create an unfilled FASTQ record.
 """
 function Record()
-    return Record(collect(codeunits("@A\nA\n+\nA")), 1:8, 2:2, 1:0, 4:4, 8:8)
+    return Record(collect(codeunits("@A\nA\n+\nA")), 8, 2:2, 1:0, 4:4, 8:8)
 end
 
 """
@@ -34,7 +34,7 @@ This function verifies and indexes fields for accessors.
     construction of the record.
 """
 function Record(data::Vector{UInt8})
-    record = Record(data, 1:0, 1:0, 1:0, 1:0, 1:0)
+    record = Record(data, 0, 1:0, 1:0, 1:0, 1:0)
     index!(record)
     return record
 end
@@ -87,12 +87,12 @@ function Base.:(==)(record1::Record, record2::Record)
     r1 = record1.filled
     r2 = record2.filled
     r1 == r2 || return false
-    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(1)), length(r1)) == 0
+    return memcmp(pointer(record1.data), pointer(record2.data), r1) == 0
 end
 
 function Base.copy(record::Record)
     return Record(
-        record.data[record.filled],
+        record.data[1:record.filled],
         record.filled,
         record.identifier,
         record.description,
@@ -101,7 +101,7 @@ function Base.copy(record::Record)
 end
 
 function Base.write(io::IO, record::Record)
-    return unsafe_write(io, pointer(record.data, first(record.filled)), length(record.filled))
+    return unsafe_write(io, pointer(record.data), record.filled)
 end
 
 function Base.print(io::IO, record::Record)
@@ -118,7 +118,7 @@ function Base.show(io::IO, record::Record)
 end
 
 function initialize!(record::Record)
-    record.filled = 1:0
+    record.filled = 0
     record.identifier = 1:0
     record.description = 1:0
     record.sequence = 1:0

@@ -80,7 +80,7 @@ actions = Dict(
     :sep => :(@escape),
     :record => quote
         appendfrom!(record.data, 1, data, @markpos, p-@markpos)
-        record.filled = 1:(p-@markpos)
+        record.filled = (p-@markpos)
         found = true
     end,
 )

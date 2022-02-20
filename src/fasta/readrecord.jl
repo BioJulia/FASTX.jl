@@ -76,7 +76,7 @@ actions = Dict(
         end
     end,
     :record => quote
-        record.filled = 1:filled
+        record.filled = filled
         found = true
         @escape
     end
