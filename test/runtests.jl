@@ -344,12 +344,12 @@ end
         @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
         @test FASTQ.header(record) == FASTQ.identifier(record) * " " * FASTA.description(record)
         @test FASTQ.hassequence(record) == BioGenerics.hassequence(record) == true
-        @test FASTQ.sequence(LongDNASeq, record) == seq
-        @test LongDNASeq(collect(FASTQ.sequence_iter(DNA, record))) == seq
-        @test LongDNASeq(collect(FASTQ.sequence_iter(DNA, record, 3:7))) == dna"GCTCA"
-        @test copyto!(LongDNASeq(FASTQ.seqlen(record)), record) == seq
-        @test_throws ArgumentError copyto!(LongDNASeq(10), FASTQ.Record())
-        @test FASTQ.sequence(LongDNASeq, record) == seq
+        @test FASTQ.sequence(LongDNA{4}, record) == seq
+        @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record))) == seq
+        @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record, 3:7))) == dna"GCTCA"
+        @test copyto!(LongDNA{4}(undef, FASTQ.seqlen(record)), record) == seq
+        @test_throws ArgumentError copyto!(LongDNA{4}(undef, 10), FASTQ.Record())
+        @test FASTQ.sequence(LongDNA{4}, record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
         @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
