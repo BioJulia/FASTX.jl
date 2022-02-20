@@ -322,7 +322,7 @@ end
 
     @testset "Record" begin
         record = FASTQ.Record()
-        @test !BioGenerics.isfilled(record)
+        @test BioGenerics.isfilled(record)
 
         record = FASTQ.Record("""
         @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
