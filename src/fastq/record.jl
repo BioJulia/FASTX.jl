@@ -178,7 +178,7 @@ the string data will be corrupted.
 !!! note
     Returns `nothing` if `record` has no description.
 """
-function description(record::Record)::Union{String, Nothing}
+function description(record::Record)::Union{StringView, Nothing}
     checkfilled(record)
     if !hasdescription(record)
         nothing
