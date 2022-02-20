@@ -12,7 +12,8 @@ export
     hassequence,
     quality,
     hasquality,
-    quality_iter
+    quality_iter,
+    transcribe
 
 # Generic methods
 function identifier end
