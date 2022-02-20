@@ -34,8 +34,8 @@ machine = (function ()
     # Sequence: A sequence can be any free combination of newline, letters and hspace
     # It cannot be re.rep(letters | hspace | newline), because back-to-back repeated
     # letters would cause an FSM ambiguity between nothing and [:letters, :mark]
-    sequence = re.rep(re.opt(letters) * (newline | hspace)) * re.opt(letters)
-    
+    sequence = re.rep(hspace | newline) * letters * re.rep((hspace | newline) * re.opt(letters))
+
     record = re.cat(header, newline, sequence, re.rep1(newline))
     record.actions[:exit] = [:record]
     

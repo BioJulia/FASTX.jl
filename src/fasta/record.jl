@@ -14,10 +14,10 @@ end
 """
     FASTA.Record()
 
-Create an unfilled FASTA record.
+Create an default FASTA record.
 """
 function Record()
-    return Record(UInt8[], 1:0, 1:0, 1:0, 1:0)
+    return Record(collect(codeunits(">\nA")), 1:3, 1:0, 1:0, 3:3)
 end
 
 """
@@ -66,7 +66,7 @@ Create a FASTA record object from `identifier`, `description` and `sequence`.
 function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence::Union{BioSequences.BioSequence, AbstractString})
     buf = IOBuffer()
     print(buf, '>', strip(identifier))
-    if description != nothing
+    if description !== nothing
         print(buf, ' ', description)
     end
     print(buf, '\n')
@@ -75,13 +75,10 @@ function Record(identifier::AbstractString, description::Union{AbstractString,No
 end
 
 function Base.:(==)(record1::Record, record2::Record)
-    if isfilled(record1) == isfilled(record2) == true
-        r1 = record1.filled
-        r2 = record2.filled
-        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
-    else
-        return isfilled(record1) == isfilled(record2) == false
-    end
+    r1 = record1.filled
+    r2 = record2.filled
+    r1 == r2 || return false
+    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(1)), length(r1)) == 0
 end
 
 function Base.copy(record::Record)
@@ -104,14 +101,10 @@ end
 
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
-    if isfilled(record)
-        println(io)
-        println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
-        println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-          print(io, "     sequence: ", hassequence(record) ? truncate(sequence(String, record), 40) : "<missing>")
-    else
-        print(io, " <not filled>")
-    end
+    println(io)
+    println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
+    println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
+    print(io, "     sequence: ", hassequence(record) ? truncate(sequence(String, record), 40) : "<missing>")
 end
 
 function truncate(s::String, len::Integer)
@@ -130,8 +123,8 @@ function initialize!(record::Record)
     return record
 end
 
-function BioGenerics.isfilled(record::Record)
-    return !isempty(record.filled)
+function BioGenerics.isfilled(::Record)
+    return true
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
@@ -160,7 +153,7 @@ end
 Checks whether or not the `record` has an identifier.
 """
 function hasidentifier(record)
-    return isfilled(record) && !isempty(record.identifier)
+    return !isempty(record.identifier)
 end
 
 function BioGenerics.seqname(record::Record)
@@ -182,7 +175,6 @@ the string data will be corrupted.
     Returns `nothing` if record has no description.
 """
 function description(record::Record)::Union{StringView, Nothing}
-    checkfilled(record)
     if !hasdescription(record)
         return nothing
     end
@@ -195,7 +187,7 @@ end
 Checks whether or not the `record` has a description.
 """
 function hasdescription(record::Record)
-    return isfilled(record) && !isempty(record.description)
+    return !isempty(record.description)
 end
 
 """
@@ -228,7 +220,6 @@ Mutating the record will corrupt the iterator.
 """
 function sequence_iter(::Type{T}, record::Record,
     part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
-    checkfilled(record)
     seqpart = record.sequence[part]
     data = record.data
     return (T(Char(@inbounds (data[i]))) for i in seqpart)
@@ -248,13 +239,11 @@ If `part` argument is given, it returns the specified part of the sequence.
     data contained in a fasta record, you can use `Base.copyto!`.
 """
 function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
-    checkfilled(record)
     seqpart = record.sequence[part]
     return S(@view(record.data[seqpart]))
 end
 
 function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
-    checkfilled(record)
     return String(record.data[record.sequence[part]])
 end
 
@@ -264,8 +253,7 @@ end
 Checks whether or not a sequence record contains a sequence.
 """
 function hassequence(record::Record)
-    # zero-length sequence may exist
-    return isfilled(record)
+    true # for backwars compatibility
 end
 
 "Get the length of the fasta record's sequence."
@@ -295,7 +283,6 @@ Copy an N long block of sequence data from the fasta record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    checkfilled(src)
     if !hassequence(src)
         missingerror(:sequence)
     end
@@ -314,9 +301,7 @@ function BioGenerics.hassequence(record::Record)
 end
 
 function checkfilled(record)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled FASTA record"))
-    end
+    nothing # for backwards compatibility
 end
 
 # Predict sequence type based on character frequencies in `seq[start:stop]`.
