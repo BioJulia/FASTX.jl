@@ -3,11 +3,20 @@
 #
 # Design discussions in https://github.com/BioJulia/FASTX.jl/pull/35
 
-struct FASTQRead{A <: BioSequences.Alphabet}
+struct Read{A <: BioSequences.Alphabet}
     identifier::String
     description::String
     sequence::BioSequences.LongSequence{A}
     quality::Vector{UInt8} # in raw PHRED scores, not offset
+end
+
+function Read(
+    id::AbstractString,
+    de::AbstractString,
+    s::BioSequences.BioSequence{A},
+    q::AbstractVector{<:Integer}
+) where {A <: BioSequences.Alphabet}
+    Read{A}(String(id), String(de), BioSequences.LongSequence{A}(s), Vector{UInt8}(q))
 end
 
 """
@@ -22,7 +31,7 @@ The FASTQ.Read has fields:
     quality::Vector{UInt8} # in raw PHRED scores, not offset
 """
 function Read(record::FASTQ.Record, offset::Integer=33)
-    FASTQRead(
+    Read(
         identifier(record),
         description(record),
         sequence(record),
@@ -31,7 +40,7 @@ function Read(record::FASTQ.Record, offset::Integer=33)
 end
 
 function Read(record::FASTQ.Record, encoding_name::Symbol)
-    FASTQRead(
+    Read(
         identifier(record),
         description(record),
         sequence(record),
@@ -40,35 +49,35 @@ function Read(record::FASTQ.Record, encoding_name::Symbol)
 end
 
 """
-    sequence(read::FASTQ.FASTQRead)
+    sequence(read::FASTQ.Read)
 Get the sequence of a FASTQ read. Same as read.sequence
 """
-function sequence(read::FASTQ.FASTQRead)
+function sequence(read::FASTQ.Read)
     read.sequence
 end
 
 """
-    quality(read::FASTQ.FASTQRead)
+    quality(read::FASTQ.Read)
 Get the quality of a FASTQ read (Vector{UInt8}). Same as read.quality
 """
-function quality(read::FASTQ.FASTQRead)
+function quality(read::FASTQ.Read)
     read.quality
 end
 
 """
-    length(read::FASTQ.FASTQRead)
+    length(read::FASTQ.Read)
 Get the length of a FASTQ read.
 """
-function Base.length(read::FASTQ.FASTQRead)
+function Base.length(read::FASTQ.Read)
     length(read.sequence)
 end
 
 """
      Base.getindex(record::Record, i::UnitRange{Int})
-Subset a FASTQRead using string syntax. Eg. read[3:7] or read[3]
+Subset a Read using string syntax. Eg. read[3:7] or read[3]
 """
-function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
-    return FASTQRead(
+function Base.getindex(read::FASTQ.Read, i::UnitRange{<:Integer})
+    return Read(
         join([read.identifier,string(i[1],"..",i[end])],"_"),
         join([read.description,string(i[1],"..",i[end])]," "),
         read.sequence[i],
@@ -76,11 +85,11 @@ function Base.getindex(read::FASTQ.FASTQRead, i::UnitRange{<:Integer})
     )
 end
 
-function Base.getindex(read::FASTQRead, i::Integer)
+function Base.getindex(read::Read, i::Integer)
     read[i:i]
 end
 
-function Base.show(io::IO, read::FASTQ.FASTQRead)
+function Base.show(io::IO, read::FASTQ.Read)
     print(io, summary(read), ':')
     println(io)
     println(io, "   identifier: ", read.identifier)
