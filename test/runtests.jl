@@ -21,9 +21,7 @@ import BioSequences:
 @testset "FASTA" begin
     @testset "Record" begin
         record = FASTA.Record()
-        @test !BioGenerics.isfilled(record)
-        @test_throws ArgumentError FASTA.description(record)
-        @test_throws MethodError FASTA.sequence(record)
+        @test BioGenerics.isfilled(record)
 
         record = FASTA.Record(">foo\nACGT\n")
         @test BioGenerics.isfilled(record)
@@ -119,7 +117,6 @@ import BioSequences:
     @test !FASTA.hasdescription(record)
     @test FASTA.sequence(LongAA, record) == aa"VLMALGMTDLFIPSANLTG*"
     @test copyto!(LongAA(undef, FASTA.seqlen(record)), record) == aa"VLMALGMTDLFIPSANLTG*"
-    @test_throws ArgumentError copyto!(LongAA(undef, 10), FASTA.Record())
     @test_throws ArgumentError FASTA.extract(reader, AminoAcidAlphabet(), "seqA", 2:3)
 
     function test_fasta_parse(filename, valid)
@@ -347,7 +344,6 @@ end
         @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record))) == seq
         @test LongDNA{4}(collect(FASTQ.sequence_iter(DNA, record, 3:7))) == dna"GCTCA"
         @test copyto!(LongDNA{4}(undef, FASTQ.seqlen(record)), record) == seq
-        @test_throws ArgumentError copyto!(LongDNA{4}(undef, 10), FASTQ.Record())
         @test FASTQ.sequence(LongDNA{4}, record) == seq
         @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
         @test FASTQ.hasquality(record)
