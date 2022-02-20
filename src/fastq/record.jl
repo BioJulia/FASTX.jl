@@ -111,10 +111,10 @@ end
 
 function Base.show(io::IO, record::Record)
     println(io)
-    println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
-    println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-    println(io, "     sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
-    print(io,   "      quality: ", hasquality(record) ? quality(record) : "<missing>")
+    println(io, "   identifier: ", identifier(record))
+    println(io, "  description: ", hasdescription(record) ? description(record) : "")
+    println(io, "     sequence: ", sequence(String, record))
+    print(io,   "      quality: ", quality(record))
 end
 
 function initialize!(record::Record)
@@ -150,14 +150,7 @@ function identifier(record::Record)::StringView
     return StringView(view(record.data, record.identifier))
 end
 
-"""
-    hasidentifier(record::Record)
-
-Checks whether or not the `record` has an identifier.
-"""
-function hasidentifier(::Record)
-    return true
-end
+@deprecate hasidentifier(record::Record) !isempty(identifier(record))
 
 
 """
@@ -183,7 +176,7 @@ end
 Checks whether or not the `record` has a description.
 """
 function hasdescription(record::Record)
-    return record.description != 1:0
+    return !isempty(record.description)
 end
 
 function Base.copy!(dest::BioSequences.LongSequence, src::Record)
@@ -231,9 +224,6 @@ Copy an N long block of sequence data from the fastq record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    if !hassequence(src)
-        missingerror(:sequence)
-    end
     return copyto!(dest, doff, src.data, src.sequence[soff], N)
 end
 
@@ -293,17 +283,7 @@ function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequen
     return sequence(BioSequences.LongDNA{4}, record, part)
 end
 
-"""
-    hassequence(record::Record)
-
-Checks whether or not a sequence record contains a sequence.
-
-!!! note
-    Zero-length sequences are allowed in records.
-"""
-function hassequence(record::Record)
-    true
-end
+@deprecate hassequence(record::Record) !isempty(sequence(record))
 
 "Get the length of the fastq record's sequence."
 @inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
@@ -355,24 +335,14 @@ function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:l
     return quality
 end
 
-"""
-    hasquality(record::Record)
-
-Check whether the given FASTQ `record` has a quality string.
-
-!!! note
-    Zero-length sequences are considered to have an empty quality.
-"""
-function hasquality(::Record)
-    return true
-end
+@deprecate hasquality(record::Record) !isempty(sequence(record))
 
 function BioGenerics.seqname(record::Record)
     return identifier(record)
 end
 
 function BioGenerics.hasseqname(record::Record)
-    return hasidentifier(record)
+    return true
 end
 
 function BioGenerics.sequence(record::Record)
@@ -384,7 +354,7 @@ function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences
 end
 
 function BioGenerics.hassequence(record::Record)
-    return hassequence(record)
+    return true
 end
 
 function Base.hash(record::Record, h::UInt)

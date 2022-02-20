@@ -102,9 +102,9 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     println(io)
-    println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
-    println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-    print(io, "     sequence: ", hassequence(record) ? truncate(sequence(String, record), 40) : "<missing>")
+    println(io, "   identifier: ", identifier(record))
+    println(io, "  description: ", hasdescription(record) ? description(record) : "")
+    print(io,   "     sequence: ",   truncate(sequence(String, record), 40))
 end
 
 function truncate(s::String, len::Integer)
@@ -147,21 +147,14 @@ function identifier(record::Record)::StringView
     return StringView(view(record.data, record.identifier))
 end
 
-"""
-    hasidentifier(record::Record)
-
-Checks whether or not the `record` has an identifier.
-"""
-function hasidentifier(record)
-    return !isempty(record.identifier)
-end
+@deprecate hasidentifier(record::Record) !isempty(identifier(record))
 
 function BioGenerics.seqname(record::Record)
     return identifier(record)
 end
 
 function BioGenerics.hasseqname(record::Record)
-    return hasidentifier(record)
+    return true
 end
 
 """
@@ -247,14 +240,7 @@ function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastind
     return String(record.data[record.sequence[part]])
 end
 
-"""
-    hassequence(record::Record)
-
-Checks whether or not a sequence record contains a sequence.
-"""
-function hassequence(record::Record)
-    true # for backwars compatibility
-end
+@deprecate hassequence(x::Record) !isempty(x.sequence)
 
 "Get the length of the fasta record's sequence."
 @inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
@@ -283,10 +269,6 @@ Copy an N long block of sequence data from the fasta record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    if !hassequence(src)
-        missingerror(:sequence)
-    end
-    
     # This check is here to prevent boundserror when indexing src.sequence
     iszero(N) && return dest
     return copyto!(dest, doff, src.data, src.sequence[soff], N)
@@ -297,7 +279,7 @@ function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences
 end
 
 function BioGenerics.hassequence(record::Record)
-    return hassequence(record)
+    return true
 end
 
 function checkfilled(record)
