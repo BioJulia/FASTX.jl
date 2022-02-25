@@ -19,6 +19,14 @@ Create a data writer of the FASTQ file format.
 # Arguments
 * `output`: data sink
 * `quality_header=false`: output the title line at the third line just after '+'
+
+# Extended help
+`Writer`s take ownership of the underlying IO. That means the underlying IO may
+not be directly modified such as writing or reading from it, or seeking in it.
+
+`Writer`s carry their own buffer. This buffer is flushed when the `Writer` is closed.
+Do not close the underlying IO without flushing the `Writer` first. Closing the
+`Writer` automatically flushes, then closes the underlying IO, and is preferred.
 """
 function Writer(output::IO, quality_header::Bool)
     if output isa TranscodingStream
