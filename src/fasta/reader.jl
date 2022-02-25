@@ -19,17 +19,13 @@ Create a data reader of the FASTA file format.
 `Reader`s take ownership of the underlying IO. That means the underlying IO may
 not be directly modified such as writing or reading from it, or seeking in it.
 
-`Reader`s carry their own buffer. This buffer is flushed when the `Reader` is closed.
-Do not close the underlying IO without flushing the `Reader` first. Closing the
-`Reader` automatically flushes, then closes the underlying IO, and is preferred.
+`Reader`s carry their own buffer. This means that the underlying IO may be `eof`
+before the `Reader` itself. To avoid issues, do not interact with the underlying
+IO while a `Reader` is using it.
 
 `Reader`s are iterable and yield `Record` objects. For improved reading speed,
 instantiate a single `Record`, then `read!` into the record repeatedly until 
 `eof(reader)`. Note that this approach overwrite the same mutable `Record`.
-
-* iterate
-* close
-
 """
 function Reader(input::IO; index = nothing)
     if isa(index, AbstractString)
