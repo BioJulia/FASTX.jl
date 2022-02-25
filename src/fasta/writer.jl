@@ -9,6 +9,14 @@ Create a data writer of the FASTA file format.
 # Arguments
 * `output`: data sink
 * `width=70`: wrapping width of sequence characters
+
+# Extended help
+`Writer`s take ownership of the underlying IO. That means the underlying IO may
+not be directly modified such as writing or reading from it, or seeking in it.
+
+`Writer`s carry their own buffer. This buffer is flushed when the `Writer` is closed.
+Do not close the underlying IO without flushing the `Writer` first. Closing the
+`Writer` automatically flushes, then closes the underlying IO, and is preferred.
 """
 struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S

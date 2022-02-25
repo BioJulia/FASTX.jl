@@ -14,6 +14,22 @@ Create a data reader of the FASTA file format.
 # Arguments
 * `input`: data source
 * `index=nothing`: filepath to a random access index (currently *fai* is supported)
+
+# Extended help
+`Reader`s take ownership of the underlying IO. That means the underlying IO may
+not be directly modified such as writing or reading from it, or seeking in it.
+
+`Reader`s carry their own buffer. This buffer is flushed when the `Reader` is closed.
+Do not close the underlying IO without flushing the `Reader` first. Closing the
+`Reader` automatically flushes, then closes the underlying IO, and is preferred.
+
+`Reader`s are iterable and yield `Record` objects. For improved reading speed,
+instantiate a single `Record`, then `read!` into the record repeatedly until 
+`eof(reader)`. Note that this approach overwrite the same mutable `Record`.
+
+* iterate
+* close
+
 """
 function Reader(input::IO; index = nothing)
     if isa(index, AbstractString)

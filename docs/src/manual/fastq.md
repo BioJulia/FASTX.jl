@@ -43,6 +43,11 @@ w = FASTQ.Writer(open("my-output.fastq", "w"))
 
 As always with julia IO types, remember to close your file readers and writer
 after you are finished.
+In particular, `Reader` and `Writer` objects take _ownership_ of the underlying IO.
+This means that you should not modify or use the underlying IO while a reader or
+writer is using it.
+When you are done with the reader/writer, close it and not the underlying IO.
+The underlying IO will automatically be closed when closing the reader/writer.
 
 Using `open` with a do-block can help ensure you close a stream after you are
 finished. `Base.open` is overloaded with a method for this purpose.
