@@ -118,7 +118,7 @@ To write a `BioSequence` to FASTA file, you first have to create a [`FASTA.Recor
 using BioSequences
 x = dna"aaaaatttttcccccggggg"
 rec = FASTA.Record("MySeq", x)
-open(FASTA.Writer, "my-out.fasta") do
+open(FASTA.Writer, "my-out.fasta") do w
     write(w, rec)
 end
 ```
