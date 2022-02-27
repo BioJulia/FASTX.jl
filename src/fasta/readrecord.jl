@@ -20,8 +20,8 @@ machine = (function ()
     header.actions[:enter] = [:mark]
     header.actions[:exit]  = [:header]
     
-    # '*': terminal, `-': gap
-    letters = re"[A-Za-z*\-]+"
+    letters = re.rep1(re"[!-~]" \ re">")
+    
     letters.actions[:enter] = [:mark]
     letters.actions[:exit]  = [:letters]
     
