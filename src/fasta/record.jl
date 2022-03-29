@@ -14,7 +14,7 @@ end
 """
     FASTA.Record()
 
-Create an default FASTA record.
+Create the default FASTA record.
 """
 function Record()
     return Record(collect(codeunits(">\nA")), 1:3, 1:0, 1:0, 3:3)
@@ -78,7 +78,7 @@ function Base.:(==)(record1::Record, record2::Record)
     r1 = record1.filled
     r2 = record2.filled
     r1 == r2 || return false
-    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(1)), length(r1)) == 0
+    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r1)), length(r1)) == 0
 end
 
 function Base.copy(record::Record)
@@ -103,7 +103,7 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     println(io)
     println(io, "   identifier: ", identifier(record))
-    println(io, "  description: ", hasdescription(record) ? description(record) : "")
+    println(io, "  description: ", description(record))
     print(io,   "     sequence: ",   truncate(sequence(String, record), 40))
 end
 
@@ -240,7 +240,6 @@ function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastind
     return String(record.data[record.sequence[part]])
 end
 
-@deprecate hassequence(x::Record) !isempty(x.sequence)
 
 "Get the length of the fasta record's sequence."
 @inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1

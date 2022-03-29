@@ -15,7 +15,7 @@ end
 """
     FASTQ.Record()
 
-Create an unfilled FASTQ record.
+Create the default FASTQ record.
 """
 function Record()
     return Record(collect(codeunits("@A\nA\n+\nA")), 1:8, 2:2, 1:0, 4:4, 8:8)
@@ -87,7 +87,7 @@ function Base.:(==)(record1::Record, record2::Record)
     r1 = record1.filled
     r2 = record2.filled
     r1 == r2 || return false
-    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(1)), length(r1)) == 0
+    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r1)), length(r1)) == 0
 end
 
 function Base.copy(record::Record)
