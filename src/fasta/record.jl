@@ -4,10 +4,10 @@
 mutable struct Record
     # data and filled range
     data::Vector{UInt8}
-    filled::UnitRange{Int}
-    # indexes
-    identifier::UnitRange{Int}
-    description::UnitRange{Int}
+    filled::Int
+    # Identifier and description always start at index 2 in data
+    identifier_len::Int
+    description_len::Int
     sequence::UnitRange{Int}
 end
 
@@ -17,7 +17,8 @@ end
 Create the default FASTA record.
 """
 function Record()
-    return Record(collect(codeunits(">\nA")), 1:3, 1:0, 1:0, 3:3)
+    # Minimal FASTA Record
+    return Record(collect(codeunits(">\n3")), 3, 0, 0, 3:3)
 end
 
 """
@@ -33,7 +34,7 @@ This function verifies and indexes fields for accessors.
     construction of the record.
 """
 function Record(data::Vector{UInt8})
-    record = Record(data, 1:0, 1:0, 1:0, 1:0)
+    record = Record(data, 0, 0, 0, 0:0)
     index!(record)
     return record
 end
@@ -50,27 +51,14 @@ Record(str::AbstractString) = Record(Vector{UInt8}(str))
 Base.parse(::Record, str::AbstractString) = Record(str)
 
 """
-    FASTA.Record(identifier, sequence)
+    FASTA.Record(description::AbstractString, sequence)
 
-Create a FASTA record object from `identifier` and `sequence`.
+Create a FASTA record object from `description` and `sequence`.
 """
-function Record(identifier::AbstractString, sequence)
-    return Record(identifier, nothing, sequence)
-end
-
-"""
-    FASTA.Record(identifier, description, sequence)
-
-Create a FASTA record object from `identifier`, `description` and `sequence`.
-"""
-function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence::Union{BioSequences.BioSequence, AbstractString})
+function Record(description::AbstractString, sequence::Union{BioSequences.BioSequence, AbstractString})
     buf = IOBuffer()
-    print(buf, '>', strip(identifier))
-    if description !== nothing
-        print(buf, ' ', description)
-    end
-    print(buf, '\n')
-    print(buf, sequence, '\n')
+    print(buf, '>', description, '\n')
+    print(buf, sequence)
     return Record(take!(buf))
 end
 
@@ -78,20 +66,20 @@ function Base.:(==)(record1::Record, record2::Record)
     r1 = record1.filled
     r2 = record2.filled
     r1 == r2 || return false
-    return memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r1)), length(r1)) == 0
+    return memcmp(pointer(record1.data), pointer(record2.data), r1) == 0
 end
 
 function Base.copy(record::Record)
     return Record(
-        record.data[record.filled],
+        record.data[1:record.filled],
         record.filled,
-        record.identifier,
-        record.description,
+        record.identifier_len,
+        record.description_len,
         record.sequence)
 end
 
 function Base.write(io::IO, record::Record)
-    return unsafe_write(io, pointer(record.data, first(record.filled)), length(record.filled))
+    return unsafe_write(io, pointer(record.data), record.filled)
 end
 
 function Base.print(io::IO, record::Record)
@@ -102,9 +90,8 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     println(io)
-    println(io, "   identifier: ", identifier(record))
-    println(io, "  description: ", description(record))
-    print(io,   "     sequence: ",   truncate(sequence(String, record), 40))
+    println(io, "description: ", description(record))
+    print(io,   "   sequence: ", truncate(sequence(String, record), 40))
 end
 
 function truncate(s::String, len::Integer)
@@ -116,10 +103,10 @@ function truncate(s::String, len::Integer)
 end
 
 function initialize!(record::Record)
-    record.filled = 1:0
-    record.identifier = 1:0
-    record.description = 1:0
-    record.sequence = 1:0
+    record.filled = 3
+    record.identifier = 0
+    record.description = 0
+    record.sequence = 3:3
     return record
 end
 
@@ -144,10 +131,8 @@ Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
 """
 function identifier(record::Record)::StringView
-    return StringView(view(record.data, record.identifier))
+    return StringView(view(record.data, 2:record.identifier))
 end
-
-@deprecate hasidentifier(record::Record) !isempty(identifier(record))
 
 function BioGenerics.seqname(record::Record)
     return identifier(record)
@@ -160,49 +145,16 @@ end
 """
     description(record::Record)::Union{StringView, Nothing}
 
-Get the description of `record`.
-Returns an `AbstractString` view into the record. If the record is overwritten,
-the string data will be corrupted.
-
-!!! note
-    Returns `nothing` if record has no description.
-"""
-function description(record::Record)::Union{StringView, Nothing}
-    if !hasdescription(record)
-        return nothing
-    end
-    return StringView(view(record.data, record.description))
-end
-
-"""
-    hasdescription(record::Record)
-
-Checks whether or not the `record` has a description.
-"""
-function hasdescription(record::Record)
-    return !isempty(record.description)
-end
-
-"""
-    header(record::Record)::StringView
-
-Returns the stripped header line of `record`. If the header is empty, return an empty string.
+Get the description of `record`. The description is the entire header line.
 Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
 """
-function header(record::Record)::StringView
-    id, de = record.identifier, record.description
-    range = if isempty(id) && isempty(de)
-        1:0
-    elseif isempty(de)
-        id
-    elseif isempty(id)
-        de
-    else
-        first(id):last(de)
-    end
-    return StringView(view(record.data, range))
+function description(record::Record)::StringView
+    return StringView(view(record.data, 2:record.description))
 end
+
+# Keep this for backwards compability
+const header = description
 
 """
     sequence_iter(T, record::Record)
@@ -211,8 +163,11 @@ Yields an iterator of the sequence, with elements of type `T`. `T` is constructe
 through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
 Mutating the record will corrupt the iterator.
 """
-function sequence_iter(::Type{T}, record::Record,
-    part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
+function sequence_iter(
+    ::Type{T},
+    record::Record,
+    part::UnitRange{<:Integer}=1:lastindex(record.sequence)
+) where {T <: BioSymbols.BioSymbol}
     seqpart = record.sequence[part]
     data = record.data
     return (T(Char(@inbounds (data[i]))) for i in seqpart)
@@ -231,18 +186,26 @@ If `part` argument is given, it returns the specified part of the sequence.
     If you have a sequence already and want to fill it with the sequence
     data contained in a fasta record, you can use `Base.copyto!`.
 """
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
+function sequence(
+    ::Type{S},
+    record::Record,
+    part::UnitRange{Int}=1:lastindex(record.sequence)
+)::S where S <: BioSequences.LongSequence
     seqpart = record.sequence[part]
     return S(@view(record.data[seqpart]))
 end
 
-function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
+function sequence(
+    ::Type{String},
+    record::Record,
+    part::UnitRange{Int}=1:lastindex(record.sequence)
+)::String
     return String(record.data[record.sequence[part]])
 end
 
 
 "Get the length of the fasta record's sequence."
-@inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
+@inline seqlen(record::Record) = length(record.sequence)
 
 function Base.copy!(dest::BioSequences.LongSequence, src::Record)
     resize!(dest, seqlen(src) % UInt)
