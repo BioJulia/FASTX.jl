@@ -15,7 +15,7 @@ import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier, hasidentifier,
     description, hasdescription, header,
-    sequence, hassequence
+    sequence, hassequence, UTF8
 
 include("record.jl")
 include("index.jl")

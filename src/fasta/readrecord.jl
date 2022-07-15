@@ -1,48 +1,64 @@
 # Automa.jl generated readrecord! function
 # ========================================
 
+# The current implementation of the machine has the following debatable choices
+# * You can put anything except \r and \n in the description, including trailing
+#   whitespace.
+# * You can put anything in the sequence lines except \n, \r and, and cannot begin with >.
+#   The sequence must include at least one newline, i.e. ">A>A" is not valid FASTA,
+#   but ">A\n>A\n" is. The newlines are not considered part of the sequence lines themselves.
+#   This implies all whitespace except newlines, including trailing whitespace, is part
+#   of the sequence.
 machine = (function ()
     isinteractive() && @info "Compiling FASTA FSM..." 
 
     re = Automa.RegExp
     
     hspace = re"[ \t\v]"
-    
-    identifier = re.rep(re.any() \ re.space())
-    identifier.actions[:enter] = [:pos]
-    identifier.actions[:exit]  = [:identifier]
-    
-    description = re.cat(re.any() \ re.space(), re"[^\n\r]*")
-    description.actions[:enter] = [:pos]
-    description.actions[:exit]  = [:description]
-
-    header = re">" * identifier * re.opt(re.rep1(hspace) * re.opt(description))
-    header.actions[:enter] = [:mark]
-    header.actions[:exit]  = [:header]
-    
-    # '*': terminal, `-': gap
-    letters = re"[A-Za-z*\-]+"
-    letters.actions[:enter] = [:mark]
-    letters.actions[:exit]  = [:letters]
-    
     newline = let
         lf = re"\n"
         lf.actions[:enter] = [:countline]
-        re.cat(re.opt('\r'), lf)
+        re.opt('\r') * lf
     end
+    space = hspace | newline
+    
+    # Identifier: Leading non-space
+    identifier = re.rep(re.any() \ re.space())
+    identifier.actions[:enter] = [:mark]
+    # Action: Store length of identifier
+    identifier.actions[:exit]  = [:identifier]
+    
+    # Description here include trailing whitespace.
+    # This is needed for the FSM, since the description can contain arbitrary
+    # whitespace, the only way to know the description ends is to encounter a newline.
+    description = identifier * re.opt(hspace * re"[^\r\n]*")
 
-    # Sequence: A sequence can be any free combination of newline, letters and hspace
-    # It cannot be re.rep(letters | hspace | newline), because back-to-back repeated
-    # letters would cause an FSM ambiguity between nothing and [:letters, :mark]
-    sequence = re.rep(hspace | newline) * letters * re.rep((hspace | newline) * re.opt(letters))
+    # Action: Store length of description and append description to record.data
+    description.actions[:exit]  = [:description]
 
-    record = re.cat(header, newline, sequence, re.rep1(newline))
+    # Header: '>' then description
+    header = re">" * description
+    
+    # Sequence line: Anything except \r, \n. Cannot begin with >
+    sequence_line = re"[^\n\r>][^\n\r]*"
+    sequence_line.actions[:enter] = [:mark]
+    # Action: Append letters to sequence_line
+    sequence_line.actions[:exit]  = [:seqline]
+
+    # Sequence: This is intentionally very liberal with whitespace.
+    # Any trailing whitespace is simply considered part of the sequence.
+    # Is this bad? Maybe.
+    sequence = re.rep1(re.opt(sequence_line) * re.rep1(newline))
+    
+    # We have sequence_eof to allow the final sequence to not end in whitespace
+    sequence_eof = sequence_line * re.rep(re.rep1(newline) * re.opt(sequence_line))
+
+    record = header * newline * sequence
     record.actions[:exit] = [:record]
-    
-    record_trailing = re.cat(header, re.rep1(newline), sequence)
-    record_trailing.actions[:exit] = [:record]
-    
-    fasta = re.cat(re.rep(newline), re.rep(record), re.opt(record_trailing))
+    record_eof = header * newline * sequence_eof
+    record_eof.actions[:exit] = [:record]
+
+    fasta = re.rep(space) * re.rep(record) * re.opt(record_eof)
     
     Automa.compile(fasta)
 end)()
@@ -52,31 +68,25 @@ end)()
 
 actions = Dict(
     :mark => :(@mark),
-    :pos => :(pos = @relpos(p)),
     :countline => :(linenum += 1),
-    :identifier => :(record.identifier = pos:@relpos(p-1)),
-    :description => :(record.description = pos:@relpos(p-1)),
-    :header => quote
-        let n = p - @markpos
+    :identifier => :(record.identifier_len = Int32(@relpos(p-1))),
+    # Append entire header line to buffer from pos 1
+    :description => quote
+        let n = @relpos(p-1)
             appendfrom!(record.data, 1, data, @markpos, n)
             filled += n
-            appendfrom!(record.data, filled + 1, b"\n", 1, 1)
-            filled += 1
+            record.description_len = Int32(n)
         end
     end,
-    :letters => quote
-        let markpos = @markpos(), n = @relpos(p-1) - @relpos(markpos) + 1
-            appendfrom!(record.data, filled + 1, data, markpos, n)
-            if isempty(record.sequence)
-                record.sequence = filled+1:filled+n
-            else
-                record.sequence = first(record.sequence):last(record.sequence)+n
-            end
+    # Append sequence line to buffer
+    :seqline => quote
+        let n = @relpos(p-1)
+            appendfrom!(record.data, filled + 1, data, @markpos, n)
             filled += n
+            record.sequence_len += n
         end
     end,
     :record => quote
-        record.filled = 1:filled
         found = true
         @escape
     end
@@ -94,7 +104,7 @@ initcode = quote
     pos = 0
     filled = 0
     found = false
-    initialize!(record)
+    empty!(record)
     cs, linenum = state
 end
 
@@ -107,7 +117,10 @@ end
 
 returncode = :(return cs, linenum, found)
 
-context = Automa.CodeGenContext(generator = :goto, checkbounds = false, loopunroll = 8)
+context = Automa.CodeGenContext(
+    generator=:simd,
+    checkbounds=false
+)
 
 isinteractive() && @info "Generating FASTA parsing code..."
 

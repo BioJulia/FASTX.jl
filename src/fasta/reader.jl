@@ -30,7 +30,7 @@ instantiate a single `Record`, then `read!` into the record repeatedly until
 function Reader(input::IO; index = nothing)
     if isa(index, AbstractString)
         index = Index(index)
-    elseif index != nothing
+    elseif index !== nothing
         throw(ArgumentError("index must be a filepath or nothing"))
     end
     if !(input isa TranscodingStream)
@@ -69,7 +69,7 @@ function Base.close(reader::Reader)
 end
 
 function Base.getindex(reader::Reader, name::AbstractString)
-    if reader.index == nothing
+    if reader.index === nothing
         throw(ArgumentError("no index attached"))
     end
     #seekrecord(reader.state.stream, reader.index, name)
@@ -91,7 +91,7 @@ Extract a subsequence given by index `range` from the sequence `named` in a
 """
 function extract(reader::Reader, A::BioSequences.Alphabet, name::AbstractString, range::UnitRange)
     index = reader.index
-    if index == nothing
+    if index === nothing
         throw(ArgumentError("no index attached"))
     end
     i = index[name]
@@ -118,8 +118,8 @@ function extract(reader::Reader, A::BioSequences.Alphabet, name::AbstractString,
     return BioSequences.LongSequence{typeof(A)}(buffer)
 end
 
-function index!(record::Record)
-    stream = TranscodingStreams.NoopStream(IOBuffer(record.data))
+function index!(record::Record, data::UTF8)
+    stream = TranscodingStreams.NoopStream(IOBuffer(data))
     cs, linenum, found = readrecord!(stream, record, (1, 1))
     if !found || !allspace(stream)
         throw(ArgumentError("invalid FASTA record"))

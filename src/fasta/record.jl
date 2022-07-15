@@ -2,14 +2,27 @@
 # ============
 
 mutable struct Record
-    # data and filled range
+    # Data contains the description, then the sequence immediately after
+    # without newlines, or the initial > symbol, and then any unused trailing bytes
     data::Vector{UInt8}
-    filled::Int
-    # Identifier and description always start at index 2 in data
-    identifier_len::Int
-    description_len::Int
-    sequence::UnitRange{Int}
+
+    # Identifier is data[1:identifier_len]
+    identifier_len::Int32
+
+    # Description is data[1:description_len], i.e. it includes the identifier
+    description_len::Int32
+
+    # Sequence is data[description_len+1 : description_len+sequence_len]
+    sequence_len::Int
 end
+
+filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
+
+"Get the indices of `data` that correspond to sequence indices `part`"
+function seq_data_part(record::Record, part::AbstractUnitRange)
+    Int(record.description_len) + first(part) : Int(record.description_len) + last(part)
+end
+
 
 """
     FASTA.Record()
@@ -17,38 +30,33 @@ end
 Create the default FASTA record.
 """
 function Record()
-    # Minimal FASTA Record
-    return Record(collect(codeunits(">\n3")), 3, 0, 0, 3:3)
+    return Record(Vector{UInt8}(), 0, 0, 0)
 end
 
-"""
-    FASTA.Record(data::Vector{UInt8})
-
-Create a FASTA record object from `data`.
-
-This function verifies and indexes fields for accessors.
-
-!!! warning
-    Note that the ownership of `data` is transferred to a new record object.
-    Editing the input data will edit the record, and is not advised after
-    construction of the record.
-"""
-function Record(data::Vector{UInt8})
-    record = Record(data, 0, 0, 0, 0:0)
-    index!(record)
+function Base.empty!(record::Record)
+    # Do not truncate the underlying data buffer
+    record.identifier_len = 0
+    record.description_len = 0
+    record.sequence_len = 0
     return record
 end
 
 """
-    FASTA.Record(str::AbstractString)
+    FASTA.Record(data::Union{Vector{UInt8, String, SubString{String}}})
 
-Create a FASTA record object from `str`.
+Create a FASTA record object from `data`.
 
 This function verifies and indexes fields for accessors.
+Note that this function allocates a new array.
+To parse a record in-place, use `index!(record, data)`
 """
-Record(str::AbstractString) = Record(Vector{UInt8}(str))
+Record(data::UTF8) = parse(Record, data)
 
-Base.parse(::Record, str::AbstractString) = Record(str)
+function Base.parse(::Type{Record}, data::UTF8)
+    record = Record(UInt8[], 0, 0, 0)
+    index!(record, data)
+    return record
+end
 
 """
     FASTA.Record(description::AbstractString, sequence)
@@ -58,28 +66,33 @@ Create a FASTA record object from `description` and `sequence`.
 function Record(description::AbstractString, sequence::Union{BioSequences.BioSequence, AbstractString})
     buf = IOBuffer()
     print(buf, '>', description, '\n')
-    print(buf, sequence)
+    # If the sequence is empty, we need to print a newline in order to not
+    # have the FASTA file truncated, thus invalid
+    print(buf, isempty(sequence) ? '\n' : sequence)
     return Record(take!(buf))
 end
 
 function Base.:(==)(record1::Record, record2::Record)
-    r1 = record1.filled
-    r2 = record2.filled
-    r1 == r2 || return false
-    return memcmp(pointer(record1.data), pointer(record2.data), r1) == 0
+    filled1 = filled(record1)
+    filled1 == filled(record2) || return false
+    return memcmp(pointer(record1.data), pointer(record2.data), filled1) == 0
 end
 
 function Base.copy(record::Record)
     return Record(
-        record.data[1:record.filled],
-        record.filled,
+        record.data[1:filled(record)],
         record.identifier_len,
         record.description_len,
-        record.sequence)
+        record.sequence_len
+    )
 end
 
 function Base.write(io::IO, record::Record)
-    return unsafe_write(io, pointer(record.data), record.filled)
+    data = record.data
+    write(io, UInt8('>'))
+    write(io, data, UInt(record.description_len))
+    write(io, UInt8('\n'))
+    write(io, pointer(data) + UInt(record.description_len), UInt(record.sequence_len))
 end
 
 function Base.print(io::IO, record::Record)
@@ -90,24 +103,16 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     println(io)
-    println(io, "description: ", description(record))
-    print(io,   "   sequence: ", truncate(sequence(String, record), 40))
+    println(io, "description: \"", description(record), '"')
+    print(io,   "   sequence: \"", truncate(sequence(String, record), 40), '"')
 end
 
 function truncate(s::String, len::Integer)
     if length(s) > len
-        return "$(String(collect(Iterators.take(s, len - 1))))…"
+        return string(String(collect(Iterators.take(s, len - 1))), '…')
     else
         return s
     end
-end
-
-function initialize!(record::Record)
-    record.filled = 3
-    record.identifier = 0
-    record.description = 0
-    record.sequence = 3:3
-    return record
 end
 
 function BioGenerics.isfilled(::Record)
@@ -131,7 +136,7 @@ Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
 """
 function identifier(record::Record)::StringView
-    return StringView(view(record.data, 2:record.identifier))
+    return StringView(view(record.data, 1:Int(record.identifier_len)))
 end
 
 function BioGenerics.seqname(record::Record)
@@ -143,21 +148,17 @@ function BioGenerics.hasseqname(record::Record)
 end
 
 """
-    description(record::Record)::Union{StringView, Nothing}
+    description(record::Record)::StringView
 
 Get the description of `record`. The description is the entire header line.
-Returns an `AbstractString` view into the record. If the record is overwritten,
-the string data will be corrupted.
+Returns an `AbstractString` view into the record.
 """
 function description(record::Record)::StringView
-    return StringView(view(record.data, 2:record.description))
+    return StringView(view(record.data, 1:Int(record.description_len)))
 end
 
-# Keep this for backwards compability
-const header = description
-
 """
-    sequence_iter(T, record::Record)
+    sequence_iter(T, record::Record, part)
 
 Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
 through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
@@ -166,11 +167,12 @@ Mutating the record will corrupt the iterator.
 function sequence_iter(
     ::Type{T},
     record::Record,
-    part::UnitRange{<:Integer}=1:lastindex(record.sequence)
+    part::UnitRange{<:Integer}=(1:record.sequence_len)
 ) where {T <: BioSymbols.BioSymbol}
-    seqpart = record.sequence[part]
+    datapart = Int(record.description_len) + first(part) : Int(record.description_len) + last(part)
     data = record.data
-    return (T(Char(@inbounds (data[i]))) for i in seqpart)
+    checkbounds(data, datapart)
+    return (T(Char(@inbounds(data[i]))) for i in datapart)
 end
 
 """
@@ -189,27 +191,22 @@ If `part` argument is given, it returns the specified part of the sequence.
 function sequence(
     ::Type{S},
     record::Record,
-    part::UnitRange{Int}=1:lastindex(record.sequence)
+    part::UnitRange{Int}=1:record.sequence_len
 )::S where S <: BioSequences.LongSequence
-    seqpart = record.sequence[part]
-    return S(@view(record.data[seqpart]))
+    return S(@view(record.data[seq_data_part(record, part)]))
 end
 
 function sequence(
     ::Type{String},
     record::Record,
-    part::UnitRange{Int}=1:lastindex(record.sequence)
+    part::UnitRange{Int}=1:record.sequence_len
 )::String
-    return String(record.data[record.sequence[part]])
+    return String(record.data[seq_data_part(record, part)])
 end
 
-
-"Get the length of the fasta record's sequence."
-@inline seqlen(record::Record) = length(record.sequence)
-
 function Base.copy!(dest::BioSequences.LongSequence, src::Record)
-    resize!(dest, seqlen(src) % UInt)
-    copyto!(dest, 1, src, 1, seqlen(src))
+    resize!(dest, UInt(src.sequence_len))
+    copyto!(dest, 1, src, 1, src.sequence_len)
 end
 
 """
@@ -221,7 +218,7 @@ the sequence represented in the fastq record. The first n elements of `dest` are
 overwritten, the other elements are left untouched.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, seqlen(src))
+    return copyto!(dest, 1, src, 1, src.sequence_len)
 end
 
 """
@@ -233,7 +230,7 @@ position `soff`, to the `BioSequence` dest, starting at position `doff`.
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
     # This check is here to prevent boundserror when indexing src.sequence
     iszero(N) && return dest
-    return copyto!(dest, doff, src.data, src.sequence[soff], N)
+    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
 function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
@@ -244,53 +241,7 @@ function BioGenerics.hassequence(record::Record)
     return true
 end
 
-function checkfilled(record)
-    nothing # for backwards compatibility
-end
-
-# Predict sequence type based on character frequencies in `seq[start:stop]`.
-function predict_seqtype(seq::Vector{UInt8}, range)
-    # count characters
-    a = c = g = t = u = n = alpha = 0
-    for i in range
-        @inbounds x = seq[i]
-        if x == 0x41 || x == 0x61
-            a += 1
-        elseif x == 0x43 || x == 0x63
-            c += 1
-        elseif x == 0x47 || x == 0x67
-            g += 1
-        elseif x == 0x54 || x == 0x74
-            t += 1
-        elseif x == 0x55 || x == 0x75
-            u += 1
-        elseif x == 0x4e || x == 0x6e
-            n += 1
-        end
-        if 0x41 ≤ x ≤ 0x5a || 0x61 ≤ x ≤ 0x7a
-            alpha += 1
-            if alpha ≥ 300 && t + u > 0 && a + c + g + t + u + n == alpha
-                # pretty sure that the sequence is either DNA or RNA
-                break
-            end
-        end
-    end
-
-    # the threshold (= 0.95) is somewhat arbitrary
-    if (a + c + g + t + u + n) / alpha > 0.95
-        if t ≥ u
-            return BioSequences.LongDNA{4}
-        else
-            return BioSequences.LongRNA{4}
-        end
-    else
-        return BioSequences.LongAA
-    end
-end
-
+# TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
-	isempty(record.identifier) || (h = hash(view(record.data, record.identifier), h))
-	isempty(record.description) || (h = hash(view(record.data, record.description), h))
-	isempty(record.sequence) || (h = hash(view(record.data, record.sequence), h))
-	h
+    hash(record.data, h ⊻ objectid(Record))
 end

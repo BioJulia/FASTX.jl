@@ -22,7 +22,10 @@ function sequence end
 function hasidentifier end
 function hasdescription end
 function hassequence end
-function header end
+
+const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
+
+const header = description
 
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
