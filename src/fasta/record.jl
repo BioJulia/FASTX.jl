@@ -243,5 +243,5 @@ end
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
-    hash(record.data, h ⊻ objectid(Record))
+    hash(view(record.data, filled(record)), h ⊻ objectid(Record))
 end

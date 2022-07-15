@@ -19,6 +19,11 @@ import BioSequences:
     Alphabet
 
 @testset "FASTA" begin
+    include("fasta.jl")
+end
+
+#=
+@testset "FASTA" begin
     @testset "Record" begin
         record = FASTA.Record()
         @test BioGenerics.isfilled(record)
@@ -260,7 +265,9 @@ import BioSequences:
         end
     end
 end
+=#
 
+#=
 @testset "FASTQ" begin
     @test isa(FASTQ.Record("1", dna"AA", UInt8[10, 11]), FASTQ.Record)
     @test isa(FASTQ.Record("1", "desc.", dna"AA", UInt8[10, 11]), FASTQ.Record)
@@ -605,3 +612,4 @@ end
     end
 
 end
+=#
