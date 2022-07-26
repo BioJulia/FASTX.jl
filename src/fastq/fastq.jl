@@ -9,9 +9,9 @@ import BioGenerics: BioGenerics, isfilled
 import BioGenerics.Automa: State
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
-import ..FASTX: identifier, hasidentifier,
-    description, hasdescription, header,
-    sequence, hassequence
+import ..FASTX: identifier,
+    description, header,
+    sequence, UTF8, sequence_length
 
 include("quality.jl")
 include("record.jl")

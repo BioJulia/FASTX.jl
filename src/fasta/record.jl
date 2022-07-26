@@ -17,13 +17,7 @@ mutable struct Record
 end
 
 filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
-
-"Get the indices of `data` that correspond to sequence indices `part`"
-function seq_data_part(record::Record, part::AbstractUnitRange)
-    start, stop = first(part), last(part)
-    (start < 1 || stop > record.sequence_len) && throw(BoundsError(record, start:stop))
-    Int(record.description_len) + start:Int(record.description_len) + stop
-end
+sequence_length(record::Record) = record.sequence_len
 
 """
     FASTA.Record()
@@ -136,14 +130,6 @@ end
 # Accessor functions
 # ------------------
 
-"""
-    identifier(record::Record)::StringView
-
-Get the sequence identifier of `record`. The identifier is the header
-before any whitespace. If the identifier is missing, return an empty string.
-Returns an `AbstractString` view into the record. If the record is overwritten,
-the string data will be corrupted.
-"""
 function identifier(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.identifier_len)))
 end
@@ -156,50 +142,8 @@ function BioGenerics.hasseqname(record::Record)
     return true
 end
 
-"""
-    description(record::Record)::StringView
-
-Get the description of `record`. The description is the entire header line.
-Returns an `AbstractString` view into the record.
-"""
 function description(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.description_len)))
-end
-
-"""
-    sequence([::Type{S}], record::Record, [part::UnitRange{Int}])::S
-
-Get the sequence of `record`.
-
-`S` can be either a subtype of `BioSequences.BioSequence` or `String`.
-If elided, `S` defaults to `StringView`.
-If `part` argument is given, it returns the specified part of the sequence.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fasta record, you can use `Base.copyto!`.
-"""
-sequence(record::Record, part::UnitRange{Int}=1:record.sequence_len) = sequence(StringView, record, part)
-
-function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:record.sequence_len)
-    return StringView(view(record.data, seq_data_part(record, part)))
-end
-
-function sequence(
-    ::Type{S},
-    record::Record,
-    part::UnitRange{Int}=1:record.sequence_len
-)::S where S <: BioSequences.LongSequence
-    return S(@view(record.data[seq_data_part(record, part)]))
-end
-
-function sequence(
-    ::Type{String},
-    record::Record,
-    part::UnitRange{Int}=1:record.sequence_len
-)::String
-    return String(record.data[seq_data_part(record, part)])
 end
 
 function Base.copy!(dest::BioSequences.LongSequence, src::Record)
