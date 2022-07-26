@@ -4,40 +4,42 @@
 struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
     state::State{S}
     seq_transform::Union{Function, Nothing}
+    record::Record
+    copy::Bool
 end
 
 """
-    FASTQ.Reader(input::IO; fill_ambiguous=nothing)
+    FASTQ.Reader(input::IO; fill_ambiguous=nothing, copy=true)
 
 Create a data reader of the FASTQ file format.
 
 # Arguments
 * `input`: data source
 * `fill_ambiguous=nothing`: fill ambiguous symbols with the given symbol
-
-# Extended help
-`Reader`s take ownership of the underlying IO. That means the underlying IO may
-not be directly modified such as writing or reading from it, or seeking in it.
-
-`Reader`s carry their own buffer. This means that the underlying IO may be `eof`
-before the `Reader` itself. To avoid issues, do not interact with the underlying
-IO while a `Reader` is using it.
-
-`Reader`s are iterable and yield `Record` objects. For improved reading speed,
-instantiate a single `Record`, then `read!` into the record repeatedly until 
-`eof(reader)`. Note that this approach overwrite the same mutable `Record`.
+* `copy::Bool`: iterating returns fresh copies instead of the same Record
 """
-function Reader(input::IO; fill_ambiguous = nothing)
+function Reader(input::IO; fill_ambiguous = nothing, copy::Bool=true)
     if fill_ambiguous === nothing
         seq_transform = nothing
     else
         seq_transform = generate_fill_ambiguous(fill_ambiguous)
     end
+    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
     if !(input isa TranscodingStream)
         stream = TranscodingStreams.NoopStream(input)
-        return Reader(State(stream, 1, 1, false), seq_transform)
+        return Reader(State(stream, 1, 1, false), seq_transform, record, copy)
     else
-        return Reader(State(input, 1, 1, false), seq_transform)
+        return Reader(State(input, 1, 1, false), seq_transform, copy)
+    end
+end
+
+function Base.iterate(reader::Reader, state=nothing)
+    eof(reader) && return nothing
+    read!(reader, reader.record)
+    return if reader.copy
+        (copy(reader.record), nothing)
+    else
+        (reader.record, nothing)
     end
 end
 
