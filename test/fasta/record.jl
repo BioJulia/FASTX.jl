@@ -63,7 +63,7 @@ end
 
 @testset "Construction edge cases" begin
     # Minimal sequence
-    record = Record(">\n\n")
+    record = Record(">\n")
     @test "" == identifier(record) == description(record) == sequence(String, record)
 
     # Empty identifier

@@ -71,6 +71,47 @@ end
     @test writer_bytes == target_bytes
 end
 
+# TranscodingStreams does not support flushing yet, so the FASTX implementation
+# reaches into TS's internals. Hence we need to test it thoroughly
+@testset "Writer flushing" begin
+    strings = [
+        ">hello there \nAACC\r\nTTGG",
+        ">\n",
+        ">someheader\n",
+        "> tr wh [] ... ab **7\npwQ.---0l\r\n\r\naaaccc\r\n",
+    ]
+    target_strings = mktemp() do path, io
+        map(strings) do string
+            writer = Writer(open(path, "w"))
+            write(writer, Record(string))
+            close(writer)
+            open(io -> read(io, String), path)
+        end
+    end
+    # Test that flushing at arbitrary points, then writing some more
+    # works as expected
+    for i in eachindex(strings)
+        buf = IOBuffer()
+        writer = Writer(buf)
+        
+        # First write some of the records and check that flush works
+        for j in 1:i-1
+            write(writer, Record(strings[j]))
+        end
+        flush(writer)
+        str = String(take!(copy(buf)))
+        @test str == join(target_strings[1:i-1])
+
+        # Then write the rest of them, and check the total results is as expected
+        for j in i:lastindex(strings)
+            write(writer, Record(strings[j]))
+        end
+        flush(writer)
+        str = String(take!(buf))
+        @test str == join(target_strings)
+    end
+end
+
 @testset "Writer width" begin
     header = "some data here"
     for width in (-10, 5, 25, 50)

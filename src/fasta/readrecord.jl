@@ -51,7 +51,7 @@ machine = (function ()
     sequence = re.rep1(re.opt(sequence_line) * re.rep1(newline))
     
     # We have sequence_eof to allow the final sequence to not end in whitespace
-    sequence_eof = sequence_line * re.rep(re.rep1(newline) * re.opt(sequence_line))
+    sequence_eof = re.opt(sequence_line) * re.rep(re.rep1(newline) * re.opt(sequence_line))
 
     record = header * newline * sequence
     record.actions[:exit] = [:record]
