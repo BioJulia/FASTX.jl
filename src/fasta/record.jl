@@ -158,6 +158,16 @@ function description(record::Record)::StringView
 end
 
 """
+    seqview(record::Record)::AbstractVector{UInt8}
+
+Get a view of the record as an `AbstractVector{UInt8}`.
+If the record has an empty sequence, return an empty view.
+"""
+function seqview(record::Record)::AbstractVector{UInt8}
+    view(record.data, record.description_len+1:record.sequence_len)
+end
+
+"""
     sequence_iter(T, record::Record, part)
 
 Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
