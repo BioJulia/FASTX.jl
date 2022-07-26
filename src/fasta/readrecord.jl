@@ -117,10 +117,7 @@ end
 
 returncode = :(return cs, linenum, found)
 
-context = Automa.CodeGenContext(
-    generator=:simd,
-    checkbounds=false
-)
+context = Automa.CodeGenContext(generator=:goto)
 
 isinteractive() && @info "Generating FASTA parsing code..."
 
