@@ -1,26 +1,45 @@
+module TestFASTA
+    
 using Test
-using FASTX
-using FormatSpecimens
-using BioSymbols
-import BioGenerics
-import BioGenerics.Testing: intempdir
-import BioSequences:
-    @dna_str,
-    @rna_str,
-    @aa_str,
-    LongDNA,
-    LongAA,
-    LongSequence,
-    AminoAcidAlphabet,
-    DNAAlphabet,
-    DNA_N,
-    DNA_A,
-    DNA_G,
-    Alphabet
+using FASTX.FASTA: Record, identifier, description, sequence, Reader, Writer
+using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
+using Random: rand!
+using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename
+using StringViews: StringView
 
 @testset "FASTA" begin
-    include("fasta.jl")
+    @testset "Record" begin
+        include("fasta/record.jl")
+    end
+    @testset "IO" begin
+        include("fasta/io.jl")
+    end
+    @testset "Specimens" begin
+        include("fasta/specimens.jl")
+    end
 end
+
+end # module TestFASTA
+
+module TestFASTQ
+
+using Test
+using FASTX.FASTQ: Record, Reader, Writer
+using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
+using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename
+using StringViews: StringView
+
+@testset "FASTQ" begin
+    @testset "Record" begin
+        include("fastq/record.jl")
+    end
+end
+
+end # module TestFASTQ
+
+#@testset "FASTQ" begin
+#    include("fastq.jl")
+#end
 
 #=
 @testset "FASTA" begin

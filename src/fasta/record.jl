@@ -25,7 +25,6 @@ function seq_data_part(record::Record, part::AbstractUnitRange)
     Int(record.description_len) + start:Int(record.description_len) + stop
 end
 
-
 """
     FASTA.Record()
 
@@ -52,10 +51,11 @@ This function verifies and indexes fields for accessors.
 Note that this function allocates a new array.
 To parse a record in-place, use `index!(record, data)`
 """
-Record(data::UTF8) = parse(Record, data)
+Record(data::AbstractString) = Record(String(data))
+Base.parse(::Type{Record}, s::AbstractString) = Record(s)
 
-function Base.parse(::Type{Record}, data::UTF8)
-    record = Record(UInt8[], 0, 0, 0)
+function Record(data::UTF8)
+    record = Record()
     index!(record, data)
     return record
 end
@@ -78,7 +78,10 @@ function Base.:(==)(record1::Record, record2::Record)
     record1.description_len == record2.description_len || return false
     filled1 = filled(record1)
     filled1 == filled(record2) || return false
-    return memcmp(pointer(record1.data), pointer(record2.data), filled1) == 0
+    (data1, data2) = (record1.data, record2.data)
+    GC.@preserve data1 data2 begin
+        return memcmp(pointer(data1), pointer(data2), filled1) == 0
+    end
 end
 
 function Base.copy(record::Record)
@@ -164,39 +167,12 @@ function description(record::Record)::StringView
 end
 
 """
-    seqview(record::Record)::AbstractVector{UInt8}
-
-Get a view of the record as an `AbstractVector{UInt8}`.
-If the record has an empty sequence, return an empty view.
-"""
-function seqview(record::Record)::AbstractVector{UInt8}
-    view(record.data, record.description_len+1:record.sequence_len)
-end
-
-"""
-    sequence_iter(T, record::Record, part)
-
-Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
-through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
-Mutating the record will corrupt the iterator.
-"""
-function sequence_iter(
-    ::Type{T},
-    record::Record,
-    part::UnitRange{<:Integer}=(1:record.sequence_len)
-) where {T <: BioSymbols.BioSymbol}
-    datapart = Int(record.description_len) + first(part) : Int(record.description_len) + last(part)
-    data = record.data
-    checkbounds(data, datapart)
-    return (T(Char(@inbounds(data[i]))) for i in datapart)
-end
-
-"""
-    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
+    sequence([::Type{S}], record::Record, [part::UnitRange{Int}])::S
 
 Get the sequence of `record`.
 
 `S` can be either a subtype of `BioSequences.BioSequence` or `String`.
+If elided, `S` defaults to `StringView`.
 If `part` argument is given, it returns the specified part of the sequence.
 
 !!! note
@@ -204,6 +180,12 @@ If `part` argument is given, it returns the specified part of the sequence.
     If you have a sequence already and want to fill it with the sequence
     data contained in a fasta record, you can use `Base.copyto!`.
 """
+sequence(record::Record, part::UnitRange{Int}=1:record.sequence_len) = sequence(StringView, record, part)
+
+function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:record.sequence_len)
+    return StringView(view(record.data, seq_data_part(record, part)))
+end
+
 function sequence(
     ::Type{S},
     record::Record,
