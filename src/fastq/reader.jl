@@ -82,8 +82,8 @@ function generate_fill_ambiguous(symbol::BioSymbols.DNA)
     end
 end
 
-function index!(record::Record)
-    stream = TranscodingStreams.NoopStream(IOBuffer(record.data))
+function index!(record::Record, data::UTF8)
+    stream = TranscodingStreams.NoopStream(IOBuffer(data))
     cs, linenum, found = readrecord!(stream, record, (1, 1), nothing)
     if !found || !allspace(stream)
         throw(ArgumentError("invalid FASTQ record"))

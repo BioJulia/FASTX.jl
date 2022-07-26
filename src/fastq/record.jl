@@ -14,11 +14,11 @@ mutable struct Record
     has_description_seq_len::UInt
 end
 
-sequence_length(record::Record) = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
+@inline seqlen(record::Record) = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
 has_extra_description(record::Record) = record.has_description_seq_len ≥ (typemin(Int) % UInt)
 
 # Number of stored bytes in data field
-filled(record::Record) = record.description_len + 2 * sequence_length(record)
+filled(record::Record) = record.description_len + 2 * seqlen(record)
 
 """
     FASTQ.Record()
@@ -93,7 +93,7 @@ end
 
 function Base.write(io::IO, record::Record)
     data = record.data
-    seqlen = UInt(sequence_length(record))
+    seqlen = UInt(seqlen(record))
     desclen = UInt(sequence.description_len)
     GC.@preserve data begin
         # Header line
@@ -120,20 +120,10 @@ function Base.print(io::IO, record::Record)
 end
 
 function Base.show(io::IO, record::Record)
-    println(io)
+    println(io, "FASTQ.Record:")
     println(io, "  description: ", description(record))
     println(io, "     sequence: ", sequence(String, record))
-    print(io,   "      quality: ", quality(record))
-end
-
-# TODO: Remove?
-function initialize!(record::Record)
-    record.filled = 1:0
-    record.identifier = 1:0
-    record.description = 1:0
-    record.sequence = 1:0
-    record.quality = 1:0
-    return record
+    print(io,   "      quality: ", collect(quality(record)))
 end
 
 function BioGenerics.isfilled(::Record)
@@ -156,43 +146,6 @@ function description(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.description_len)))
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function Base.copy!(dest::BioSequences.LongSequence, src::Record)
-    resize!(dest, seqlen(src) % UInt)
-    copyto!(dest, 1, src, 1, seqlen(src))
-end
-
-"""
-    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-
-Copy all of the sequence data from the fastq record `src` to a biological
-sequence `dest`. `dest` must have a length greater or equal to the length of
-the sequence represented in the fastq record. The first n elements of `dest` are
-overwritten, the other elements are left untouched.
-"""
-function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, seqlen(src))
-end
-
 """
     Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
 
@@ -200,85 +153,42 @@ Copy an N long block of sequence data from the fastq record `src`, starting at
 position `soff`, to the `BioSequence` dest, starting at position `doff`.
 """
 function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    return copyto!(dest, doff, src.data, src.sequence[soff], N)
+    # This check is here to prevent boundserror when indexing src.sequence
+    iszero(N) && return dest
+    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
 """
-    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])
-
-Get the sequence of `record`.
-
-`S` can be either a subtype of `BioSequences.LongSequence` or `String`.
-If `part` argument is given, it returns the specified part of the sequence.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fastq record, you can use `Base.copyto!`.
-"""
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
-    seqpart = record.sequence[part]
-    return S(@view(record.data[seqpart]))
-end
-
-"""
-    sequence(::Type{String}, record::Record, [part::UnitRange{Int}])::String
-
-Get the sequence of `record` as a String.
-If `part` argument is given, it returns the specified part of the sequence.
-"""
-function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
-    return String(record.data[record.sequence[part]])
-end
-
-"""
-    sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
-
-Get the sequence of `record` as a DNA sequence.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fastq record, you can use `Base.copyto!`.
-"""
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNA{4}
-    return sequence(BioSequences.LongDNA{4}, record, part)
-end
-
-"Get the length of the fastq record's sequence."
-@inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
-
-"""
-    quality_iter(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
+    quality_iter(record::Record, [part::UnitRange])::Vector{UInt8}
 
 Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
 """
-function quality_iter(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))
-    offs = convert(UInt8, offset)
-    part = record.quality[part]
+function quality(record::Record, part::UnitRange{Int}=1:seqlen(record))
+    quality(record, DEFAULT_ENCODING, part)
+end
+
+function quality(record::Record, encoding::QualityEncoding, part::UnitRange{Int}=1:seqlen(record))
+    start, stop = first(part), last(part)
+    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     data = record.data
-    return (@inbounds(data[i]) - offs for i in part)
+    return Iterators.map(Int(record.description_len) + start:Int(record.description_len) + stop) do i
+        v = data[i]
+        decode_quality(encoding, v)
+    end
 end
 
-"""
-    quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
-
-Get the base quality of `record`.
-"""
-function quality(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
-    collect(quality_iter(record, offset, part))
-end
 """
     quality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}
 
 Get the base quality of `record` by decoding with `encoding_name`.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
-
-!!! note
-    Returns `nothing` if the record has no quality string.
 """
-function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
+function quality(
+    record::Record,
+    encoding_name::Symbol,
+    part::UnitRange{Int}=1:seqlen(record)
+)
     encoding = (
         encoding_name == :sanger     ?     SANGER_QUAL_ENCODING :
         encoding_name == :solexa     ?     SOLEXA_QUAL_ENCODING :
@@ -286,16 +196,8 @@ function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:l
         encoding_name == :illumina15 ? ILLUMINA15_QUAL_ENCODING :
         encoding_name == :illumina18 ? ILLUMINA18_QUAL_ENCODING :
         throw(ArgumentError("quality encoding ':$(encoding_name)' is not supported")))
-    quality = Vector{UInt8}(undef, length(part))
-    if !isempty(part)
-        qpart = record.quality[part]
-        check_quality_string(encoding, record.data, first(qpart), last(qpart))
-        decode_quality_string!(encoding, record.data, quality, first(qpart), last(qpart))
-    end
-    return quality
+    quality(record, encoding, part)
 end
-
-@deprecate hasquality(record::Record) !isempty(sequence(record))
 
 function BioGenerics.seqname(record::Record)
     return identifier(record)
@@ -318,17 +220,6 @@ function BioGenerics.hassequence(record::Record)
 end
 
 function Base.hash(record::Record, h::UInt)
-	isempty(record.identifier) || (h = hash(view(record.data, record.identifier), h))
-	isempty(record.description) || (h = hash(view(record.data, record.description), h))
-	isempty(record.sequence) || (h = hash(view(record.data, record.sequence), h))
-	isempty(record.quality) || (h = hash(view(record.data, record.quality), h))
-	h
-end
-
-
-# Helper functions
-# ----------------
-
-function checkfilled(record)
-    nothing # for backward compatibility
+    h = hash(record.description_len, h)
+    hash(view(record.data, filled(record)), h)
 end

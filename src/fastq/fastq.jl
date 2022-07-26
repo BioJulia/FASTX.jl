@@ -11,7 +11,7 @@ import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier,
     description, header,
-    sequence, UTF8, sequence_length
+    sequence, UTF8, seqlen
 
 include("quality.jl")
 include("record.jl")
