@@ -37,13 +37,19 @@ function Writer(output::IO, width::Integer=70)
     end
 end
 
+function Base.flush(writer::Writer)
+    # This is, bizarrely needed for TranscodingStreams for now.
+    write(writer.output, TranscodingStreams.TOKEN_END)
+    flush(writer.output)
+end
+
 function Base.write(writer::Writer, record::Record)
     output = writer.output
     width = writer.width
     n::Int = 0
     # If write has no width, we can just write the record in a single line
     # as the default method does
-    if width ≤ 0
+    if width ≤ 0 || width ≥ record.sequence_len
         n += write(output, record, '\n')
     # Else we write it in chunks.
     else

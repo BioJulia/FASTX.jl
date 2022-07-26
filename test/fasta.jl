@@ -5,6 +5,8 @@ using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 
 using Random: rand!
 
+using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format
+
 # Only using empty records here
 @testset "Basic properties" begin
     # Equality
@@ -113,6 +115,18 @@ end
     @test record == cp
     @test identifier(cp) == description(record) == "abc"
     @test sequence(String, cp) == "OOJMQQ"
+end
+
+# Get sequence as String
+@testset "Get sequence" begin
+    record = Record(codeunits("ab cAACCAAGGTTKKKMMMM"), 2, 4, 10)
+    @test sequence(String, record) == "AACCAAGGTT"
+    @test sequence(String, record, 1:0) == ""
+    @test sequence(String, record, 1:3) == "AAC"
+    @test sequence(String, record, 6:10) == "AGGTT"
+    
+    @test_throws Exception sequence(String, record, 6:11)
+    @test_throws Exception sequence(String, record, 0:3)
 end
 
 # Encode to various biosequences
@@ -274,100 +288,140 @@ end
         for record in records
             write(writer, record)
         end
-        close(writer) # necessary to flush
+        flush(writer)
         str = String(take!(buffer))
+        close(writer)
         @test occursin(regex, str)
     end
 
     # Empty writer
+    records = []
+    test_writer(records, r"^$")
 
     # Empty records
-    #records = [Record(), Record()]
-    #test_writer(records, r"^>\n\n>\n\n$")
+    records = [Record(), Record()]
+    test_writer(records, r"^>\n\n>\n\n$")
 
     # Does not write uncoding bytes in records
+    records = [
+        Record(codeunits("someheader hereAACCGGTT"), 10, 15, 3),
+        Record(codeunits("fewhjlkdsjepis.."), 0, 0, 0)
+    ]
+    test_writer(records, r"^>someheader here\nAAC\n>\n\n")
 
-    # 
-        
-
-end
-
-@testset "Writter append" begin
+    # Lots of records to exercise the IO a little more
+    # we don't test width here, that's for later
+    target_buffer = IOBuffer()
+    writer_buffer = IOBuffer()
+    writer = Writer(writer_buffer, 0)
+    for i in 1:50
+        name = join(rand('A':'z'), rand(20:30))
+        name2 = join(rand('A':'z'), rand(30:40))
+        descr = name * ' ' * name2
+        seq = join(rand(('A', 'C', 'G', 'T', 'a', 'c', 'g', 't'), rand(1000:2000)))
+        write(target_buffer, '>', descr, '\n', seq, '\n')
+        write(writer, Record(descr, seq))
+    end
+    flush(writer)
+    writer_bytes = take!(writer_buffer)
+    target_bytes = take!(target_buffer)
+    close(writer)
+    @test writer_bytes == target_bytes
 end
 
 @testset "Writer width" begin
+    header = "some data here"
+    for width in (-10, 5, 25, 50)
+        for seqlen in [width-1, width, 3*width, 3*width+3, 75, 200]
+            seqlen < 1 && continue
+            seq = join(rand('A':'Z', seqlen))
+            record = Record(header, seq)
+            buf = IOBuffer()
+            writer = Writer(buf, width)
+            write(writer, record)
+            flush(writer)
+            str = String(take!(buf))
+            close(writer)
+            target_seq = if width < 1
+                seq
+            else
+                join(Iterators.map(join, Iterators.partition(seq, width)), '\n')
+            end
+            @test str == ">" * header * '\n' * target_seq * '\n'
+        end
+    end
 end
 
 # Records can be written, then re-read without loss,
 # except arbitrary whitespace in the sequence
-@testset "Roundtrip" begin
+@testset "Round trip" begin
+    strings = [
+        ">abc some 
+        def
+        hgi",
+        ">A\n\n>A B C \nlkpo",
+        "
+        > here | be [dragons > 1]
+        polm---GA
+        --PPPLLAA
+        
+        >and more
+        AAA",
+        "",
+    ]
+    strings = [
+        join(Iterators.map(lstrip, eachline(IOBuffer(s))), '\n')
+        for s in strings
+    ]
+    for string in strings
+        read = collect(Reader(IOBuffer(string)))
+        buf = IOBuffer()
+        writer = Writer(buf, 0)
+        for record in read
+            write(writer, record)
+        end
+        flush(writer)
+        data = String(take!(buf))
+        close(writer)
+        read2 = collect(Reader(IOBuffer(string)))
+        @test read == read2
+    end
 end
 
 @testset "Index" begin
 end
 
-@testset "Test files" begin
+@testset "Test specimens" begin
+    # All valid specimens should be read, written, re-read, and the
+    # second read should be identical.
+    # All invalid specimens should throw an exception
+    function test_valid_specimen(path)
+        try
+            records = open(collect, Reader, path)
+            buf = IOBuffer()
+            writer = Writer(buf)
+            foreach(i -> write(writer, i), records)
+            flush(writer)
+            data = take!(buf)
+            close(writer)
+            records2 = collect(Reader(IOBuffer(data)))
+            issame = records == records2
+            if !issame
+                println("Valid format not parsed properly: $path")
+            end
+            @test issame
+        catch e
+            println("Error when parsing $path")
+            @test false
+        end
+    end
+
+    for specimen in list_valid_specimens("FASTA")
+        path = joinpath(path_of_format("FASTA"), filename(specimen))
+        test_valid_specimen(path)
+    end
+
+    for specimen in list_invalid_specimens("FASTA")
+        @test_throws Exception open(collect, Reader, path)
+    end
 end
-
-#=
-@testset "Record" begin
-    record = FASTA.Record()
-    @test BioGenerics.isfilled(record)
-
-    record = FASTA.Record(">foo\nACGT\n")
-    @test BioGenerics.isfilled(record)
-    @test BioGenerics.seqname(record) == FASTA.identifier(record) == "foo"
-    @test !FASTA.hasdescription(record)
-    @test FASTA.description(record) === nothing
-    @test FASTA.sequence(LongDNA{4}, record) == dna"ACGT"
-    @test collect(FASTA.sequence_iter(DNA, record)) == [DNA_A, DNA_C, DNA_G, DNA_T] 
-    @test FASTA.sequence(LongDNA{4}, record, 2:3) == LongDNA{4}(collect(FASTA.sequence_iter(DNA, record, 2:3))) == dna"CG"
-    @test FASTA.sequence(String, record) == "ACGT"
-    @test FASTA.sequence(String, record, 2:3) == "CG"
-
-    @test_throws MethodError FASTA.Record("header", nothing)
-
-    record1 = FASTA.Record("id", "desc", "AGCT")
-    record2 = FASTA.Record("id", "desc", "AGCT")
-    @test record1 == record2
-    @test hash(record1) == hash(record2)
-    @test unique([record1, record1, record2, record2]) == [record1] == [record2]
-
-    record1 = FASTA.Record("id", "AGCT")
-    record2 = FASTA.Record("id", "AGCT")
-    @test record1 == record2
-    @test FASTA.Record() == FASTA.Record()
-    @test FASTA.Record() != record1
-    @test hash(record1) == hash(record2)
-    @test unique([record1, record1, record2, record2]) == [record1] == [record2]
-
-    @test FASTA.Record("id", "AGCT") != FASTA.Record("id2", "AGCT")
-    @test FASTA.Record("id", "AGCT") != FASTA.Record("id", "TAGC")
-    @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "AGCT")
-    @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc", "TAGC")
-    @test FASTA.Record("id", "desc", "AGCT") != FASTA.Record("id", "desc2", "AGCT")
-
-    @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id2", "AGCT"))
-    @test hash(FASTA.Record("id", "AGCT")) != hash(FASTA.Record("id", "TAGC"))
-    @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "AGCT"))
-    @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc", "TAGC"))
-    @test hash(FASTA.Record("id", "desc", "AGCT")) != hash(FASTA.Record("id", "desc2", "AGCT"))
-
-    record = FASTA.Record("""
-    >CYS1_DICDI fragment
-    SCWSFSTTGNVEGQHFISQNKL
-    VSLSEQNLVDCDHECMEYEGE
-    """)
-    @test BioGenerics.isfilled(record)
-    @test FASTA.identifier(record) == "CYS1_DICDI"
-    @test FASTA.description(record) == "fragment"
-    @test FASTA.header(record) == "CYS1_DICDI fragment"
-    @test FASTA.sequence(LongAA, record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
-    @test FASTA.sequence(LongAA, record, 10:15) == aa"NVEGQH"
-
-    # PR 37
-    s = ">A \nTAG\n"
-    rec = first(iterate(FASTA.Reader(IOBuffer(s))))
-    @test isempty(rec.description)
-end
-=#

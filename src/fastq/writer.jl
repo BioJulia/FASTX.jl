@@ -37,6 +37,12 @@ function Writer(output::IO, quality_header::Bool)
     end
 end
 
+function Base.flush(writer::Writer)
+    # This is, bizarrely needed for TranscodingStreams for now.
+    write(writer.output, TranscodingStreams.TOKEN_END)
+    flush(writer.output)
+end
+
 function Base.write(writer::Writer, record::Record)
     checkfilled(record)
     output = writer.output

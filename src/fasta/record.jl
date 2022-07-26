@@ -20,7 +20,9 @@ filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
 
 "Get the indices of `data` that correspond to sequence indices `part`"
 function seq_data_part(record::Record, part::AbstractUnitRange)
-    Int(record.description_len) + first(part) : Int(record.description_len) + last(part)
+    start, stop = first(part), last(part)
+    (start < 1 || stop > record.sequence_len) && throw(BoundsError(record, start:stop))
+    Int(record.description_len) + start:Int(record.description_len) + stop
 end
 
 
@@ -91,9 +93,12 @@ end
 function Base.write(io::IO, record::Record)
     data = record.data
     write(io, UInt8('>'))
-    write(io, data, UInt(record.description_len))
-    write(io, UInt8('\n'))
-    write(io, pointer(data) + UInt(record.description_len), UInt(record.sequence_len))
+    GC.@preserve data begin
+        unsafe_write(io, pointer(data), UInt(record.description_len))
+        write(io, UInt8('\n'))
+        unsafe_write(io, pointer(data) + UInt(record.description_len), UInt(record.sequence_len))
+    end
+    return filled(record) + 2 # number of bytes
 end
 
 function Base.print(io::IO, record::Record)
