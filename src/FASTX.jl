@@ -12,7 +12,7 @@ export
     transcribe
 
 using StringViews: StringView
-using BioSequences: BioSequence
+using BioSequences: BioSequence, LongSequence
 
 # Generic methods
 
@@ -49,7 +49,7 @@ If `part` argument is given, it returns the specified part of the sequence.
     data contained in a record, you can use `Base.copyto!`.
 """
 function sequence end
-function sequence_length end
+function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
@@ -63,20 +63,20 @@ const Record = Union{FASTA.Record, FASTQ.Record}
 "Get the indices of `data` that correspond to sequence indices `part`"
 function seq_data_part(record::Record, part::AbstractUnitRange)
     start, stop = first(part), last(part)
-    (start < 1 || stop > sequence_length(record)) && throw(BoundsError(record, start:stop))
+    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     Int(record.description_len) + start:Int(record.description_len) + stop
 end
 
-sequence(record::Record, part::UnitRange{Int}=1:sequence_length(record)) = sequence(StringView, record, part)
+sequence(record::Record, part::UnitRange{Int}=1:seqlen(record)) = sequence(StringView, record, part)
 
-function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:sequence_length(record))
+function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:seqlen(record))
     return StringView(view(record.data, seq_data_part(record, part)))
 end
 
 function sequence(
     ::Type{S},
     record::Record,
-    part::UnitRange{Int}=1:sequence_length(record)
+    part::UnitRange{Int}=1:seqlen(record)
 )::S where S <: BioSequence
     return S(@view(record.data[seq_data_part(record, part)]))
 end
@@ -84,9 +84,26 @@ end
 function sequence(
     ::Type{String},
     record::Record,
-    part::UnitRange{Int}=1:sequence_length(record)
+    part::UnitRange{Int}=1:seqlen(record)
 )::String
     return String(record.data[seq_data_part(record, part)])
+end
+
+function Base.copy!(dest::LongSequence, src::Record)
+    resize!(dest, UInt(seqlen(src)))
+    copyto!(dest, 1, src, 1, seqlen(src))
+end
+
+"""
+    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
+
+Copy all of the sequence data from the fastq record `src` to a biological
+sequence `dest`. `dest` must have a length greater or equal to the length of
+the sequence represented in the fastq record. The first n elements of `dest` are
+overwritten, the other elements are left untouched.
+"""
+function Base.copyto!(dest::LongSequence, src::Record)
+    return copyto!(dest, 1, src, 1, seqlen(src))
 end
 
 import .FASTA
