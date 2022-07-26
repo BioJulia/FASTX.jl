@@ -1,5 +1,5 @@
 using FASTX: FASTA
-using FASTX.FASTA: Record, identifier, description, sequence
+using FASTX.FASTA: Record, identifier, description, sequence, Reader, Writer
 
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 
@@ -90,7 +90,13 @@ end
     @test description(record) == "ag | kop[\ta]"
     @test sequence(String, record) == ""
 
-    # Trailing whitespace
+    # Trailing description whitespace
+    record = Record(">hdr name\t \r\npkmn\naj")
+    @test identifier(record) == "hdr"
+    @test description(record) == "hdr name\t "
+    @test sequence(String, record) == "pkmnaj"
+
+    # Trailing sequence whitespace
     record = Record(">here\nplKn\n.\n  \t\v\n\n  \n \n")
     @test identifier(record) == description(record) == "here"
     @test sequence(String, record) == "plKn.  \t\v   "
@@ -98,7 +104,7 @@ end
 
 # Tests trailing bytes in data field are OK
 @testset "Noncoding bytes" begin
-    record = FASTA.Record(">abc\nOOJM\nQQ")
+    record = Record(">abc\nOOJM\nQQ")
     resize!(record.data, 1000)
     @test identifier(record) == description(record) == "abc"
     @test sequence(String, record) == "OOJMQQ"
@@ -220,15 +226,70 @@ end
     end
 end
 
-
 # Includes "unique"
 @testset "Hashing" begin
+    records = map(Record, [
+        ">A\n\n",
+        ">A\nAG",
+        ">AA\nG",
+    ])
+    # Same as previous, but with noncoding data
+    push!(records, Record(codeunits("AAGGGG"), 2, 2, 1))
+
+    @test hash(first(records)) == hash(first(records))
+    @test hash(records[end]) == hash(records[end-1])
+    @test isequal(records[end], records[end-1])
+    @test !isequal(records[3], records[2])
+    @test length(unique(records)) == length(records) - 1
 end
 
 @testset "Reader basics" begin
+    # Empty reader
+    reader = Reader(IOBuffer(""))
+    @test isnothing(iterate(reader))
+    close(reader)
+
+    # Resumable
+    reader = Reader(IOBuffer(">header\nTAG\nAA\n\r\n\r\n>header2\nAAA\n\nGG\n\r\n"))
+    (r, s) = iterate(reader)
+    @test identifier(r) == "header"
+    @test sequence(String, r) == "TAGAA"
+    (r, s) = iterate(reader)
+    @test identifier(r) == "header2"
+    @test sequence(String, r) == "AAAGG"
+    @test isnothing(iterate(reader))
+    close(reader)
+
+    # Copies on iteration
+    reader = Reader(IOBuffer(">A\nG\n>A\nG"))
+    records = collect(reader)
+    @test first(records) !== last(records)
+    close(reader)
 end
 
 @testset "Writer basics" begin
+    function test_writer(records, regex::Regex)
+        buffer = IOBuffer()
+        writer = Writer(buffer)
+        for record in records
+            write(writer, record)
+        end
+        close(writer) # necessary to flush
+        str = String(take!(buffer))
+        @test occursin(regex, str)
+    end
+
+    # Empty writer
+
+    # Empty records
+    #records = [Record(), Record()]
+    #test_writer(records, r"^>\n\n>\n\n$")
+
+    # Does not write uncoding bytes in records
+
+    # 
+        
+
 end
 
 @testset "Writter append" begin
@@ -237,8 +298,8 @@ end
 @testset "Writer width" begin
 end
 
-# Records can be written, then re-read without loss
-# When with arbitrary whitespace
+# Records can be written, then re-read without loss,
+# except arbitrary whitespace in the sequence
 @testset "Roundtrip" begin
 end
 

@@ -73,6 +73,7 @@ function Record(description::AbstractString, sequence::Union{BioSequences.BioSeq
 end
 
 function Base.:(==)(record1::Record, record2::Record)
+    record1.description_len == record2.description_len || return false
     filled1 = filled(record1)
     filled1 == filled(record2) || return false
     return memcmp(pointer(record1.data), pointer(record2.data), filled1) == 0
@@ -253,5 +254,9 @@ end
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
-    hash(view(record.data, filled(record)), h ⊻ objectid(Record))
+    # The description length is informative of the record's content
+    # in a way that the sequence length and identifier length isn't.
+    # I.e. you could have ">A\nAG" vs ">AA\nG"
+    h = hash(record.description_len, h)
+    hash(view(record.data, filled(record)), h)
 end
