@@ -67,7 +67,7 @@ function Record(description::AbstractString, sequence, quality::Vector{<:Number}
     buf = IOBuffer()
     print(buf, '@', description, '\n')
     print(buf, sequence, "\n+\n")
-    ascii_quality = [q + offset for q in quality]
+    ascii_quality = [UInt8(q + offset) for q in quality]
     write(buf, ascii_quality, '\n')
     return Record(take!(buf))
 end
@@ -163,15 +163,16 @@ end
 
 Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
 """
-function quality(record::Record, part::UnitRange{Int}=1:seqlen(record))
+function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
     quality(record, DEFAULT_ENCODING, part)
 end
 
-function quality(record::Record, encoding::QualityEncoding, part::UnitRange{Int}=1:seqlen(record))
+function quality(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
     start, stop = first(part), last(part)
     (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     data = record.data
-    return Iterators.map(Int(record.description_len) + start:Int(record.description_len) + stop) do i
+    offset = record.description_len + seqlen(record) 
+    return Iterators.map(offset+start:offset+stop) do i
         v = data[i]
         decode_quality(encoding, v)
     end
@@ -187,7 +188,7 @@ The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumin
 function quality(
     record::Record,
     encoding_name::Symbol,
-    part::UnitRange{Int}=1:seqlen(record)
+    part::UnitRange{<:Integer}=1:seqlen(record)
 )
     encoding = (
         encoding_name == :sanger     ?     SANGER_QUAL_ENCODING :
