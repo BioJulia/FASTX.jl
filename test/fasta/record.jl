@@ -95,6 +95,16 @@ end
     @test sequence(String, record) == "plKn.  \t\v   "
 end
 
+@testset "Equality" begin
+    record = Record(">AAG\nWpKN.\n\n")
+    record2 = Record(">AAG\n\r\nWpKN.\n\n\n\r\n")
+    append!(record2.data, [0x05, 0x65, 0x81])
+    @test record == record2
+
+    record3 = Record(">AA\nGWpKN.\n\n")
+    @test record != record3
+end
+
 # Tests trailing bytes in data field are OK
 @testset "Noncoding bytes" begin
     record = Record(">abc\nOOJM\nQQ")
@@ -141,99 +151,6 @@ end
         LongDNA{4}, LongDNA{2}, LongRNA{4}, LongRNA{2}, LongAA
     ]
         @test sequence(S, record) == S("")
-    end
-end
-
-@testset "Copying to LongSequence" begin
-    strings = [
-        "ATCGTAGTAC",         # DNA 2
-        "AACGMYKATNwhdvAC",   # DNA 4
-        "AUTcutUAUU",         # RNA 2
-        "AUGMNmuaWUAGUC",     # RNA 4
-        "AGCGGACAAC",         # DNA/RNA2
-        "AHCDNnnkmaAGCNvSSW", # DNA/RNA4
-        "KPLMQWDCB",          # AA
-        "AKLVYhkxzX",         # AA
-        "BOJarleaiilvw",      # AA
-        "møjsommelig",        # Invalid
-        "--m!kvLMO",          # Invalid
-    ]
-    seqtypes = [
-        LongDNA{4},
-        LongDNA{2},
-        LongRNA{4},
-        LongRNA{2},
-        LongAA
-    ]
-    empty_record = Record("some content", "")
-    success = false
-    seq = nothing
-    for seqtype in seqtypes
-        short_seq = seqtype()
-        long_seq = seqtype(undef, 100)
-        for str in strings
-            record = Record("name", str)
-
-            # Empty sequence
-            copy!(short_seq, empty_record)
-            @test isempty(short_seq)
-            cp = copy(long_seq)
-            copyto!(long_seq, empty_record)
-            @test long_seq == cp
-
-            # Nonempty sequence
-            try
-                seq = seqtype(str)
-                success = true
-            catch error
-                success = false
-            end
-            
-            if success
-                # copy! will change the size, whether smaller or larger
-                empty!(short_seq)
-                resize!(long_seq, 100)
-                copy!(long_seq, record)
-                copy!(short_seq, record)
-                @test length(short_seq) == ncodeunits(str)
-                @test short_seq == seq == long_seq
-                
-                # copyto! will error if too short...
-                resize!(short_seq, ncodeunits(str) - 1)
-                @test_throws BoundsError copyto!(short_seq, record)
-                
-                # if too long, it will leave extra symbols untouched
-                resize!(long_seq, 100)
-                rand!(long_seq)
-                rest = long_seq[ncodeunits(str)+1:100]
-                copyto!(long_seq, record)
-                @test long_seq[1:ncodeunits(str)] == seq
-                @test long_seq[ncodeunits(str)+1:100] == rest
-
-                # copyto with indices.
-                resize!(long_seq, ncodeunits(str))
-                old = copy(long_seq)
-                copyto!(long_seq, 3, record, 2, 6)
-                @test old[1:2] == long_seq[1:2]
-                @test long_seq[3:8] == seq[2:7]
-                @test long_seq[9:end] == old[9:end]
-
-            else
-                empty!(short_seq)
-                resize!(long_seq, 100)
-                
-                # Test both, since it must throw no matter if the exception
-                # is a bounds error or an alphabet incompatibility error.
-                @test_throws Exception copy!(short_seq, record)
-                @test_throws Exception copyto!(short_seq, record)
-                @test_throws Exception copyto!(short_seq, 1, record, 1, ncodeunits(str))
-                
-                @test_throws Exception copy!(long_seq, record)
-                @test_throws Exception copyto!(long_seq, record)
-                @test_throws Exception copyto!(long_seq, 1, record, 1, ncodeunits(str))
-                
-            end
-        end
     end
 end
 
