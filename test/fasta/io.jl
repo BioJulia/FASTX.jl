@@ -17,9 +17,24 @@
     close(reader)
 
     # Copies on iteration
-    reader = Reader(IOBuffer(">A\nG\n>A\nG"))
+    copy_str = ">A\nG\n>A\nG\n>A\nT"
+    reader = Reader(IOBuffer(copy_str))
     records = collect(reader)
-    @test first(records) !== last(records)
+    @test records[1] == records[2]
+    @test records[1] !== records[2]
+    @test records[1] != records[3]
+    close(reader)
+
+    # Does not copy on iteration if copy=false
+    # in this case it will iterate the same object which
+    # will just be overwritten.
+    # This is not intended to be relied on, so can be removed,
+    # but is currently necessary for performance, so we test it
+    # to prevent performance regressions on this front
+    reader = Reader(IOBuffer(copy_str); copy=false)
+    records = collect(reader)
+    @test records[1] === records[2] === records[3]
+    @test sequence(records[1]) == "T"
     close(reader)
 end
 

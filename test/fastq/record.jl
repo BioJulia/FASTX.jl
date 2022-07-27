@@ -42,7 +42,10 @@ TEST_BAD_RECORD_STRINGS = [
     "@abc\nABC\n+\nAB", # qual too short,
     "@A B \nC\n+A B\nA", # second header different
     "@A\nC\n+AB\nA", # second header too long
-    "@AB\nC\n+A\nA", # second header too short
+    "@AB\nC\n+A\nA", # second header too short,
+    "@AB\nC\n+AB\n\t", # qual not in range
+    "@AB\nABC\n+\nK V", # qual not in range
+    "@AB\nABC\n+\nK\x7fV", # qual not in range
 ]
 
 @testset "Basic construction" begin
@@ -66,12 +69,12 @@ TEST_BAD_RECORD_STRINGS = [
     @test identifier(record) == "some"
     @test description(record) == "some header"
     @test sequence(record) == "AAGG"
-    @test collect(quality(record)) == [Int8(i)-33 for i in "jjll"]
+    @test collect(quality(record)) == [Int8(i)-OFFSET for i in "jjll"]
 
     # Construct from two strings and quality
-    record3 = Record("some header", "AAGG", [73, 73, 75, 75])
+    record3 = Record("some header", "AAGG", [Int8(i)-OFFSET for i in "jjll"])
     test_is_equal(record, record3)
-    @test_throws Exception Record("some_header", "TAG", [73, 73])
+    @test_throws Exception Record("some_header", "TAG", [Int8(i)-OFFSET for i in "jj"])
 
     # From substrings
     record4 = Record(SubString(string, 1:lastindex(string)))
@@ -126,7 +129,7 @@ end
     for rec in (record, cp)
         @test identifier(rec) == description(rec) == "some_header"
         @test sequence(rec) == "AAGG"
-        @test collect(quality(rec)) == [73, 73, 75, 75]
+        @test collect(quality(rec)) == [Int8(i)-OFFSET for i in "jjll"]
     end
 end
 
@@ -166,6 +169,77 @@ end
 
     @test_throws Exception sequence(LongRNA{2}, record1)
     @test_throws Exception sequence(LongDNA{4}, record2)
+end
+
+# We have already tested basic quality iteration in rest of tests
+@testset "Quality" begin
+    records = map(Record, TEST_RECORD_STRINGS)
+    qarr(str::String) = [Int8(i - OFFSET) for i in str]
+
+    # Slicing
+    @test isnothing(iterate(quality(records[1], 1:0)))
+    @test collect(quality(records[1])) == qarr("jjll")
+    @test collect(quality(records[1], 1:4)) == qarr("jjll")
+    @test collect(quality(records[1], 2:4)) == qarr("jll")
+
+    @test_throws BoundsError quality(records[1], 0:0)
+    @test_throws BoundsError quality(records[1], -2:2)
+    @test_throws BoundsError quality(records[1], 4:6)
+
+    # QualityEncoding
+    @test_throws Exception QualityEncoding('B':'A', 10)
+    @test_throws Exception QualityEncoding('a':'A', 10)
+    @test_throws Exception QualityEncoding('Z':'Y', 10)
+    @test_throws Exception QualityEncoding('A':'B', -1)
+
+    CustomQE = QualityEncoding('A':'Z', 12)
+    good = Record("@a\naaaaaa\n+\nAKPZJO")
+    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "AKPZJO"]
+    good = Record("@a\naaa\n+\nABC")
+    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "ABC"]
+    good = Record("@a\naaaa\n+\nXYZW")
+    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "XYZW"]
+    
+    # Bad sequences
+    for seq in [
+        "BACDEf",
+        "ABCC!",
+        "abc",
+        "}}!]@@"
+    ]
+        record = Record(string("@a\n", 'a'^length(seq), "\n+\n", seq))
+        @test_throws Exception collect(quality(record, CustomQE))
+    end
+end
+
+@testset "Named quality encodings" begin
+    @test_throws Exception quality(record, :fakename)
+    @test_throws Exception quality(record, :snager)
+    @test_throws Exception quality(record, :illumina) # must specify which kind
+    
+    record = Record("@ABC\nABCDEFGHIJK\n+\n]C_Za|}~^xA")
+
+    for (symbol, offset) in [
+        (:sanger, 33),
+        (:solexa, 64),
+        (:illumina13, 64),
+        (:illumina15, 64),
+        (:illumina18, 33),
+    ]
+        @test collect(quality(record, symbol, 1:10)) == [Int8(i - offset) for i in "]C_Za|}~^x"]
+    end
+
+    # 64-encodings do not support lower end of qual range
+    bad_records = map(Record, [
+        "@A\nABCDE\n+\n:KPab", # Colon not in range
+        "@A\nABCDE\n+\nJKH!I", # ! not in range
+        "@A\nABCDE\n+\nBDE72", # numbers not in range
+    ])
+    for record in bad_records
+        @test_throws Exception collect(quality(record, :solexa))
+        @test_throws Exception collect(quality(record, :illumina13))
+        @test_throws Exception collect(quality(record, :illumina15))
+    end
 end
 
 @testset "Hashing" begin

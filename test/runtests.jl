@@ -7,6 +7,7 @@ using Random: rand!
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename
 using StringViews: StringView
 
+#=
 @testset "FASTA" begin
     @testset "Record" begin
         include("fasta/record.jl")
@@ -18,13 +19,17 @@ using StringViews: StringView
         include("fasta/specimens.jl")
     end
 end
+=#
 
 end # module TestFASTA
 
 module TestFASTQ
 
+# Default offset for quality
+const OFFSET = 33
+
 using Test
-using FASTX.FASTQ: Record, Reader, Writer, identifier, description, sequence, quality
+using FASTX.FASTQ: Record, Reader, Writer, identifier, description, sequence, quality, QualityEncoding
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename
 using StringViews: StringView
@@ -32,6 +37,12 @@ using StringViews: StringView
 @testset "FASTQ" begin
     @testset "Record" begin
         include("fastq/record.jl")
+    end
+    @testset "IO" begin
+        include("fastq/io.jl")
+    end
+    @testset "Specimens" begin
+        include("fastq/specimens.jl")
     end
 end
 
