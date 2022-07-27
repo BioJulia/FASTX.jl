@@ -32,7 +32,7 @@
     # but is currently necessary for performance, so we test it
     # to prevent performance regressions on this front
     reader = Reader(IOBuffer(copy_str); copy=false)
-    records = collect(reader)
+    records = [first(iterate(reader)) for i in 1:3]
     @test records[1] === records[2] === records[3]
     @test sequence(records[1]) == "T"
     close(reader)

@@ -33,13 +33,19 @@ function Reader(input::IO; fill_ambiguous = nothing, copy::Bool=true)
     end
 end
 
-function Base.iterate(reader::Reader, state=nothing)
-    eof(reader) && return nothing
-    read!(reader, reader.record)
-    return if reader.copy
-        (copy(reader.record), nothing)
+function Base.iterate(rdr::Reader, state=nothing)
+    (cs, ln, f) = readrecord!(rdr.state.stream, rdr.record, (rdr.state.state, rdr.state.linenum), rdr.seq_transform)
+    rdr.state.state = cs
+    rdr.state.linenum = ln
+    rdr.state.filled = f
+    if !f
+        iszero(cs) && return nothing
+        error("Unexpected error when reading FASTQ file")
+    end
+    return if rdr.copy
+        (copy(rdr.record), nothing)
     else
-        (reader.record, nothing)
+        (rdr.record, nothing)
     end
 end
 

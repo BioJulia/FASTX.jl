@@ -8,6 +8,7 @@ export
     header,
     sequence,
     quality,
+    quality_header!,
     QualityEncoding,
     quality_iter,
     transcribe
