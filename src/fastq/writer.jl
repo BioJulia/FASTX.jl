@@ -3,14 +3,14 @@
 
 struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S
-    quality_header::Bool
+    quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read 
 end
 
 function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 
-Writer(output::IO; quality_header::Bool=false) = Writer(output, quality_header)
+Writer(output::IO; quality_header::Union{Nothing, Bool}=nothing) = Writer(output, quality_header)
 """
     FASTQ.Writer(output::IO; quality_header=false)
 
@@ -18,22 +18,16 @@ Create a data writer of the FASTQ file format.
 
 # Arguments
 * `output`: data sink
-* `quality_header=false`: output the title line at the third line just after '+'
-
-# Extended help
-`Writer`s take ownership of the underlying IO. That means the underlying IO may
-not be directly modified such as writing or reading from it, or seeking in it.
-
-`Writer`s carry their own buffer. This buffer is flushed when the `Writer` is closed.
-Do not close the underlying IO without flushing the `Writer` first. Closing the
-`Writer` automatically flushes, then closes the underlying IO, and is preferred.
+* `quality_header=nothing`: output the title line at the third line just after '+'.
+  If `nothing`, do so if the record itself contains second header.
 """
-function Writer(output::IO, quality_header::Bool)
+function Writer(output::IO, quality_header::Union{Nothing, Bool})
+    qstate = quality_header === nothing ? 0x02 : UInt8(quality_header)
     if output isa TranscodingStream
-        return Writer{typeof(output)}(output, quality_header)
+        return Writer{typeof(output)}(output, qstate)
     else
         stream = TranscodingStreams.NoopStream(output)
-        return Writer{typeof(stream)}(stream, quality_header)
+        return Writer{typeof(stream)}(stream, qstate)
     end
 end
 
@@ -44,30 +38,36 @@ function Base.flush(writer::Writer)
 end
 
 function Base.write(writer::Writer, record::Record)
-    checkfilled(record)
     output = writer.output
     n = 0
-    # sequence
-    n += write(output, '@')
-    n += unsafe_write(output, pointer(record.data, first(record.identifier)), length(record.identifier))
-    if hasdescription(record)
-        n += write(output, ' ')
-        n += unsafe_write(output, pointer(record.data, first(record.description)), length(record.description))
-    end
-    n += write(output, '\n')
-    n += unsafe_write(output, pointer(record.data, first(record.sequence)), length(record.sequence))
-    n += write(output, '\n')
-    # quality
-    n += write(output, '+')
-    if writer.quality_header
-        n += unsafe_write(output, pointer(record.data, first(record.identifier)), length(record.identifier))
-        if hasdescription(record)
-            n += write(output, ' ')
-            n += unsafe_write(output, pointer(record.data, first(record.description)), length(record.description))
+    data = record.data
+
+    desclen = UInt(record.description_len)
+    seqlength = UInt(seqlen(record))
+
+    GC.@preserve data begin
+        # Header
+        n += write(output, UInt8('@'))
+        n += unsafe_write(output, pointer(data), desclen)
+        
+        # Sequence
+        n += write(output, UInt8('\n'))
+        n += unsafe_write(output, pointer(data) + desclen, seqlength)
+
+        # Second header
+        n += write(output, "\n+")
+        # Write description in second header if either the writer is set to do that,
+        # or writer is set to look at record, and record has second header
+        if writer.quality_header == 0x01 || (writer.quality_header == 0x02 && has_extra_description(record))
+            n += unsafe_write(output, pointer(data), desclen)
         end
+
+        # Quality
+        n += write(output, UInt8('\n'))
+        n += unsafe_write(output, pointer(data) + desclen + seqlength, seqlength)
+
+        # Final trailing newline
+        n += write(output, UInt8('\n'))
     end
-    n += write(output, '\n')
-    n += unsafe_write(output, pointer(record.data, first(record.quality)), length(record.quality))
-    n += write(output, '\n')
     return n
 end
