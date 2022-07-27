@@ -4,7 +4,8 @@
 mutable struct Record
     # Contains: description, then sequence, then quality, then any noncoding bytes.
     # all rest, including newlines and the @ and + symbol, are not stored.
-    # The second description after + must be identical to first description
+    # The second description after + must be identical to first description.
+    # The quality is not corrected for offset, i.e. it is stored as it in the input file
     data::Vector{UInt8}
     
     identifier_len::Int32
@@ -19,6 +20,36 @@ has_extra_description(record::Record) = record.has_description_seq_len ≥ (type
 
 # Number of stored bytes in data field
 filled(record::Record) = record.description_len + 2 * seqlen(record)
+
+"""
+    quality_header!(record::Record, x::Bool)
+
+Set whether the record repeats its header on the quality comment line,
+i.e. the line with `+`.
+
+# Examples
+```
+julia> record = FASTQ.Record("@A B\nT\n+\nJ");
+
+julia> string(record)
+"@A B\nT\n+\nJ"
+
+julia> quality_header!(record, true);
+
+julia> string(record)
+"@A B\nT\n+A B\nJ"
+```
+"""
+function quality_header!(record::Record, x::Bool)
+    bits = record.has_description_seq_len
+    y = if x
+        bits | (typemin(Int) % UInt)
+    else
+        bits & (typemax(Int) % UInt)
+    end
+    record.has_description_seq_len = y
+    record
+end
 
 """
     FASTQ.Record()
@@ -93,15 +124,15 @@ end
 
 function Base.write(io::IO, record::Record)
     data = record.data
-    seqlen = UInt(seqlen(record))
-    desclen = UInt(sequence.description_len)
+    len = UInt(seqlen(record))
+    desclen = UInt(record.description_len)
     GC.@preserve data begin
         # Header line
         nbytes = write(io, UInt8('@'))
         nbytes += unsafe_write(io, pointer(data), desclen)
         nbytes += write(io, '\n')
         # Sequence
-        nbytes += unsafe_write(io, pointer(data) + desclen, seqlen)
+        nbytes += unsafe_write(io, pointer(data) + desclen, len)
         # + line, with additional description if applicable
         nbytes += write(io, UInt8('\n'), UInt8('+'))
         if has_extra_description(record)
@@ -109,7 +140,7 @@ function Base.write(io::IO, record::Record)
         end
         # Quality
         nbytes += write(io, '\n')
-        nbytes += unsafe_write(io, pointer(data) + desclen + seqlen, seqlen)
+        nbytes += unsafe_write(io, pointer(data) + desclen + len, len)
     end
     return nbytes
 end
