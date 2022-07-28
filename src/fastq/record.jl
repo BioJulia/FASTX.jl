@@ -1,6 +1,37 @@
 # FASTQ Record
 # ============
 
+"""
+    FASTQ.Record([::Union{AbstractString, AbstractVector{UInt8}}])
+
+Mutable struct representing a FASTQ record as parsed from a FASTQ file.
+The content of the record can be queried with the following functions:
+`identifier`, `description`, `sequence`, `seqlen`, `quality`
+
+FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
+
+See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTA.Record`](@ref)
+
+# Examples
+```jldoctest
+julia> rec = Record("@ill r1\nGGC\n+\njjk");
+
+julia> identifier(rec)
+"ill"
+
+julia> description(rec)
+"ill r1"
+
+julia> sequence(rec)
+"GGC"
+
+julia> show(collect(quality(rec)))
+[73, 73, 74]
+
+julia> typeof(description(rec)) == typeof(sequence(rec)) == StringView
+true
+```
+"""
 mutable struct Record
     # Contains: description, then sequence, then quality, then any noncoding bytes.
     # all rest, including newlines and the @ and + symbol, are not stored.
@@ -15,7 +46,7 @@ mutable struct Record
     has_description_seq_len::UInt
 end
 
-@inline seqlen(record::Record) = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
+@inline seqlen(record::Record)::Int = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
 has_extra_description(record::Record) = record.has_description_seq_len ≥ (typemin(Int) % UInt)
 
 # Number of stored bytes in data field
@@ -185,15 +216,18 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
     return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
-"""
-    quality_iter(record::Record, [part::UnitRange])::Vector{UInt8}
-
-Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
-"""
 function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
     quality(record, DEFAULT_ENCODING, part)
 end
 
+"""
+    quality(record::FASTQ.Record, [encoding::QualityEncoding], [part::UnitRange])
+
+Get an iterator of base quality of the slice `part` of `record`'s quality.
+This iterator is corrupted if the record is mutated.
+By default, `part` is the whole sequence.
+By default, the encoding is PHRED33 Sanger encoding, but may be specified with a `QualityEncoding` object
+"""
 function quality(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
     start, stop = first(part), last(part)
     (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
@@ -208,7 +242,7 @@ end
 """
     quality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}
 
-Get the base quality of `record` by decoding with `encoding_name`.
+Get an iterator of base quality of the slice `part` of `record`'s quality.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
 """

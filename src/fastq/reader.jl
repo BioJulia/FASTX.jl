@@ -8,13 +8,38 @@ struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
 end
 
 """
-    FASTQ.Reader(input::IO; fill_ambiguous=nothing, copy=true)
+    FASTQ.Reader(input::IO; copy::Bool=true)
 
-Create a data reader of the FASTQ file format.
+Create a buffered data reader of the FASTQ file format.
+The reader is a `BioGenerics.IO.AbstractReader`, a stateful iterator of `FASTQ.Record`.
+Readers take ownership of the underlying IO. Mutating or closing the underlying IO
+not using the reader is undefined behaviour.
+Closing the Reader also closes the underlying IO.
+
+See more examples in the FASTX documentation.
+
+See also: [`FASTQ.Record`](@ref), [`FASTA.Reader`](@ref)
 
 # Arguments
 * `input`: data source
-* `copy::Bool`: iterating returns fresh copies instead of the same Record
+* `copy::Bool`: iterating returns fresh copies instead of the same Record. Set to `false`
+  for improved performance, but be wary that iterating mutates records.
+
+# Examples
+```jldoctest
+julia> rdr = Reader(IOBuffer("@readname\nGGCC\n+\njk;]"));
+
+julia> record = first(Reader); close(reader);
+
+julia> identifier(record)
+"readname"
+
+julia> sequence(record)
+"GGCC"
+
+julia> show(collect(quality(record))) # phred 33 encoding by default
+[73, 74, 26, 60]
+```
 """
 function Reader(input::IO; copy::Bool=true)
     record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)

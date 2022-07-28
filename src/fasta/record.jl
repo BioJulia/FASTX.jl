@@ -1,6 +1,34 @@
 # FASTA Record
 # ============
 
+"""
+    FASTA.Record([::Union{AbstractString, AbstractVector{UInt8}, FASTQ.Record}])
+
+Mutable struct representing a FASTA record as parsed from a FASTA file.
+The content of the record can be queried with the following functions:
+`identifier`, `description`, `seqlen`, `sequence`.
+
+FASTA records are un-typed, i.e. they are agnostic to what kind of data they contain.
+
+See also: [`FASTA.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTQ.Record`](@ref)
+
+# Examples
+```jldoctest
+julia> rec = Record(">some header\nTAqA\nCC");
+
+julia> identifier(rec)
+"some"
+
+julia> description(rec)
+"some header"
+
+julia> sequence(rec)
+"TAqACC"
+
+julia> typeof(description(rec)) == typeof(sequence(rec)) == StringView
+true
+```
+"""
 mutable struct Record
     # Data contains the description, then the sequence immediately after
     # without newlines, or the initial > symbol, and then any unused trailing bytes
@@ -17,7 +45,7 @@ mutable struct Record
 end
 
 filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
-@inline seqlen(record::Record) = record.sequence_len
+@inline seqlen(record::Record)::Int = record.sequence_len
 
 """
     FASTA.Record()

@@ -5,18 +5,25 @@
     FASTA.Writer(output::IO; width=70)
 
 Create a data writer of the FASTA file format.
+The writer is a `BioGenerics.IO.AbstractWriter`.
+Writers take ownership of the underlying IO. Mutating or closing the underlying IO
+not using the writer is undefined behaviour.
+Closing the writer also closes the underlying IO.
+
+See more examples in the FASTX documentation.
+
+See also: [`FASTA.Record`](@ref), [`FASTA.Reader`](@ref), [`FASTQ.Writer`](@ref)
 
 # Arguments
-* `output`: data sink
-* `width=70`: wrapping width of sequence characters
+* `output`: Data sink to write to
+* `width`: Wrapping width of sequence characters. If < 1, no wrapping.
 
-# Extended help
-`Writer`s take ownership of the underlying IO. That means the underlying IO may
-not be directly modified such as writing or reading from it, or seeking in it.
-
-`Writer`s carry their own buffer. This buffer is flushed when the `Writer` is closed.
-Do not close the underlying IO without flushing the `Writer` first. Closing the
-`Writer` automatically flushes, then closes the underlying IO, and is preferred.
+# Examples
+```
+julia> FASTA.Writer(open("some_file.fna", "w")) do writer
+    write(writer, record) # a FASTA.Record
+end
+```
 """
 struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S

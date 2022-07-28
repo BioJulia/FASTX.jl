@@ -8,18 +8,40 @@ using BioSequences: BioSequence, LongSequence
 """
     identifier(record::Record)::StringView
 
-Get the sequence identifier of `record`. The identifier is the header
+Get the sequence identifier of `record`. The identifier is the description
 before any whitespace. If the identifier is missing, return an empty string.
 Returns an `AbstractString` view into the record. If the record is overwritten,
 the string data will be corrupted.
+
+See also: [`description`](@ref), [`sequence`](@ref)
+
+# Examples
+```jldoctest
+julia> record = FASTA.Record(">ident_here some descr \nTAGA");
+
+julia> identifier(record)
+"ident_here"
+```
 """
 function identifier end
 
 """
     description(record::Record)::StringView
 
-Get the description of `record`. The description is the entire header line.
-Returns an `AbstractString` view into the record.
+Get the description of `record`. The description is the entire header line, minus the
+leading `>` or `@` symbols for FASTA/FASTQ records, respectively, including trailing whitespace.
+Returns an `AbstractString` view into the record. If the record is overwritten,
+the string data will be corrupted.
+
+See also: [`identifier`](@ref), [`sequence`](@ref)
+
+# Examples
+```jldoctest
+julia> record = FASTA.Record(">ident_here some descr \nTAGA");
+
+julia> description(record)
+"some descr "
+```
 """
 function description end
 
@@ -28,16 +50,31 @@ function description end
 
 Get the sequence of `record`.
 
-`S` can be either a subtype of `BioSequences.BioSequence` or `String`.
+`S` can be either a subtype of `BioSequences.BioSequence`, `StringView` or `String`.
 If elided, `S` defaults to `StringView`.
 If `part` argument is given, it returns the specified part of the sequence.
 
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a record, you can use `Base.copyto!`.
+See also: [`identifier`](@ref), [`description`](@ref)
+
+# Examples
+```jldoctest
+julia> record = FASTQ.Record("@read1\nTAGA\n+\n;;]]");
+
+julia> sequence(record)
+"TAGA"
+
+julia> sequence(LongDNA{2}, record)
+4nt DNA Sequence:
+TAGA
+```
 """
 function sequence end
+
+"""
+    seqlen(::Record)::Int
+
+Get the length of the sequence part of `Record`.
+"""
 function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
@@ -74,6 +111,16 @@ function sequence(
     record::Record,
     part::UnitRange{Int}=1:seqlen(record)
 )::S where S <: BioSequence
+    return S(sequence(record))
+end
+
+# Special method for LongSequence: Can operate on bytes directly
+# and more efficiently
+function sequence(
+    ::Type{S},
+    record::Record,
+    part::UnitRange{Int}=1:seqlen(record)
+)::S where S <: LongSequence
     return S(@view(record.data[seq_data_part(record, part)]))
 end
 

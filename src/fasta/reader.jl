@@ -9,9 +9,17 @@ struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
 end
 
 """
-    FASTA.Reader(input::IO; index=nothing, copy=true)
+    FASTA.Reader(input::IO; index=nothing, copy::Bool=true)
 
-Create a data reader of the FASTA file format.
+Create a buffered data reader of the FASTA file format.
+The reader is a `BioGenerics.IO.AbstractReader`, a stateful iterator of `FASTA.Record`.
+Readers take ownership of the underlying IO. Mutating or closing the underlying IO
+not using the reader is undefined behaviour.
+Closing the Reader also closes the underlying IO.
+
+See more examples in the FASTX documentation.
+
+See also: [`FASTA.Record`](@ref), [`FASTQ.Reader`](@ref)
 
 # Arguments
 * `input`: data source
@@ -19,7 +27,21 @@ Create a data reader of the FASTA file format.
   `index` can be `nothing`, a `FASTA.Index`, or an `IO` in which case an index will
   be parsed from the IO, or `AbstractString`, in which case it will be treated as a path
   to a fai file.
-* `copy::Bool`: iterating returns fresh copies instead of the same Record
+* `copy::Bool`: iterating returns fresh copies instead of the same Record. Set to `false`
+  for improved performance, but be wary that iterating mutates records.
+
+# Examples
+```jldoctest
+julia> rdr = Reader(IOBuffer(">header\nTAG\n>another\nAGA"));
+
+julia> records = collect(Reader); close(reader);
+
+julia> show(map(identifier, records))
+["header", "another"]
+
+julia> show(map(sequence, records))
+["TAG", "AGA"]
+```
 """
 function Reader(
     input::IO;
@@ -38,9 +60,9 @@ function Reader(
     record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
     if !(input isa TranscodingStream)
         stream = TranscodingStreams.NoopStream(input)
-        return Reader(State(stream, 1, 1, false), index, record, copy)
+        return Reader(State(stream, 1, 1, false), idx, record, copy)
     else
-        return Reader(State(input, 1, 1, false), index, record, copy)
+        return Reader(State(input, 1, 1, false), idx, record, copy)
     end
 end
 

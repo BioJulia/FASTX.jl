@@ -7,6 +7,33 @@
 # License is MIT: https://github.com/BioJulia/BioSequences.jl/blob/master/LICENSE.md
 
 # http://www.htslib.org/doc/faidx.html
+"""
+    Index(src::Union{IO, AbstractString})
+
+FASTA index object, which allows constant-time seeking of FASTA files by name.
+The index is assumed to be in FAI format.
+
+Notable methods:
+* `Index(::Union{IO, AbstractString})`: Read FAI file from IO or file at path
+* `write(::IO, ::Index)`: Write index in FAI format
+* `faidx(::IO)::Index`: Index FASTA file
+
+See also: [FASTA.Reader](@ref)
+
+# Examples
+```jldoctest
+julia> src = IOBuffer("seqname\t9\t0\t6\t8");
+
+julia> fna = IOBuffer(">A\nG\n>seqname\nACGTAC\r\nTTG");
+
+julia> rdr = FASTA.Reader(fna; index=src)
+
+julia> seekrecord(rdr, "seqname");
+
+julia> sequence(String, first(rdr))
+"ACGTACTTG"
+```
+"""
 struct Index
     # offset for the record's sequence by header: See above specification
     names::Dict{String, Int}
