@@ -14,6 +14,9 @@ using StringViews: StringView
     @testset "IO" begin
         include("fasta/io.jl")
     end
+    @testset "Index" begin
+        include("fasta/index.jl")
+    end
     @testset "Specimens" begin
         include("fasta/specimens.jl")
     end
@@ -45,8 +48,12 @@ using StringViews: StringView
     end
 end
 
-using FASTX: FASTA, FASTQ
+end # module TestFASTQ
+
+using FASTX: FASTA, FASTQ, identifier, description, sequence
+using BioSequences: LongDNA, LongAA, LongRNA
 using Random: rand!
+using Test
 
 # Common tests
 @testset "FASTX" begin
@@ -172,5 +179,3 @@ using Random: rand!
         @test sequence(rec) == "polA"
     end
 end
-
-end # module TestFASTQ
