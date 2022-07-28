@@ -9,7 +9,6 @@ import Automa.Stream: @mark, @markpos, @relpos, @abspos
 import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import BioSequences
-import BioSymbols
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier, description, sequence, UTF8, seqlen
