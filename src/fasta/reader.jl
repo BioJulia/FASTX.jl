@@ -15,14 +15,25 @@ Create a data reader of the FASTA file format.
 
 # Arguments
 * `input`: data source
-* `index=nothing`: filepath to a random access index (currently *fai* is supported)
+* `index`: Optional random access index (currently *fai* is supported).
+  `index` can be `nothing`, a `FASTA.Index`, or an `IO` in which case an index will
+  be parsed from the IO, or `AbstractString`, in which case it will be treated as a path
+  to a fai file.
 * `copy::Bool`: iterating returns fresh copies instead of the same Record
 """
-function Reader(input::IO; index = nothing, copy::Bool=true)
-    if isa(index, AbstractString)
-        index = Index(index)
-    elseif index !== nothing
-        throw(ArgumentError("index must be a filepath or nothing"))
+function Reader(
+    input::IO;
+    index::Union{Nothing, Index, IO, AbstractString}=nothing,
+    copy::Bool=true
+)
+    idx = if index isa Index
+        index
+    elseif index isa Union{AbstractString, IO}
+        Index(index)
+    elseif index isa Nothing
+        nothing
+    else
+        @assert false
     end
     record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
     if !(input isa TranscodingStream)
