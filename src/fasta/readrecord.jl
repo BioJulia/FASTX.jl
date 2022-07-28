@@ -9,7 +9,7 @@
 #   but ">A\n>A\n" is. The newlines are not considered part of the sequence lines themselves.
 #   This implies all whitespace except newlines, including trailing whitespace, is part
 #   of the sequence.
-machine = (function ()
+machine = let
     isinteractive() && @info "Compiling FASTA FSM..." 
 
     re = Automa.RegExp
@@ -31,6 +31,7 @@ machine = (function ()
     # Description here include trailing whitespace.
     # This is needed for the FSM, since the description can contain arbitrary
     # whitespace, the only way to know the description ends is to encounter a newline.
+    # NB: Make sure to also change the Index machine to match this is you change it.
     description = identifier * re.opt(hspace * re"[^\r\n]*")
 
     # Action: Store length of description and append description to record.data
@@ -61,7 +62,7 @@ machine = (function ()
     fasta = re.rep(space) * re.rep(record) * re.opt(record_eof)
     
     Automa.compile(fasta)
-end)()
+end
 
 #write("fasta.dot", Automa.machine2dot(machine))
 #run(`dot -Tsvg -o fasta.svg fasta.dot`)

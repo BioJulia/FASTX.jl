@@ -110,7 +110,7 @@ end
 
 import .FASTA
 import .FASTQ
-import .FASTQ: quality, hasquality, quality_iter
+import .FASTQ: quality
 
 # TODO: Check this
 #=
