@@ -134,8 +134,6 @@ end
 loopcode = quote
     if cs < 0
         throw(ArgumentError("malformed FASTQ file at line $(linenum)"))
-    elseif found && transform != nothing
-        transform(record.data, record.sequence)
     end
     found && @goto __return__
 end
@@ -149,7 +147,7 @@ isinteractive() && @info "Generating FASTQ parsing code..."
 Automa.Stream.generate_reader(
     :readrecord!,
     machine,
-    arguments = (:(record::Record), :(state::Tuple{Int,Int}), :(transform)),
+    arguments = (:(record::Record), :(state::Tuple{Int,Int})),
     actions = actions,
     context = context,
     initcode = initcode,
