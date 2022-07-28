@@ -23,11 +23,12 @@
         end
     end
 
-    for specimen in list_valid_specimens("FASTA")
-        path = joinpath(path_of_format("FASTA"), filename(specimen))
-
-        # We intentionally do not support comments!
-        if hastag(specimen, "comments")
+    for specimen in list_valid_specimens("FASTQ")
+        path = joinpath(path_of_format("FASTQ"), filename(specimen))
+        
+        # These files contain multiline FASTQ, which we can't currently parse,
+        # and parsing these is surprisingly hard (see issue #78)
+        if hastag(specimen, "linewrap")
             @test_throws Exception open(collect, Reader, path)
         else
             test_valid_specimen(path)
@@ -36,8 +37,8 @@
 end
 
 @testset "Invalid specimens" begin
-    for specimen in list_invalid_specimens("FASTA")
-        path = joinpath(path_of_format("FASTA"), filename(specimen))
+    for specimen in list_invalid_specimens("FASTQ")
+        path = joinpath(path_of_format("FASTQ"), filename(specimen))
         @test_throws Exception open(collect, Reader, path)
     end
 end
