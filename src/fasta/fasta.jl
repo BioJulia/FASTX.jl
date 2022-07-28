@@ -13,7 +13,7 @@ import BioSymbols
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
 import ..FASTX: identifier,
-    description, header,
+    description,
     sequence, UTF8, seqlen
 
 include("record.jl")

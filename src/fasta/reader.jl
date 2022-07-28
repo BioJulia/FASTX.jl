@@ -45,12 +45,11 @@ function Reader(
 end
 
 function Base.iterate(rdr::Reader, state=nothing)
-    (cs, ln, f) = readrecord!(rdr.state.stream, rdr.record, (rdr.state.state, rdr.state.linenum))
-    rdr.state.state = cs
-    rdr.state.linenum = ln
-    rdr.state.filled = f
+    (cs, f) = _read!(rdr, rdr.record)
     if !f
         iszero(cs) && return nothing
+        # Make sure reader's record in not invalid
+        empty!(rdr.record)
         error("Unexpected error when reading FASTQ file")
     end
     return if rdr.copy
@@ -60,24 +59,29 @@ function Base.iterate(rdr::Reader, state=nothing)
     end
 end
 
+function Base.read!(rdr::Reader, rec::Record)
+    (cs, f) = _read!(rdr, rec)
+    if !f
+        cs == 0 && throw(EOFError())
+        throw(ArgumentError("malformed FASTA file"))
+    end    
+    return rec
+end
+
+function _read!(rdr::Reader, rec::Record)
+    cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum))
+    rdr.state.state = cs
+    rdr.state.linenum = ln
+    rdr.state.filled = f
+    return (cs, f)
+end
+
 function Base.eltype(::Type{<:Reader})
     return Record
 end
 
 function BioGenerics.IO.stream(reader::Reader)
     return reader.state.stream
-end
-
-function Base.read!(rdr::Reader, rec::Record)
-    cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum))
-    rdr.state.state = cs
-    rdr.state.linenum = ln
-    rdr.state.filled = f
-    if !f
-        cs == 0 && throw(EOFError())
-        throw(ArgumentError("malformed FASTA file"))
-    end    
-    return rec
 end
 
 function Base.close(reader::Reader)
