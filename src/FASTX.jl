@@ -1,18 +1,5 @@
 module FASTX
 
-export
-    FASTA,
-    FASTQ,
-    identifier,
-    description,
-    header,
-    sequence,
-    quality,
-    quality_header!,
-    QualityEncoding,
-    quality_iter,
-    transcribe
-
 using StringViews: StringView
 using BioSequences: BioSequence, LongSequence
 
@@ -55,10 +42,12 @@ function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
-const header = description
-
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
+
+import .FASTA
+import .FASTQ
+import .FASTQ: quality, quality_header!, QualityEncoding
 
 const Record = Union{FASTA.Record, FASTQ.Record}
 
@@ -108,32 +97,19 @@ function Base.copyto!(dest::LongSequence, src::Record)
     return copyto!(dest, 1, src, 1, seqlen(src))
 end
 
-import .FASTA
-import .FASTQ
-import .FASTQ: quality
+export
+    FASTA,
+    FASTQ,
+    identifier,
+    description,
+    sequence,
+    quality,
+    quality_header!,
+    QualityEncoding,
+    transcribe
 
-# TODO: Check this
-#=
 function FASTA.Record(record::FASTQ.Record)
-    FASTQ.checkfilled(record)
-    slice = (first(record.identifier) - 1):last(record.sequence)
-    newdata = @inbounds record.data[slice]
-    newdata[1] = 0x3E
-    FASTA.Record(newdata)
+    FASTA.Record(description(record), sequence(record))
 end
-
-"""
-    transcribe(in::FASTQ.Reader, out::FASTA.Writer)
-
-Convert a FASTQ file to a FASTA file.
-"""
-function transcribe(in::FASTQ.Reader, out::FASTA.Writer)
-    buff_record = FASTQ.Record()
-    while !eof(in)
-        read!(in, buff_record)
-        write(out, FASTA.Record(buff_record))
-    end
-end
-=#
 
 end # module

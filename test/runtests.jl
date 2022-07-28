@@ -156,6 +156,21 @@ using Random: rand!
             end
         end
     end
+
+    @testset "Convert FASTQ to FASTA" begin
+        rec = FASTA.Record(FASTQ.Record("@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo"))
+        @test description(rec) == "ta_g^ ha||;; "
+        @test identifier(rec) == "ta_g^"
+        @test sequence(rec) == "TAGJKKm"
+
+        rec = FASTA.Record(FASTQ.Record("@\n\n+\n"))
+        @test identifier(rec) == description(rec) == sequence(rec) == ""
+
+        rec = FASTA.Record(FASTQ.Record("@mba M\npolA\n+mba M\nTAGA"))
+        @test description(rec) == "mba M"
+        @test identifier(rec) == "mba"
+        @test sequence(rec) == "polA"
+    end
 end
 
 end # module TestFASTQ
