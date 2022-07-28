@@ -49,6 +49,11 @@ import .FASTA
 import .FASTQ
 import .FASTQ: quality, quality_header!, QualityEncoding
 
+const FASTARecord = FASTA.Record
+const FASTQRecord = FASTQ.Record
+const FASTAReader = FASTA.Reader
+const FASTQReader = FASTQ.Reader
+
 const Record = Union{FASTA.Record, FASTQ.Record}
 
 "Get the indices of `data` that correspond to sequence indices `part`"
@@ -100,13 +105,17 @@ end
 export
     FASTA,
     FASTQ,
+    FASTARecord,
+    FASTAReader,
+    FASTQRecord,
+    FASTQReader,
     identifier,
     description,
     sequence,
     quality,
     quality_header!,
     QualityEncoding,
-    transcribe
+    seqlen
 
 function FASTA.Record(record::FASTQ.Record)
     FASTA.Record(description(record), sequence(record))
