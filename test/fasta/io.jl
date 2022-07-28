@@ -38,6 +38,16 @@
     close(reader)
 end
 
+@testset "Reader edgecases" begin
+    good = ">A\nA\n>B\nB"
+    # do not accept > in sequence to detect missing newline
+    # when two records are concatenated without newline
+    bad = ">A\nA>B\nB"
+
+    @test Reader(collect, IOBuffer(good)) isa Vector{Record}
+    @test_throws Exception Reader(collect, IOBuffer(bad))
+end
+
 @testset "Writer basics" begin
     function test_writer(records, regex::Regex)
         buffer = IOBuffer()

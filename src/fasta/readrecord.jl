@@ -40,8 +40,8 @@ machine = let
     # Header: '>' then description
     header = re">" * description
     
-    # Sequence line: Anything except \r, \n. Cannot begin with >
-    sequence_line = re"[^\n\r>][^\n\r]*"
+    # Sequence line: Anything except \r, \n and >
+    sequence_line = re"[^\n\r>]+"
     sequence_line.actions[:enter] = [:mark]
     # Action: Append letters to sequence_line
     sequence_line.actions[:exit]  = [:seqline]
