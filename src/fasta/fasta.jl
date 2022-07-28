@@ -12,9 +12,7 @@ import BioSequences
 import BioSymbols
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream
-import ..FASTX: identifier,
-    description,
-    sequence, UTF8, seqlen
+import ..FASTX: identifier, description, sequence, UTF8, seqlen
 
 include("record.jl")
 include("index.jl")
