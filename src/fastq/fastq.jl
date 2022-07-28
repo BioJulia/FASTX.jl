@@ -5,7 +5,7 @@ import Automa.RegExp: @re_str
 import Automa.Stream: @mark, @markpos, @relpos, @abspos
 import BioSymbols
 import BioSequences
-import BioGenerics: BioGenerics, isfilled
+import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream

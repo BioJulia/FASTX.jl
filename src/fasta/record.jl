@@ -118,10 +118,6 @@ function truncate(s::String, len::Integer)
     end
 end
 
-function BioGenerics.isfilled(::Record)
-    return true
-end
-
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
     return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
 end
@@ -132,14 +128,6 @@ end
 
 function identifier(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.identifier_len)))
-end
-
-function BioGenerics.seqname(record::Record)
-    return identifier(record)
-end
-
-function BioGenerics.hasseqname(record::Record)
-    return true
 end
 
 function description(record::Record)::StringView
@@ -156,14 +144,6 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
     # This check is here to prevent boundserror when indexing src.sequence
     iszero(N) && return dest
     return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
-end
-
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
-    return sequence(S, record)
-end
-
-function BioGenerics.hassequence(record::Record)
-    return true
 end
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?

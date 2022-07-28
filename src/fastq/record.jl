@@ -157,10 +157,6 @@ function Base.show(io::IO, record::Record)
     print(io,   "      quality: ", collect(quality(record)))
 end
 
-function BioGenerics.isfilled(::Record)
-    return true # for backwards compatibility
-end
-
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
     return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
 end
@@ -229,26 +225,6 @@ function quality(
         encoding_name == :illumina18 ? ILLUMINA18_QUAL_ENCODING :
         throw(ArgumentError("quality encoding ':$(encoding_name)' is not supported")))
     quality(record, encoding, part)
-end
-
-function BioGenerics.seqname(record::Record)
-    return identifier(record)
-end
-
-function BioGenerics.hasseqname(record::Record)
-    return true
-end
-
-function BioGenerics.sequence(record::Record)
-    return sequence(record)
-end
-
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
-    return sequence(S, record)
-end
-
-function BioGenerics.hassequence(record::Record)
-    return true
 end
 
 function Base.hash(record::Record, h::UInt)
