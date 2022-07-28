@@ -191,6 +191,7 @@ end
     @test_throws Exception QualityEncoding('a':'A', 10)
     @test_throws Exception QualityEncoding('Z':'Y', 10)
     @test_throws Exception QualityEncoding('A':'B', -1)
+    @test_throws Exception QualityEncoding('α':'β', 10)
 
     CustomQE = QualityEncoding('A':'Z', 12)
     good = Record("@a\naaaaaa\n+\nAKPZJO")
@@ -210,6 +211,16 @@ end
         record = Record(string("@a\n", 'a'^length(seq), "\n+\n", seq))
         @test_throws Exception collect(quality(record, CustomQE))
     end
+
+    # As strings
+    @test quality(String, records[1]) == quality(StringView, records[1]) == "jjll"
+    @test quality(String, records[1], 2:3) == "jl"
+    @test quality(String, records[1], 1:3) == "jjl"
+    @test_throws Exception quality(String, records[1], 0:3)
+    @test_throws Exception quality(String, records[1], 1:5)
+
+    @test quality(String, records[1]) isa String
+    @test quality(StringView, records[1]) isa StringView
 end
 
 @testset "Named quality encodings" begin

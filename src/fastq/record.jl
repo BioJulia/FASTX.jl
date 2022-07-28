@@ -185,7 +185,7 @@ function Base.show(io::IO, record::Record)
     println(io, "FASTQ.Record:")
     println(io, "  description: ", description(record))
     println(io, "     sequence: ", sequence(String, record))
-    print(io,   "      quality: ", collect(quality(record)))
+    print(io,   "      quality: ", quality(String, record))
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
@@ -218,6 +218,17 @@ end
 
 function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
     quality(record, DEFAULT_ENCODING, part)
+end
+
+function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    start, stop = first(part), last(part)
+    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
+    offset = record.description_len + seqlen(record)
+    StringView(view(record.data, start+offset:stop+offset))
+end
+
+function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    String(quality(StringView, record, part))
 end
 
 """
