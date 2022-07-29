@@ -58,7 +58,7 @@ end
     test_writer(records, r"^@\n\n\+\n\n@\n\n\+\n\n$")
 
     # Does not write noncoding bytes in records
-    records = map(Record, [
+    records = map(i -> parse(Record, i), [
         "@ABC DEF\nkjhmn\n+ABC DEF\njjjkk",
         "@pro [1-2](HLA=2);k=1\nttagga\n+\nabcdef",
     ])
@@ -89,7 +89,7 @@ end
 
 # Rudamentary, see FASTA's tests
 @testset "Writer flushing" begin
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
     target_strings = mktemp() do path, io
         map(records) do record
             writer = Writer(open(path, "w"))
@@ -134,7 +134,7 @@ end
         return str
     end
 
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
 
     @test iowrite(records, nothing) == join(map(string, records), '\n') * '\n'
     @test iowrite(records, true) == join(map(records) do record
@@ -158,7 +158,7 @@ end
         return str
     end
 
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
     str = iowrite(records)
     records2 = Reader(collect, IOBuffer(str))
     str2 = iowrite(records2)

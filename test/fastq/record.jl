@@ -58,7 +58,7 @@ TEST_BAD_RECORD_STRINGS = [
     end
 
     string = "@some header\nAAGG\n+\njjll"
-    record = Record(string)
+    record = parse(Record, string)
     record2 = Record()
 
     # Identity and emptiness
@@ -77,21 +77,21 @@ TEST_BAD_RECORD_STRINGS = [
     @test_throws Exception Record("some_header", "TAG", [Int8(i)-OFFSET for i in "jj"])
 
     # From substrings
-    record4 = Record(SubString(string, 1:lastindex(string)))
+    record4 = parse(Record, SubString(string, 1:lastindex(string)))
     test_is_equal(record, record4)
 
     # From arrays
     cu = codeunits(string)
-    test_is_equal(Record(cu), record)
-    test_is_equal(Record(collect(cu)), record)
+    test_is_equal(parse(Record, cu), record)
+    test_is_equal(parse(Record, collect(cu)), record)
 end
 
 @testset "Construction edge cases" begin
     # Can construct good examples
     strings = TEST_RECORD_STRINGS[1:6]
     records = map(strings) do string
-        @test Record(string) isa Any # does not throw
-        Record(string)
+        @test parse(Record, string) isa Any # does not throw
+        parse(Record, string)
     end
 
     @test description(records[4]) == ""
@@ -109,20 +109,20 @@ end
 end
 
 @testset "Equality" begin
-    a, b = Record(TEST_RECORD_STRINGS[1]), Record(TEST_RECORD_STRINGS[3])
+    a, b = parse(Record, TEST_RECORD_STRINGS[1]), parse(Record, TEST_RECORD_STRINGS[3])
     @test a == b
     push!(a.data, 0x00)
     @test a == b
 
     # The descr/seq break matter
-    @test Record("@AA\nT\n+\nA") != Record("@A\nAT\n+\nAT")
+    @test parse(Record, "@AA\nT\n+\nA") != parse(Record, "@A\nAT\n+\nAT")
     # Second header does not matter
-    @test Record("@AA\nT\n+\nA") == Record("@AA\nT\n+AA\nA")
+    @test parse(Record, "@AA\nT\n+\nA") == parse(Record, "@AA\nT\n+AA\nA")
 end
 
 # I.e. trailing bytes in the data field not used do not matter
 @testset "Noncoding bytes" begin
-    record = Record(TEST_RECORD_STRINGS[1])
+    record = parse(Record, TEST_RECORD_STRINGS[1])
     resize!(record.data, 1000)
     cp = copy(record)
 
@@ -134,7 +134,7 @@ end
 end
 
 @testset "Get sequence as String/StringView" begin
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
 
     @test sequence(String, records[1]) == "AAGG"
     @test sequence(String, records[2]) == "kjmn"
@@ -159,8 +159,8 @@ end
 # The same machinery as FASTA is used, and that is much more
 # thoroughly tested, so I only test a few cases here
 @testset "Encode BioSequences" begin
-    record1 = Record("@A\nTAG\n+\nPRJ")
-    record2 = Record("@A\nYJP\n+\nACG")
+    record1 = parse(Record, "@A\nTAG\n+\nPRJ")
+    record2 = parse(Record, "@A\nYJP\n+\nACG")
     
     @test sequence(LongDNA{4}, record1) == dna"TAG"
     @test sequence(LongDNA{2}, record1) == dna"TAG"
@@ -173,7 +173,7 @@ end
 
 # We have already tested basic quality iteration in rest of tests
 @testset "Quality" begin
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
 
     # Slicing
     @test isnothing(iterate(quality(records[1], 1:0)))
@@ -204,11 +204,11 @@ end
 
     # Custom quality encoding
     CustomQE = QualityEncoding('A':'Z', 12)
-    good = Record("@a\naaaaaa\n+\nAKPZJO")
+    good = parse(Record, "@a\naaaaaa\n+\nAKPZJO")
     @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "AKPZJO"]
-    good = Record("@a\naaa\n+\nABC")
+    good = parse(Record, "@a\naaa\n+\nABC")
     @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "ABC"]
-    good = Record("@a\naaaa\n+\nXYZW")
+    good = parse(Record, "@a\naaaa\n+\nXYZW")
     @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "XYZW"]
     
     # Bad sequences
@@ -218,7 +218,7 @@ end
         "abc",
         "}}!]@@"
     ]
-        record = Record(string("@a\n", 'a'^length(seq), "\n+\n", seq))
+        record = parse(Record, string("@a\n", 'a'^length(seq), "\n+\n", seq))
         @test_throws Exception collect(quality_scores(record, CustomQE))
     end
 
@@ -239,7 +239,7 @@ end
     @test_throws Exception quality(record, :snager)
     @test_throws Exception quality(record, :illumina) # must specify which kind
     
-    record = Record("@ABC\nABCDEFGHIJK\n+\n]C_Za|}~^xA")
+    record = parse(Record, "@ABC\nABCDEFGHIJK\n+\n]C_Za|}~^xA")
 
     for (symbol, offset) in [
         (:sanger, 33),
@@ -252,7 +252,7 @@ end
     end
 
     # 64-encodings do not support lower end of qual range
-    bad_records = map(Record, [
+    bad_records = map(i -> parse(Record, i), [
         "@A\nABCDE\n+\n:KPab", # Colon not in range
         "@A\nABCDE\n+\nJKH!I", # ! not in range
         "@A\nABCDE\n+\nBDE72", # numbers not in range
@@ -265,7 +265,7 @@ end
 end
 
 @testset "Hashing" begin
-    records = map(Record, TEST_RECORD_STRINGS)
+    records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
     @test hash(records[1]) != hash(records[2])
     @test hash(records[1]) == hash(records[3])
     @test !isequal(records[1], records[2])

@@ -17,7 +17,7 @@ See also: [`description`](@ref), [`sequence`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = FASTA.Record(">ident_here some descr \nTAGA");
+julia> record = parse(FASTA.Record, ">ident_here some descr \nTAGA");
 
 julia> identifier(record)
 "ident_here"
@@ -37,7 +37,7 @@ See also: [`identifier`](@ref), [`sequence`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = FASTA.Record(">ident_here some descr \nTAGA");
+julia> record = parse(FASTA.Record, ">ident_here some descr \nTAGA");
 
 julia> description(record)
 "some descr "
@@ -58,7 +58,7 @@ See also: [`identifier`](@ref), [`description`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = FASTQ.Record("@read1\nTAGA\n+\n;;]]");
+julia> record = parse(FASTQ.Record, "@read1\nTAGA\n+\n;;]]");
 
 julia> sequence(record)
 "TAGA"
@@ -92,6 +92,8 @@ const FASTAReader = FASTA.Reader
 const FASTQReader = FASTQ.Reader
 
 const Record = Union{FASTA.Record, FASTQ.Record}
+
+Base.parse(::Type{T}, s::AbstractString) where {T <: Record} = parse(T, String(s))
 
 "Get the indices of `data` that correspond to sequence indices `part`"
 function seq_data_part(record::Record, part::AbstractUnitRange)

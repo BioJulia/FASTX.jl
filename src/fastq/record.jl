@@ -2,7 +2,7 @@
 # ============
 
 """
-    FASTQ.Record([::Union{AbstractString, AbstractVector{UInt8}}])
+    FASTQ.Record
 
 Mutable struct representing a FASTQ record as parsed from a FASTQ file.
 The content of the record can be queried with the following functions:
@@ -14,7 +14,7 @@ See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTA.Record`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = Record("@ill r1\nGGC\n+\njjk");
+julia> rec = parse(Record, "@ill r1\nGGC\n+\njjk");
 
 julia> identifier(rec)
 "ill"
@@ -60,7 +60,7 @@ i.e. the line with `+`.
 
 # Examples
 ```
-julia> record = FASTQ.Record("@A B\nT\n+\nJ");
+julia> record = parse(FASTQ.Record, "@A B\nT\n+\nJ");
 
 julia> string(record)
 "@A B\nT\n+\nJ"
@@ -97,20 +97,7 @@ function Base.empty!(record::Record)
     return record
 end
 
-
-"""
-    FASTQ.Record(data::Union{Vector{UInt8, String, SubString{String}}})
-
-Create a FASTQ record object from `data`.
-
-This function verifies and indexes fields for accessors.
-Note that this function allocates a new array.
-To parse a record in-place, use `index!(record, data)`
-"""
-Record(data::AbstractString) = Record(String(data))
-Base.parse(::Type{Record}, s::AbstractString) = Record(s)
-
-function Record(data::UTF8)
+function Base.parse(::Type{Record}, data::UTF8)
     record = Record()
     index!(record, data)
     return record
@@ -131,7 +118,7 @@ function Record(description::AbstractString, sequence, quality::Vector{<:Number}
     print(buf, sequence, "\n+\n")
     ascii_quality = [UInt8(q + offset) for q in quality]
     write(buf, ascii_quality, '\n')
-    return Record(take!(buf))
+    return parse(Record, take!(buf))
 end
 
 function Base.:(==)(record1::Record, record2::Record)
@@ -232,7 +219,7 @@ If not passed, `part` defaults to the entire quality string.
 
 # Examples
 ```jldoctest
-julia> rec = FASTQ.Record("@hdr\nUAGUCU\n+\nCCDFFG");
+julia> rec = parse(FASTQ.Record, "@hdr\nUAGUCU\n+\nCCDFFG");
 
 julia> quality(rec)
 "CCDFFG"

@@ -34,7 +34,7 @@ end
     end
 
     str = ">some_identifier \tmy_description  | text\nAAT\nTA\nCCG"
-    record = Record(str)
+    record = parse(Record, str)
     record2 = Record()
 
     # Identity and emptiness
@@ -51,63 +51,63 @@ end
     test_is_equal(record, record3)
 
     # From substrings
-    record4 = Record(SubString(str, 1:lastindex(str)))
+    record4 = parse(Record, SubString(str, 1:lastindex(str)))
     test_is_equal(record, record4)
 
     # From arrays
-    record5 = Record(codeunits(str))
+    record5 = parse(Record, codeunits(str))
     test_is_equal(record, record5)
-    record6 = Record(collect(codeunits(str)))
+    record6 = parse(Record, collect(codeunits(str)))
     test_is_equal(record, record6)
 end
 
 @testset "Construction edge cases" begin
     # Minimal sequence
-    record = Record(">\n")
+    record = parse(Record, ">\n")
     @test "" == identifier(record) == description(record) == sequence(String, record)
 
     # Empty identifier
-    record = Record(">\tsome header\nTAGA\n\nAAG")
+    record = parse(Record, ">\tsome header\nTAGA\n\nAAG")
     @test identifier(record) == ""
     @test description(record) == "\tsome header"
     @test sequence(String, record) == "TAGAAAG"
 
     # Empty description
-    record = Record(">\nAAG\nWpKN.\n\n")
+    record = parse(Record, ">\nAAG\nWpKN.\n\n")
     @test identifier(record) == description(record) == ""
     @test sequence(String, record) == "AAGWpKN."
     
     # Empty sequence
-    record = Record(">ag | kop[\ta]\n\n")
+    record = parse(Record, ">ag | kop[\ta]\n\n")
     @test identifier(record) == "ag"
     @test description(record) == "ag | kop[\ta]"
     @test sequence(String, record) == ""
 
     # Trailing description whitespace
-    record = Record(">hdr name\t \r\npkmn\naj")
+    record = parse(Record, ">hdr name\t \r\npkmn\naj")
     @test identifier(record) == "hdr"
     @test description(record) == "hdr name\t "
     @test sequence(String, record) == "pkmnaj"
 
     # Trailing sequence whitespace
-    record = Record(">here\nplKn\n.\n  \t\v\n\n  \n \n")
+    record = parse(Record, ">here\nplKn\n.\n  \t\v\n\n  \n \n")
     @test identifier(record) == description(record) == "here"
     @test sequence(String, record) == "plKn.  \t\v   "
 end
 
 @testset "Equality" begin
-    record = Record(">AAG\nWpKN.\n\n")
-    record2 = Record(">AAG\n\r\nWpKN.\n\n\n\r\n")
+    record = parse(Record, ">AAG\nWpKN.\n\n")
+    record2 = parse(Record, ">AAG\n\r\nWpKN.\n\n\n\r\n")
     append!(record2.data, [0x05, 0x65, 0x81])
     @test record == record2
 
-    record3 = Record(">AA\nGWpKN.\n\n")
+    record3 = parse(Record, ">AA\nGWpKN.\n\n")
     @test record != record3
 end
 
 # Tests trailing bytes in data field are OK
 @testset "Noncoding bytes" begin
-    record = Record(">abc\nOOJM\nQQ")
+    record = parse(Record, ">abc\nOOJM\nQQ")
     resize!(record.data, 1000)
     @test identifier(record) == description(record) == "abc"
     @test sequence(String, record) == "OOJMQQ"
@@ -139,14 +139,14 @@ end
 # Encode to various biosequences
 @testset "Encode sequence" begin
     # Encode to LongSequence
-    record = Record(">header\naAtC\nwsdNN\n\nhhH")
+    record = parse(Record, ">header\naAtC\nwsdNN\n\nhhH")
     @test sequence(LongDNA{4}, record) == dna"AATCWSDNNHHH"
     @test sequence(LongAA, record) == aa"AATCWSDNNHHH"
     @test_throws Exception sequence(LongDNA{2}, record)
     @test_throws Exception sequence(LongRNA{4}, record)
 
     # Encode empty to longsequence of any type
-    record = Record(">name\n\n")
+    record = parse(Record, ">name\n\n")
     for S in [
         LongDNA{4}, LongDNA{2}, LongRNA{4}, LongRNA{2}, LongAA
     ]
@@ -156,7 +156,7 @@ end
 
 # Includes "unique"
 @testset "Hashing" begin
-    records = map(Record, [
+    records = map(i -> parse(Record, i), [
         ">A\n\n",
         ">A\nAG",
         ">AA\nG",

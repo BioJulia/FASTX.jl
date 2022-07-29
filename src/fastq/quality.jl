@@ -19,7 +19,7 @@ See also: [`quality`](@ref)
 
 # Examples
 ```jldoctest
-julia> read = FASTQ.Record("@hdr\nAGA\n+\nabc");
+julia> read = parse(FASTQ.Record, "@hdr\nAGA\n+\nabc");
 
 julia> qe = QualityEncoding('a':'z', 16) # hypothetical encoding
 

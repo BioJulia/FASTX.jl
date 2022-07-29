@@ -127,7 +127,7 @@ end
     target_strings = mktemp() do path, io
         map(strings) do string
             writer = Writer(open(path, "w"))
-            write(writer, Record(string))
+            write(writer, parse(Record, string))
             close(writer)
             open(io -> read(io, String), path)
         end
@@ -140,7 +140,7 @@ end
         
         # First write some of the records and check that flush works
         for j in 1:i-1
-            write(writer, Record(strings[j]))
+            write(writer, parse(Record, strings[j]))
         end
         flush(writer)
         str = String(take!(copy(buf)))
@@ -148,7 +148,7 @@ end
 
         # Then write the rest of them, and check the total results is as expected
         for j in i:lastindex(strings)
-            write(writer, Record(strings[j]))
+            write(writer, parse(Record, strings[j]))
         end
         flush(writer)
         str = String(take!(buf))

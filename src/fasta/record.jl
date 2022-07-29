@@ -2,7 +2,7 @@
 # ============
 
 """
-    FASTA.Record([::Union{AbstractString, AbstractVector{UInt8}, FASTQ.Record}])
+    FASTA.Record
 
 Mutable struct representing a FASTA record as parsed from a FASTA file.
 The content of the record can be queried with the following functions:
@@ -14,7 +14,7 @@ See also: [`FASTA.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTQ.Record`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = Record(">some header\nTAqA\nCC");
+julia> rec = parse(Record, ">some header\nTAqA\nCC");
 
 julia> identifier(rec)
 "some"
@@ -64,19 +64,7 @@ function Base.empty!(record::Record)
     return record
 end
 
-"""
-    FASTA.Record(data::Union{Vector{UInt8, String, SubString{String}}})
-
-Create a FASTA record object from `data`.
-
-This function verifies and indexes fields for accessors.
-Note that this function allocates a new array.
-To parse a record in-place, use `index!(record, data)`
-"""
-Record(data::AbstractString) = Record(String(data))
-Base.parse(::Type{Record}, s::AbstractString) = Record(s)
-
-function Record(data::UTF8)
+function Base.parse(::Type{Record}, data::UTF8)
     record = Record()
     index!(record, data)
     return record
@@ -93,7 +81,7 @@ function Record(description::AbstractString, sequence::Union{BioSequences.BioSeq
     # If the sequence is empty, we need to print a newline in order to not
     # have the FASTA file truncated, thus invalid
     print(buf, isempty(sequence) ? '\n' : sequence)
-    return Record(take!(buf))
+    return parse(Record, take!(buf))
 end
 
 function Base.:(==)(record1::Record, record2::Record)
