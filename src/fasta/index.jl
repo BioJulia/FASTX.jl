@@ -51,7 +51,8 @@ index_machine = let
         re.opt('\r') * lf
     end
 
-    name = re.rep1(re.any() \ re.space())
+    # The specs refer to the SAM specs, which contain this regex
+    name = re"[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*"
     name.actions[:enter] = [:mark]
     name.actions[:exit] = [:name]
 
@@ -82,11 +83,28 @@ index_actions = Dict{Symbol, Expr}(
     end,
     :number => quote
         nvector = mod1(nvector + 1, 4)
-        push!(@inbounds (vectors[nvector]), num)
+        if nvector == 2
+            iszero(num) && error("First offset cannot be zero in a valid FAI index")
+        # Number of basepairs per line obviously cannot exceed the sequence length.
+        elseif nvector == 3
+            if num > vectors[1][end]
+                error("Bases per line exceed sequence length on line ", string(linenum))
+            end
+        # Linewidth is linebases plus the length of the line terminator.
+        # Since we only accept \n and \r\n as line terminator, validate
+        # linewidth is linebases +1 or +2.
+        elseif nvector == 4
+            linebases = vectors[3][end]
+            if num ∉ (linebases+1, linebases+2)
+                error("Linewidth must be equal to linebases +1 or +2 at line ", string(linenum))
+            end
+        end
+        push!(vectors[nvector], num)
         num = 0
     end,
 )
 
+ctx = Automa.CodeGenContext()
 @eval function read_faidx(data::Vector{UInt8})
     start = 0
     linenum = 1
@@ -96,15 +114,41 @@ index_actions = Dict{Symbol, Expr}(
     vectors = (Int[], Int[], Int[], Int[])
 
     GC.@preserve data begin
-        $(Automa.generate_code(index_machine, index_actions))
+        #$(Automa.generate_code(index_machine, index_actions))
+        $(Automa.generate_init_code(ctx, index_machine))
+        $(Automa.generate_exec_code(ctx, index_machine, index_actions))
     end
 
+    # TODO: Rely on Automa's new error code
+    if !iszero(cs)
+        error("Malformed index at byte $p")
+    end
     return Index(names, vectors...)
 end
 
 Index(io::IO) = read_faidx(read(io))
 Index(filepath::AbstractString) = open(Index, filepath)
 
+function Base.write(io::IO, index::Index)
+    # Put names dict in a sorted array
+    names = Vector{String}(undef, length(index.names))
+    for (name, i) in index.names
+        names[i] = name
+    end
+    n = 0
+    for i in eachindex(names)
+        n +=  write(io,
+            names[i], UInt8('\t'),
+            string(index.lengths[i]), UInt8('\t'),
+            string(index.offsets[i]), UInt8('\t'),
+            string(index.linebases[i]), UInt8('\t'),
+            string(index.linewidths[i]), UInt8('\n')
+        )
+    end
+    n
+end
+
+#=
 index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
@@ -148,30 +192,13 @@ index_fasta_actions = Dict(
         @escape
     end
 )
+=#
 
 # TODO: Generate indexing reader
 
 # Set the reading position of `input` to the starting position of the record `name`.
 function seekrecord(input::IO, index::Index, name::AbstractString)
-    i = index[name]
-
-    # For the first index, offset is trivially zero
-    if i == 1
-        offset = 0
-    # Else, we go to the previous one and calculate the length of the previous
-    # sequence in bytes, then seek to right after that one.
-    else
-        prev_offset = index.offsets[i - 1]
-        prev_len = index.lengths[i - 1]
-        prev_linebase = index.linebases[i - 1]
-        prev_linewidth = index.linewidths[i - 1]
-
-        # Note: newline_len may differ between sequences in the same file, as per
-        # the specification.
-        newline_len = prev_linewidth - prev_linebase
-        len = cld(prev_len, prev_linebase) * newline_len + prev_len
-        offset = prev_offset + len
-    end
-    seek(input, offset)
-    return offset
+    n_record = index.names[name]
+    offset = index.offsets[n_record]
+    return seek(input, offset - 1) # compensate for > symbol
 end

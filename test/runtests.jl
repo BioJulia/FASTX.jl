@@ -1,7 +1,7 @@
 module TestFASTA
     
 using Test
-using FASTX.FASTA: Record, identifier, description, sequence, Reader, Writer
+using FASTX.FASTA: Record, identifier, description, sequence, Reader, Writer, Index
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using Random: rand!
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename, hastag
