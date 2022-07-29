@@ -7,7 +7,7 @@
 # License is MIT: https://github.com/BioJulia/BioSequences.jl/blob/master/LICENSE.md
 
 """
-    QualityEncoding(range::OrdinalRange{Char}, offset::Integer)
+    QualityEncoding(range::StepRange{Char}, offset::Integer)
 
 FASTQ PHRED quality encoding scheme. `QualityEncoding` objects are used to
 interpret the quality scores of FASTQ records.
@@ -34,7 +34,7 @@ struct QualityEncoding
     # ASCII byte offset, i.e. 33 for standard PHRED scores
     offset::Int8
 
-    function QualityEncoding(ascii::OrdinalRange{Char}, offset::Integer)
+    function QualityEncoding(ascii::StepRange{Char}, offset::Integer)
         isone(step(ascii)) || error("Must use an ordinal Char range with step 1")
         off = Int8(offset)
         (low, high) = (Int8(first(ascii)), Int8(last(ascii)))

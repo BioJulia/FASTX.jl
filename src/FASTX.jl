@@ -84,7 +84,7 @@ include("fastq/fastq.jl")
 
 import .FASTA
 import .FASTQ
-import .FASTQ: quality, quality_header!, QualityEncoding
+import .FASTQ: quality, quality_scores, quality_header!, QualityEncoding
 
 const FASTARecord = FASTA.Record
 const FASTQRecord = FASTQ.Record
