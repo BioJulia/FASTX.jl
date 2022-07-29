@@ -9,12 +9,12 @@
     record = first(iterate(reader))
     @test identifier(record) == "A"
     @test sequence(record) == "TAG"
-    @test collect(quality(record)) == [Int8(c - OFFSET) for c in "JJK"]
+    @test quality(record) == "JJK"
     record = first(iterate(reader))
     @test identifier(record) == "B"
     @test description(record) == "B C"
     @test sequence(record) == "MNB"
-    @test collect(quality(record)) == [Int8(c - OFFSET) for c in "LLL"]
+    @test quality(record) == "LLL"
     @test isnothing(iterate(reader))
     close(reader)
 

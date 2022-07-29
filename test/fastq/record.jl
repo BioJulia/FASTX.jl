@@ -19,7 +19,7 @@
     @test identifier(record) == ""
     @test description(record) == ""
     @test sequence(record) == ""
-    @test isempty(collect(quality(record)))
+    @test isempty(quality(record))
 end
 
 TEST_RECORD_STRINGS = [
@@ -54,7 +54,7 @@ TEST_BAD_RECORD_STRINGS = [
         @test identifier(a) == identifier(b)
         @test description(a) == description(b)
         @test sequence(String, a) == sequence(String, b)
-        @test collect(quality(a)) == collect(quality(b))
+        @test quality(a) == quality(b)
     end
 
     string = "@some header\nAAGG\n+\njjll"
@@ -69,7 +69,7 @@ TEST_BAD_RECORD_STRINGS = [
     @test identifier(record) == "some"
     @test description(record) == "some header"
     @test sequence(record) == "AAGG"
-    @test collect(quality(record)) == [Int8(i)-OFFSET for i in "jjll"]
+    @test quality(record) == "jjll"
 
     # Construct from two strings and quality
     record3 = Record("some header", "AAGG", [Int8(i)-OFFSET for i in "jjll"])
@@ -98,7 +98,7 @@ end
     @test identifier(records[5]) == ""
     @test description(records[5]) != ""
     @test sequence(records[6]) == ""
-    @test isempty(collect(quality(records[6])))
+    @test isempty(quality(records[6]))
 
     @test records[3] == records[1]
 
@@ -129,7 +129,7 @@ end
     for rec in (record, cp)
         @test identifier(rec) == description(rec) == "some_header"
         @test sequence(rec) == "AAGG"
-        @test collect(quality(rec)) == [Int8(i)-OFFSET for i in "jjll"]
+        @test quality(rec) == "jjll"
     end
 end
 
@@ -174,13 +174,12 @@ end
 # We have already tested basic quality iteration in rest of tests
 @testset "Quality" begin
     records = map(Record, TEST_RECORD_STRINGS)
-    qarr(str::String) = [Int8(i - OFFSET) for i in str]
 
     # Slicing
     @test isnothing(iterate(quality(records[1], 1:0)))
-    @test collect(quality(records[1])) == qarr("jjll")
-    @test collect(quality(records[1], 1:4)) == qarr("jjll")
-    @test collect(quality(records[1], 2:4)) == qarr("jll")
+    @test quality(records[1]) == "jjll"
+    @test quality(records[1], 1:4) == "jjll"
+    @test quality(records[1], 2:4) == "jll"
 
     @test_throws BoundsError quality(records[1], 0:0)
     @test_throws BoundsError quality(records[1], -2:2)
@@ -193,13 +192,24 @@ end
     @test_throws Exception QualityEncoding('A':'B', -1)
     @test_throws Exception QualityEncoding('α':'β', 10)
 
+    # Default Quality encoding
+    @test collect(quality_scores(records[2])) == [Int8(i) - OFFSET for i in "aabb"]
+    @test collect(quality_scores(records[5])) == [Int8(i) - OFFSET for i in "aabbcc"]
+    @test collect(quality_scores(records[2], 3:4)) == [Int8(i) - OFFSET for i in "bb"]
+    @test collect(quality_scores(records[2], 4:4)) == [Int8(i) - OFFSET for i in "b"]
+    
+    @test_throws BoundsError quality_scores(records[2], 0:4)
+    @test_throws BoundsError quality_scores(records[2], 2:5)
+    @test_throws BoundsError quality_scores(records[2], 5:5)
+
+    # Custom quality encoding
     CustomQE = QualityEncoding('A':'Z', 12)
     good = Record("@a\naaaaaa\n+\nAKPZJO")
-    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "AKPZJO"]
+    @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "AKPZJO"]
     good = Record("@a\naaa\n+\nABC")
-    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "ABC"]
+    @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "ABC"]
     good = Record("@a\naaaa\n+\nXYZW")
-    @test collect(quality(good, CustomQE)) == [Int8(i-12) for i in "XYZW"]
+    @test collect(quality_scores(good, CustomQE)) == [Int8(i-12) for i in "XYZW"]
     
     # Bad sequences
     for seq in [
@@ -209,13 +219,14 @@ end
         "}}!]@@"
     ]
         record = Record(string("@a\n", 'a'^length(seq), "\n+\n", seq))
-        @test_throws Exception collect(quality(record, CustomQE))
+        @test_throws Exception collect(quality_scores(record, CustomQE))
     end
 
     # As strings
     @test quality(String, records[1]) == quality(StringView, records[1]) == "jjll"
     @test quality(String, records[1], 2:3) == "jl"
     @test quality(String, records[1], 1:3) == "jjl"
+    @test quality(records[1]) == quality(StringView, records[1])
     @test_throws Exception quality(String, records[1], 0:3)
     @test_throws Exception quality(String, records[1], 1:5)
 
@@ -237,7 +248,7 @@ end
         (:illumina15, 64),
         (:illumina18, 33),
     ]
-        @test collect(quality(record, symbol, 1:10)) == [Int8(i - offset) for i in "]C_Za|}~^x"]
+        @test collect(quality_scores(record, symbol, 1:10)) == [Int8(i - offset) for i in "]C_Za|}~^x"]
     end
 
     # 64-encodings do not support lower end of qual range

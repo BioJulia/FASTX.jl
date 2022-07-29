@@ -28,7 +28,7 @@ julia> sequence(rec)
 julia> show(collect(quality(rec)))
 [73, 73, 74]
 
-julia> typeof(description(rec)) == typeof(sequence(rec)) == StringView
+julia> typeof(description(rec)) == typeof(sequence(rec)) isa AbstractString
 true
 ```
 """
@@ -216,30 +216,56 @@ function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, 
     return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
-function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
-    quality(record, DEFAULT_ENCODING, part)
-end
-
-function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality_indices(record::Record, part::UnitRange{<:Integer})
     start, stop = first(part), last(part)
     (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     offset = record.description_len + seqlen(record)
-    StringView(view(record.data, start+offset:stop+offset))
-end
-
-function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
-    String(quality(StringView, record, part))
+    start+offset:stop+offset
 end
 
 """
-    quality(record::FASTQ.Record, [encoding::QualityEncoding], [part::UnitRange])
+    quality([T::Type{String, StringView}], record::FASTQ.Record, [part::UnitRange])
 
-Get an iterator of base quality of the slice `part` of `record`'s quality.
+Get the ASCII quality of `record` at positions `part` as type `T`.
+If not passed, `T` defaults to `StringView`.
+If not passed, `part` defaults to the entire quality string.
+
+# Examples
+```jldoctest
+julia> rec = FASTQ.Record("@hdr\nUAGUCU\n+\nCCDFFG");
+
+julia> quality(rec)
+"CCDFFG"
+
+julia> quality isa AbstractString
+true
+```
+"""
+function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    quality(StringView, record, part)
+end
+
+function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    String(record.data[quality_indices(record, part)])
+end
+
+function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    StringView(view(record.data, quality_indices(record, part)))
+end
+
+function quality_scores(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    quality_scores(record, DEFAULT_ENCODING, part)
+end
+
+"""
+    quality_scores(record::FASTQ.Record, [encoding::QualityEncoding], [part::UnitRange])
+
+Get an iterator of PHRED base quality scores of `record` at positions `part`.
 This iterator is corrupted if the record is mutated.
 By default, `part` is the whole sequence.
 By default, the encoding is PHRED33 Sanger encoding, but may be specified with a `QualityEncoding` object
 """
-function quality(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
     start, stop = first(part), last(part)
     (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     data = record.data
@@ -257,7 +283,7 @@ Get an iterator of base quality of the slice `part` of `record`'s quality.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
 """
-function quality(
+function quality_scores(
     record::Record,
     encoding_name::Symbol,
     part::UnitRange{<:Integer}=1:seqlen(record)
@@ -269,7 +295,7 @@ function quality(
         encoding_name == :illumina15 ? ILLUMINA15_QUAL_ENCODING :
         encoding_name == :illumina18 ? ILLUMINA18_QUAL_ENCODING :
         throw(ArgumentError("quality encoding ':$(encoding_name)' is not supported")))
-    quality(record, encoding, part)
+    quality_scores(record, encoding, part)
 end
 
 function Base.hash(record::Record, h::UInt)

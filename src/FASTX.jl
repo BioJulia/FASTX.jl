@@ -6,7 +6,7 @@ using BioSequences: BioSequence, LongSequence
 # Generic methods
 
 """
-    identifier(record::Record)::StringView
+    identifier(record::Record)::AbstractString
 
 Get the sequence identifier of `record`. The identifier is the description
 before any whitespace. If the identifier is missing, return an empty string.
@@ -26,7 +26,7 @@ julia> identifier(record)
 function identifier end
 
 """
-    description(record::Record)::StringView
+    description(record::Record)::AbstractString
 
 Get the description of `record`. The description is the entire header line, minus the
 leading `>` or `@` symbols for FASTA/FASTQ records, respectively, including trailing whitespace.
@@ -50,8 +50,8 @@ function description end
 
 Get the sequence of `record`.
 
-`S` can be either a subtype of `BioSequences.BioSequence`, `StringView` or `String`.
-If elided, `S` defaults to `StringView`.
+`S` can be either a subtype of `BioSequences.BioSequence`, `AbstractString` or `String`.
+If elided, `S` defaults to an `AbstractString`.
 If `part` argument is given, it returns the specified part of the sequence.
 
 See also: [`identifier`](@ref), [`description`](@ref)
@@ -160,6 +160,7 @@ export
     description,
     sequence,
     quality,
+    quality_scores,
     quality_header!,
     QualityEncoding,
     seqlen
