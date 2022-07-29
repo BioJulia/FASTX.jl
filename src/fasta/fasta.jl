@@ -1,6 +1,11 @@
 # FASTA File Format
 # =================
 
+"""
+    FASTA
+
+Module under FASTX with code related to FASTA files.
+"""
 module FASTA
 
 import Automa

@@ -1,3 +1,8 @@
+"""
+    FASTA
+
+Module under FASTX with code related to FASTA files.
+"""
 module FASTQ
 
 import Automa

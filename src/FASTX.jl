@@ -73,7 +73,7 @@ function sequence end
 """
     seqlen(::Record)::Int
 
-Get the length of the sequence part of `Record`.
+Get the length of the sequence part of a `FASTX` `Record` in number of bytes.
 """
 function seqlen end
 
@@ -90,8 +90,20 @@ const FASTARecord = FASTA.Record
 const FASTQRecord = FASTQ.Record
 const FASTAReader = FASTA.Reader
 const FASTQReader = FASTQ.Reader
+const FASTAWriter = FASTA.Writer
+const FASTQWriter = FASTQ.Writer
 
 const Record = Union{FASTA.Record, FASTQ.Record}
+
+function FASTA.Record(record::FASTQ.Record)
+    ilen = record.identifier_len
+    dlen = record.description_len
+    slen = seqlen(record)
+    tlen = UInt(dlen + slen)
+    data = Vector{UInt8}(undef, tlen)
+    copyto!(data, 1, record.data, 1, tlen)
+    FASTA.Record(data, ilen, dlen, slen)
+end
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: Record} = parse(T, String(s))
 
@@ -156,8 +168,10 @@ export
     FASTQ,
     FASTARecord,
     FASTAReader,
+    FASTAWriter,
     FASTQRecord,
     FASTQReader,
+    FASTQWriter,
     identifier,
     description,
     sequence,
@@ -166,9 +180,5 @@ export
     quality_header!,
     QualityEncoding,
     seqlen
-
-function FASTA.Record(record::FASTQ.Record)
-    FASTA.Record(description(record), sequence(record))
-end
 
 end # module
