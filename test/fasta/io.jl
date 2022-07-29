@@ -36,6 +36,17 @@
     @test records[1] === records[2] === records[3]
     @test sequence(records[1]) == "T"
     close(reader)
+
+    # Test using new syntax
+    filename = tempname()
+    open(filename, "w") do io
+        print(io, ">ABC\nUUGG\n>LLK\nAN\nPA\n\n")
+    end
+    Reader(NoopStream(open(filename))) do reader
+        recs = collect(reader)
+        @test map(identifier, recs) == ["ABC", "LLK"]
+        @test map(sequence, recs) == ["UUGG", "ANPA"]
+    end 
 end
 
 @testset "Reader edgecases" begin
@@ -94,6 +105,14 @@ end
     target_bytes = take!(target_buffer)
     close(writer)
     @test writer_bytes == target_bytes
+
+    # Test using new syntax
+    filename = tempname()
+    Writer(NoopStream(open(filename, "w"))) do writer
+        write(writer, Record("some header", "UHAGC"))
+        write(writer, Record("another_thing", "KJLM"))
+    end
+    @test read(filename, String) == ">some header\nUHAGC\n>another_thing\nKJLM\n"
 end
 
 # TranscodingStreams does not support flushing yet, so the FASTX implementation

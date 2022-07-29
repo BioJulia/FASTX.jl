@@ -6,6 +6,7 @@ using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using Random: rand!
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename, hastag
 using StringViews: StringView
+using TranscodingStreams: NoopStream
 
 @testset "FASTA" begin
     @testset "Record" begin
@@ -35,6 +36,7 @@ using FASTX.FASTQ: Record, Reader, Writer, identifier, description,
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename, hastag
 using StringViews: StringView
+using TranscodingStreams: NoopStream
 
 @testset "FASTQ" begin
     @testset "Record" begin

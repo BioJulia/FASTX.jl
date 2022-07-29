@@ -61,7 +61,7 @@ index_machine = let
     number.actions[:exit] = [:number]
 
     line = name * re"\t" * number * re"\t" * number * re"\t" * number * re"\t" * number
-    fai = re.opt(line) * re.rep(newline * line) * re.rep(newline)
+    fai = re.opt(line * re.rep(newline * line)) * re.rep(newline)
     Automa.compile(fai)
 end
 
@@ -104,7 +104,7 @@ index_actions = Dict{Symbol, Expr}(
     end,
 )
 
-ctx = Automa.CodeGenContext()
+ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte))
 @eval function read_faidx(data::Vector{UInt8})
     start = 0
     linenum = 1
@@ -116,6 +116,7 @@ ctx = Automa.CodeGenContext()
     GC.@preserve data begin
         #$(Automa.generate_code(index_machine, index_actions))
         $(Automa.generate_init_code(ctx, index_machine))
+        p_eof = p_end = length(data)
         $(Automa.generate_exec_code(ctx, index_machine, index_actions))
     end
 
