@@ -10,7 +10,7 @@ The content of the record can be queried with the following functions:
 
 FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
 
-See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTA.Record`](@ref)
+See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref)
 
 # Examples
 ```jldoctest
@@ -182,26 +182,6 @@ end
 
 # Accessor functions
 # ------------------
-
-function identifier(record::Record)::StringView
-    return StringView(view(record.data, 1:Int(record.identifier_len)))
-end
-
-function description(record::Record)::StringView
-    return StringView(view(record.data, 1:Int(record.description_len)))
-end
-
-"""
-    Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-
-Copy an N long block of sequence data from the fastq record `src`, starting at
-position `soff`, to the `BioSequence` dest, starting at position `doff`.
-"""
-function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    # This check is here to prevent boundserror when indexing src.sequence
-    iszero(N) && return dest
-    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
-end
 
 function quality_indices(record::Record, part::UnitRange{<:Integer})
     start, stop = first(part), last(part)

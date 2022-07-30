@@ -1,9 +1,34 @@
 # FASTQ Writer
 # ============
 
+"""
+    FASTQ.Writer(output::IO; quality_header::Union{Nothing, Bool}=nothing)
+
+Create a data writer of the FASTQ file format.
+The writer is a `BioGenerics.IO.AbstractWriter`.
+Writers take ownership of the underlying IO. Mutating or closing the underlying IO
+not using the writer is undefined behaviour.
+Closing the writer also closes the underlying IO.
+
+See more examples in the FASTX documentation.
+
+See also: [`FASTQ.Record`](@ref), [`FASTQ.Reader`](@ref)
+
+# Arguments
+* `output`: Data sink to write to
+* `quality_header`: Whether to print second header on the + line. If `nothing` (default),
+  check the individual `Record` objects for whether they contain a second header.
+
+# Examples
+```
+julia> FASTQ.Writer(open("some_file.fq", "w")) do writer
+    write(writer, record) # a FASTQ.Record
+end
+```
+"""
 struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S
-    quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read 
+    quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read
 end
 
 function BioGenerics.IO.stream(writer::Writer)
@@ -23,32 +48,6 @@ Create a data writer of the FASTQ file format.
   If `nothing`, do so if the record itself contains second header.
 """
 
-
-"""
-    FASTQ.Writer(output::IO; quality_header::Union{Nothing, Bool}=nothing)
-
-Create a data writer of the FASTQ file format.
-The writer is a `BioGenerics.IO.AbstractWriter`.
-Writers take ownership of the underlying IO. Mutating or closing the underlying IO
-not using the writer is undefined behaviour.
-Closing the writer also closes the underlying IO.
-
-See more examples in the FASTX documentation.
-
-See also: [`FASTQ.Record`](@ref), [`FASTQ.Reader`](@ref), [`FASTQ.Writer`](@ref)
-
-# Arguments
-* `output`: Data sink to write to
-* `quality_header`: Whether to print second header on the + line. If `nothing` (default),
-  check the individual `Record` objects for whether they contain a second header.
-
-# Examples
-```
-julia> FASTQ.Writer(open("some_file.fq", "w")) do writer
-    write(writer, record) # a FASTQ.Record
-end
-```
-"""
 function Writer(output::IO, quality_header::Union{Nothing, Bool})
     qstate = quality_header === nothing ? 0x02 : UInt8(quality_header)
     if output isa TranscodingStream

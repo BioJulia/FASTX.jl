@@ -1,24 +1,20 @@
-using Documenter, FASTX
+using Documenter
+using FASTX
 
 # Build documentation.
 
 makedocs(
     format = Documenter.HTML(),
-    modules = [FASTX, FASTX.FASTQ, FASTX.FASTA],
+    modules = [FASTX, FASTA, FASTQ],
     sitename = "FASTX.jl",
     doctest = false,
     strict = false,
     pages = [
-        "Home" => "index.md",
-        "Manual" => [
-            "FASTA formatted files" => "manual/fasta.md",
-            "FASTQ formatted files" => "manual/fastq.md"
-        ],
-        "Library" => [
-            "Public" => "lib/public.md"
-        ]
+        "FASTX" => "index.md",
+        "FASTA" => "fasta.md",
+        "FASTQ" => "fastq.md"
     ],
-    authors = "Ben J. Ward, The BioJulia Organisation and other contributors."
+    authors = "Sabrina J. Ward, Jakob N. Nissen, The BioJulia Organisation and other contributors."
 )
 
 deploydocs(

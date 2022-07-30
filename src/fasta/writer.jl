@@ -12,7 +12,7 @@ Closing the writer also closes the underlying IO.
 
 See more examples in the FASTX documentation.
 
-See also: [`FASTA.Record`](@ref), [`FASTA.Reader`](@ref), [`FASTQ.Writer`](@ref)
+See also: [`FASTA.Record`](@ref), [`FASTA.Reader`](@ref)
 
 # Arguments
 * `output`: Data sink to write to

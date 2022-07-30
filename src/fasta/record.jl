@@ -10,7 +10,7 @@ The content of the record can be queried with the following functions:
 
 FASTA records are un-typed, i.e. they are agnostic to what kind of data they contain.
 
-See also: [`FASTA.Reader`](@ref), [FASTQ.Writer](@ref), [`FASTQ.Record`](@ref)
+See also: [`FASTA.Reader`](@ref), [FASTA.Writer](@ref)
 
 # Examples
 ```jldoctest
@@ -136,30 +136,6 @@ end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
     return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
-end
-
-
-# Accessor functions
-# ------------------
-
-function identifier(record::Record)::StringView
-    return StringView(view(record.data, 1:Int(record.identifier_len)))
-end
-
-function description(record::Record)::StringView
-    return StringView(view(record.data, 1:Int(record.description_len)))
-end
-
-"""
-    Base.copyto!(dest::BioSequences.BioSequence, doff, src::Record, soff, N)
-
-Copy an N long block of sequence data from the fasta record `src`, starting at
-position `soff`, to the `BioSequence` dest, starting at position `doff`.
-"""
-function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    # This check is here to prevent boundserror when indexing src.sequence
-    iszero(N) && return dest
-    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?

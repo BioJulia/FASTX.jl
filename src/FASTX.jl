@@ -3,8 +3,6 @@ module FASTX
 using StringViews: StringView
 using BioSequences: BioSequence, LongSequence
 
-# Generic methods
-
 """
     identifier(record::Record)::AbstractString
 
@@ -82,18 +80,21 @@ const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
 
+const Record = Union{FASTA.Record, FASTQ.Record}
+
+# Generic methods
+
+function identifier(record::Record)::StringView
+    return StringView(view(record.data, 1:Int(record.identifier_len)))
+end
+
+function description(record::Record)::StringView
+    return StringView(view(record.data, 1:Int(record.description_len)))
+end
+
 import .FASTA
 import .FASTQ
 import .FASTQ: quality, quality_scores, quality_header!, QualityEncoding
-
-const FASTARecord = FASTA.Record
-const FASTQRecord = FASTQ.Record
-const FASTAReader = FASTA.Reader
-const FASTQReader = FASTQ.Reader
-const FASTAWriter = FASTA.Writer
-const FASTQWriter = FASTQ.Writer
-
-const Record = Union{FASTA.Record, FASTQ.Record}
 
 function FASTA.Record(record::FASTQ.Record)
     ilen = record.identifier_len
@@ -151,17 +152,22 @@ function Base.copy!(dest::LongSequence, src::Record)
     copyto!(dest, 1, src, 1, seqlen(src))
 end
 
-"""
-    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-
-Copy all of the sequence data from the fastq record `src` to a biological
-sequence `dest`. `dest` must have a length greater or equal to the length of
-the sequence represented in the fastq record. The first n elements of `dest` are
-overwritten, the other elements are left untouched.
-"""
 function Base.copyto!(dest::LongSequence, src::Record)
     return copyto!(dest, 1, src, 1, seqlen(src))
 end
+
+function Base.copyto!(dest::LongSequence, doff, src::Record, soff, N)
+    # This check is here to prevent boundserror when indexing src.sequence
+    iszero(N) && return dest
+    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
+end
+
+const FASTARecord = FASTA.Record
+const FASTQRecord = FASTQ.Record
+const FASTAReader = FASTA.Reader
+const FASTQReader = FASTQ.Reader
+const FASTAWriter = FASTA.Writer
+const FASTQWriter = FASTQ.Writer
 
 export
     FASTA,

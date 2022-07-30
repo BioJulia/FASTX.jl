@@ -18,7 +18,7 @@ Closing the Reader also closes the underlying IO.
 
 See more examples in the FASTX documentation.
 
-See also: [`FASTQ.Record`](@ref), [`FASTA.Reader`](@ref)
+See also: [`FASTQ.Record`](@ref), [`FASTQ.Writer`](@ref)
 
 # Arguments
 * `input`: data source
