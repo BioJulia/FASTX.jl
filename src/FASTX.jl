@@ -101,9 +101,17 @@ function FASTA.Record(record::FASTQ.Record)
     dlen = record.description_len
     slen = seqlen(record)
     tlen = UInt(dlen + slen)
-    data = Vector{UInt8}(undef, tlen)
-    copyto!(data, 1, record.data, 1, tlen)
-    FASTA.Record(data, ilen, dlen, slen)
+    FASTA.Record(record.data[1:tlen], ilen, dlen, slen)
+end
+
+"""
+    FASTA.Record!(::FASTQ.Record)
+
+Convert the `FASTQ.Record` to a `FASTA.Record`, taking control of the underlying
+data. The FASTQ record cannot be used after this operation.
+"""
+function FASTA.Record!(record::FASTQ.Record)
+    FASTA.Record(record.data, record.identifier_len, record.description_len, seqlen(record))
 end
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: Record} = parse(T, String(s))

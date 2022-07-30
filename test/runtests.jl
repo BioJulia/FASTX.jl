@@ -52,7 +52,7 @@ end
 
 end # module TestFASTQ
 
-using FASTX: FASTA, FASTQ, identifier, description, sequence
+using FASTX: FASTA, FASTQ, identifier, description, sequence, quality
 using BioSequences: LongDNA, LongAA, LongRNA
 using Random: rand!
 using Test
@@ -167,17 +167,28 @@ using Test
     end
 
     @testset "Convert FASTQ to FASTA" begin
-        rec = FASTA.Record(parse(FASTQ.Record, "@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo"))
-        @test description(rec) == "ta_g^ ha||;; "
-        @test identifier(rec) == "ta_g^"
-        @test sequence(rec) == "TAGJKKm"
+        for func in (FASTA.Record, FASTA.Record!)
+            rec = func(parse(FASTQ.Record, "@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo"))
+            @test description(rec) == "ta_g^ ha||;; "
+            @test identifier(rec) == "ta_g^"
+            @test sequence(rec) == "TAGJKKm"
 
-        rec = FASTA.Record(parse(FASTQ.Record, "@\n\n+\n"))
-        @test identifier(rec) == description(rec) == sequence(rec) == ""
+            rec = func(parse(FASTQ.Record, "@\n\n+\n"))
+            @test identifier(rec) == description(rec) == sequence(rec) == ""
 
-        rec = FASTA.Record(parse(FASTQ.Record, "@mba M\npolA\n+mba M\nTAGA"))
-        @test description(rec) == "mba M"
-        @test identifier(rec) == "mba"
-        @test sequence(rec) == "polA"
+            rec = func(parse(FASTQ.Record, "@mba M\npolA\n+mba M\nTAGA"))
+            @test description(rec) == "mba M"
+            @test identifier(rec) == "mba"
+            @test sequence(rec) == "polA"
+        end
+
+        # Copyin conversion do no modify underlying record
+        fq = parse(FASTQ.Record, "@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo")
+        fa = FASTA.Record(fq)
+        FASTA.index!(fa, ">some_new_data\nTAGATA")
+        @test description(fq) == "ta_g^ ha||;; "
+        @test identifier(fq) == "ta_g^"
+        @test sequence(fq) == "TAGJKKm"
+        @test quality(fq) == "jjkkmmo"
     end
 end

@@ -56,6 +56,10 @@ function Record()
     return Record(Vector{UInt8}(), 0, 0, 0)
 end
 
+# This is extended with its only method in FASTX.jl, but must
+# be defined here to be under the FASTA module.
+function Record! end
+
 function Base.empty!(record::Record)
     # Do not truncate the underlying data buffer
     record.identifier_len = 0
