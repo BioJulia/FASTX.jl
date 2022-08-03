@@ -59,6 +59,10 @@ end
     test_is_equal(record, record5)
     record6 = parse(Record, collect(codeunits(str)))
     test_is_equal(record, record6)
+
+    # From AbstractString
+    record3 = parse(Record, Test.GenericString(str))
+    test_is_equal(record, record3)
 end
 
 @testset "Construction edge cases" begin

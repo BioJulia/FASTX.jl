@@ -84,6 +84,10 @@ TEST_BAD_RECORD_STRINGS = [
     cu = codeunits(string)
     test_is_equal(parse(Record, cu), record)
     test_is_equal(parse(Record, collect(cu)), record)
+
+    # From AbstractString
+    record5 = parse(Record, Test.GenericString(string))
+    test_is_equal(record5, record)
 end
 
 @testset "Construction edge cases" begin
