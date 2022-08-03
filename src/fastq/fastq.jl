@@ -8,7 +8,7 @@ module FASTQ
 import Automa
 import Automa.RegExp: @re_str
 import Automa.Stream: @mark, @markpos, @relpos, @abspos
-import BioSequences
+import BioSequences: BioSequences, BioSequence
 import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import StringViews: StringView

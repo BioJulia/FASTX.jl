@@ -88,6 +88,10 @@ TEST_BAD_RECORD_STRINGS = [
     # From AbstractString
     record5 = parse(Record, Test.GenericString(string))
     test_is_equal(record5, record)
+
+    # From BioSequence/quality string
+    record6 = Record("some header", dna"AAGG", "jjll")
+    test_is_equal(record6, record)
 end
 
 @testset "Construction edge cases" begin

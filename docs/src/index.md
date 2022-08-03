@@ -74,13 +74,19 @@ TAGATGAA
 AA
 ```
 Is stored in a `FASTA.Record` object.
-Records can be constructed from raw parts (i.e. name and sequence and, for FASTQ, quality),
-or parsed directly from a string or `AbstractVector{UInt8}`:
+Records can be constructed from raw parts (i.e. description and sequence and, for FASTQ, quality), where
+* `description::AbstractString`
+* `sequence::Union{AbstractString, BioSequence}`
+* `quality::Union{AbstractString, Vector{<:Number}}`
+
+Alternatively, they can be parsed directly from a string or an `AbstractVector{UInt8}`.
 
 ```jldoctest
-julia> record = parse(FASTARecord, ">abc\ndef\nghi");
+julia> record = parse(FASTARecord, ">abc\nAGCC\nCCGA");
 
-julia> record isa FASTA.Record
+julia> record2 = FASTARecord("abc", dna"AGCCCCGA");
+
+julia> record == record2
 true
 ```
 

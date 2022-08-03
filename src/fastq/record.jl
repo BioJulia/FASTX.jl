@@ -7,7 +7,6 @@
 Mutable struct representing a FASTQ record as parsed from a FASTQ file.
 The content of the record can be queried with the following functions:
 `identifier`, `description`, `sequence`, `seqlen`, `quality`
-
 FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
 
 See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref)
@@ -103,22 +102,42 @@ function Base.parse(::Type{Record}, data::UTF8)
     return record
 end
 
-# TODO: This could be done more efficiently.
 """
     FASTQ.Record(description, sequence, quality; offset=33)
 
 Create a FASTQ record from `description`, `sequence` and `quality`.
+Arguments:
+* `description::AbstractString`
+* `sequence::Union{AbstractString, BioSequence}`,
+* `quality::Union{AbstractString, Vector{<:Number}}`
+* Keyword argument `offset` (if `quality isa Vector`): PHRED offset
 """
-function Record(description::AbstractString, sequence, quality::Vector{<:Number}; offset::Integer=33)
-    if length(sequence) != length(quality)
-        throw(ArgumentError("the length of sequence doesn't match the length of quality"))
+function Record(
+    description::AbstractString,
+    sequence::Union{AbstractString, BioSequence},
+    quality::AbstractString
+)
+    seqlen = sequence isa AbstractString ? ncodeunits(sequence) : length(sequence)
+    if seqlen != ncodeunits(quality)
+        throw(ArgumentError("Byte length of sequence doesn't match codeunits of quality"))
     end
     buf = IOBuffer()
-    print(buf, '@', description, '\n')
-    print(buf, sequence, "\n+\n")
-    ascii_quality = [UInt8(q + offset) for q in quality]
-    write(buf, ascii_quality, '\n')
-    return parse(Record, take!(buf))
+    print(buf,
+        '@', description, '\n',
+        sequence, "\n+\n",
+        quality
+    )
+    parse(Record, take!(buf))
+end
+
+function Record(
+    description::AbstractString,
+    sequence::Union{AbstractString, BioSequence},
+    quality::Vector{<:Number};
+    offset::Integer=33
+)
+    ascii_quality = String([UInt8(q + offset) for q in quality])
+    Record(description, sequence, ascii_quality)
 end
 
 function Base.:(==)(record1::Record, record2::Record)
