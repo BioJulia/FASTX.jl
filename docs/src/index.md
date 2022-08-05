@@ -28,6 +28,12 @@ julia> sequence(LongDNA{2}, record)
 TAGAAGA
 ```
 
+* Validate files
+```julia
+julia> nothing === validate_fasta(IOBuffer(">ABC\nDEF"))
+true
+```
+
 * Read FASTX files
 ```julia
 record = FASTAReader(first, IOBuffer(">ABC\nDEF"))
@@ -118,6 +124,14 @@ julia> record = parse(FASTARecord, ">X\ntaga\nccaa");
 julia> seqlen(record)
 8
 ```
+
+### Validate files
+The functions `validate_fasta` and `validate_fastq` can be used to check if an IO
+contains data that can be read as FASTX.
+They are significantly faster than parsing the whole file into records,
+and are memory efficient.
+
+Be aware that the validators mutate the IO by reading it, so make sure to reset the IO before using it to parse FASTX files.
 
 ### Readers and writers
 A `Reader` and a `Writer` are structs that wrap an IO, and allows efficient reading/writing of FASTX `Record`s.

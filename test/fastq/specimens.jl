@@ -17,6 +17,7 @@
                 println("Valid format not parsed properly: $path")
             end
             @test issame
+            @test isnothing(open(validate_fastq, path))
         catch e
             println("Error when parsing $path")
             @test false
@@ -40,5 +41,6 @@ end
     for specimen in list_invalid_specimens("FASTQ")
         path = joinpath(path_of_format("FASTQ"), filename(specimen))
         @test_throws Exception open(collect, Reader, path)
+        @test !isnothing(open(validate_fastq, path))
     end
 end

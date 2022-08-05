@@ -154,3 +154,74 @@ Automa.Stream.generate_reader(
     loopcode = loopcode,
     returncode = returncode
 ) |> eval
+
+validator_actions = Dict(
+    :mark => :(@mark),
+    :countline => :(linenum += 1),
+    :header1_identifier => quote nothing end,
+
+    # Copy description to buffer to check if second description is same
+    :header1_description => quote
+        let n = @relpos(p-1)
+            appendfrom!(headerbuffer, 1, data, @markpos, n)
+            description_len = n
+        end
+    end,
+
+    # Copy sequence bytes and keep track of how many bytes copied
+    :sequence => :(sequence_len = @relpos(p-1)),
+
+    # Verify the second description is identical to the first,
+    :header2_description => quote
+        let n = @relpos(p-1)
+            if n != description_len || !iszero(memcmp(pointer(headerbuffer), pointer(data, p-n), n%UInt))
+                return linenum
+            end
+        end
+    end,
+
+    # Verify the length of quality and sequence is identical
+    :quality => quote
+        let n = @relpos(p-1)
+            n == sequence_len || return linenum
+        end
+    end,
+    :record => quote nothing end
+)
+
+initcode = quote
+    linenum = 1
+    description_len = 0
+    sequence_len = 0
+    headerbuffer = Vector{UInt8}(undef, 1024)
+end
+
+Automa.Stream.generate_reader(
+    :validate_fastq,
+    machine,
+    arguments = (),
+    actions= validator_actions,
+    context = context,
+    initcode = initcode,
+    loopcode = :(cs < 0 && return linenum),
+    returncode = :(iszero(cs) ? nothing : linenum)
+) |> eval
+
+# Currently returns linenumber if it is not, but we might remove
+# this from the readers, since this state cannot be kept when seeking.
+"""
+    validate_fastq(io::IO) >: Nothing
+
+Check if `io` is a valid FASTQ file.
+Return `nothing` if it is, and an instance of another type if not.
+
+# Examples
+```jldoctest
+julia> validate_fastq(IOBuffer("@i1 r1\nuuag\n+\nHJKI")) === nothing
+true
+
+julia> validate_fastq(IOBuffer("@i1 r1\nu;ag\n+\nHJKI")) === nothing
+false
+```
+"""
+validate_fastq(io::IO) = validate_fastq(TranscodingStreams.NoopStream(io))

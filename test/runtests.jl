@@ -33,7 +33,7 @@ const OFFSET = 33
 
 using Test
 using FASTX.FASTQ: Record, Reader, Writer, identifier, description,
-    sequence, quality, quality_scores, QualityEncoding, quality_header!
+    sequence, quality, quality_scores, QualityEncoding, quality_header!, validate_fastq
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename, hastag
 using StringViews: StringView

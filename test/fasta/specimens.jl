@@ -17,6 +17,7 @@
                 println("Valid format not parsed properly: $path")
             end
             @test issame
+            @test isnothing(open(validate_fasta, path))
         catch e
             println("Error when parsing $path")
             @test false
@@ -39,5 +40,6 @@ end
     for specimen in list_invalid_specimens("FASTA")
         path = joinpath(path_of_format("FASTA"), filename(specimen))
         @test_throws Exception open(collect, Reader, path)
+        @test !isnothing(open(validate_fasta, path))
     end
 end

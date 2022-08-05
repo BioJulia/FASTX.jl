@@ -136,3 +136,36 @@ Automa.Stream.generate_reader(
     loopcode = loopcode,
     returncode = returncode
 ) |> eval
+
+validator_actions = Dict(k => quote nothing end for k in keys(actions))
+validator_actions[:countline] = :(linenum += 1)
+
+Automa.Stream.generate_reader(
+    :validate_fasta,
+    machine,
+    arguments = (),
+    actions= validator_actions,
+    context = context,
+    initcode = :(linenum = 1),
+    loopcode = :(cs < 0 && return linenum),
+    returncode = :(iszero(cs) ? nothing : linenum)
+) |> eval
+
+# Currently returns linenumber if it is not, but we might remove
+# this from the readers, since this state cannot be kept when seeking.
+"""
+    validate_fasta(io::IO) >: Nothing
+
+Check if `io` is a valid FASTA file.
+Return `nothing` if it is, and an instance of another type if not.
+
+# Examples
+```jldoctest
+julia> validate_fasta(IOBuffer(">a bc\nTAG\nTA")) === nothing
+true
+
+julia> validate_fasta(IOBuffer(">a bc\nT>G\nTA")) === nothing
+false
+```
+"""
+validate_fasta(io::IO) = validate_fasta(TranscodingStreams.NoopStream(io))
