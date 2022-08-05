@@ -92,9 +92,8 @@ function description(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.description_len)))
 end
 
-import .FASTA
-import .FASTQ
-import .FASTQ: quality, quality_scores, quality_header!, QualityEncoding
+import .FASTA: FASTA, validate_fasta, Index, faidx, extract
+import .FASTQ: FASTQ, quality, quality_scores, quality_header!, QualityEncoding
 
 function FASTA.Record(record::FASTQ.Record)
     ilen = record.identifier_len
@@ -193,6 +192,9 @@ export
     quality_scores,
     quality_header!,
     QualityEncoding,
-    seqlen
+    seqlen,
+    Index,
+    faidx,
+    extract
 
 end # module

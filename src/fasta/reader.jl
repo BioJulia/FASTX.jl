@@ -114,58 +114,116 @@ function Base.close(reader::Reader)
 end
 
 function Base.getindex(reader::Reader, name::AbstractString)
-    if reader.index === nothing
-        throw(ArgumentError("no index attached"))
-    end
-    #seekrecord(reader.state.stream, reader.index, name)
-    seekrecord(reader.state.stream, reader.index, name) # TODO: reader.index may not be type stable.
-    #reader.state.cs = file_machine.start_state
-    #reader.state.finished = false
-    #return read(reader)
+    seekrecord(reader, name)
     record = Record()
-    cs, linenum, found = readrecord!(TranscodingStreams.NoopStream(reader.state.stream), record, (1, 1))
+    cs, _, found = readrecord!(TranscodingStreams.NoopStream(reader.state.stream), record, (1, 1))
     @assert cs ≥ 0 && found
     return record
 end
 
+function seekrecord(reader::Reader, name::AbstractString)
+    if reader.index === nothing
+        throw(ArgumentError("no index attached"))
+    end
+    seekrecord(reader, reader.index.names[name])
+end
+
+# TODO: `linenum` in reader.state is messed up by this operation
+# It is not easily recovered.
+function seekrecord(reader::Reader, i::Integer)
+    seekrecord(reader.state.stream, reader.index, i)
+    reader.state.state = machine.start_state
+    reader.state.filled = false
+end
+
 """
-    extract(reader::Reader, Alphabet, name::AbstractString, range::UnitRange)
+    extract(reader::Reader, name::AbstractString, range::Union{Nothing, UnitRange})
 
 Extract a subsequence given by index `range` from the sequence `named` in a
-`Reader` with an index. Returns a `LongSequence` with the given `Alphabet`.   
+`Reader` with an index. Returns a `String`.
+If `range` is nothing (the default value), return the entire sequence.
 """
-function extract(reader::Reader, A::BioSequences.Alphabet, name::AbstractString, range::UnitRange)
+function extract(
+    reader::Reader,
+    name::AbstractString,
+    range::Union{Nothing, UnitRange}=nothing
+)
+    # Validate it has index, and index has sequence, and range
+    # is inbound
     index = reader.index
     if index === nothing
         throw(ArgumentError("no index attached"))
     end
-    i = index[name]
+    index_of_name = index.names[name]
 
-    # Seek to first base of range within the sequence
-    offset = index.offsets[i]
-    len = index.lengths[i]
-    last(range) > len && throw(ArgumentError("Sequence not long enough"))
-    linebase = index.linebases[i]
-    linewidth = index.linewidths[i]
-    len_newline = linewidth - linebase
-    skip_lines = fld(first(range) - 1, linebase)
-    seek(reader.state.stream, offset + (first(range) - 1) + (len_newline * skip_lines))
-
-    # Now fill in data
-    buffer = Vector{UInt8}(undef, length(range))
-    filled = 0
-    while filled < length(buffer)
-        line = readline(reader.state.stream)
-        len = min(ncodeunits(line), length(buffer) - filled)
-        unsafe_copyto!(pointer(buffer, filled+1), pointer(line), len)
-        filled += len
+    len = index.lengths[index_of_name]
+    checked_range = if range !== nothing
+        checkbounds(1:len, range)
+        isempty(range) && return ""
+        range
+    else
+        1:len
     end
-    return BioSequences.LongSequence{typeof(A)}(buffer)
+    total_bases = length(checked_range)
+
+    # Load all required bytes into a buffer, including newlines
+    (linebases, linewidth) = linebases_width(index, index_of_name)
+    len_newline = linewidth - linebases
+    (start_lineind_z, start_lineoff_z) = divrem(first(checked_range) - 1, linebases)
+    start_offset = start_lineind_z * linewidth + start_lineoff_z
+
+    (stop_lineind_z, stop_lineoff_z) = divrem(last(checked_range), linebases)
+    stop_offset = stop_lineind_z * linewidth + stop_lineoff_z
+
+    until_first_newline = linebases - start_lineoff_z
+    buffer = Vector{UInt8}(undef, stop_offset - start_offset)
+    start_file_offset = index.offsets[index_of_name] + ncodeunits(name) + len_newline + start_offset
+    seek(reader.state.stream, start_file_offset)
+    read!(reader.state.stream, buffer)
+
+    # Now remove newlines in buffer by shifting the non-newline content
+    remaining = total_bases - until_first_newline
+    write_index = until_first_newline + 1
+    read_index = write_index + len_newline
+
+    #=
+    @show start_offset
+    @show stop_offset
+    @show write_index
+    @show read_index
+    @show len_newline
+    @show remaining
+    @show total_bases
+    @show linebases
+    =#
+
+    while remaining > 0
+        n = min(linebases, remaining)
+        copyto!(buffer, write_index, buffer, read_index, n)
+        write_index += n
+        read_index += n + len_newline
+        remaining -= n
+    end
+    # After having removed newlines, we shrink buffer to fit
+    resize!(buffer, total_bases)
+
+    # Now check that there are no bad bytes in our buffer
+    # Note: This ByteSet must correspond to the allowed bytes in
+    # the FASTA machine to ensure we can seek the same FASTA files we can read
+    badpos = memchr(buffer, Val(ByteSet((UInt8('\n'), UInt8('\r'), UInt8('>')))))
+    if badpos !== nothing
+        error("Invalid byte in FASTA sequence line: $(buffer[badpos])")
+    end
+
+    # Return the Reader to a usable state after having messed with its
+    # underlying IO, then return result
+    seekrecord(reader, index_of_name)
+    return String(buffer)
 end
 
 function index!(record::Record, data::UTF8)
     stream = TranscodingStreams.NoopStream(IOBuffer(data))
-    cs, linenum, found = readrecord!(stream, record, (1, 1))
+    _, _, found = readrecord!(stream, record, (1, 1))
     if !found || !allspace(stream)
         throw(ArgumentError("invalid FASTA record"))
     end

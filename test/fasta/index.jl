@@ -23,8 +23,6 @@ INDEX_ZERO_OFFSET = "abc\t100\t5\t15\t16\ndef\t6\t0\t1\t2"
     @test ind.names["^def?@l~2:/"] == 2
     @test ind.lengths == [100, 17]
     @test ind.offsets == [5, 1]
-    @test ind.linebases == [15, 14]
-    @test ind.linewidths == [16, 16]
 
     for bad_index in [
         INDEX_NAME_SPACE,
@@ -42,10 +40,14 @@ INDEX_ZERO_OFFSET = "abc\t100\t5\t15\t16\ndef\t6\t0\t1\t2"
 end
 
 const VALID_INDEX_CHARS = append!(vcat('0':'9', 'A':'Z', 'a':'z'), collect("!#\$%&+./:;?@^_|~-"))
+const VALID_SEQ_BYTES = [i for i in 0x00:0xff if i ∉ UInt8.(Tuple(">\r\n"))]
+
+random_name() = join(rand(VALID_INDEX_CHARS, rand(10:25)))
+random_seqline(len::Integer) = String(rand(VALID_SEQ_BYTES, len))
 function make_random_index()
     buf = IOBuffer()
     for i in 1:25
-        print(buf, join(rand(VALID_INDEX_CHARS, rand(10:25))), '\t')
+        print(buf, random_name(), '\t')
         len = rand(20:250)
         print(buf, len, '\t')
         print(buf, rand(1:100), '\t')
@@ -69,11 +71,75 @@ end
 
 end
 
+function make_random_indexable_fasta()
+    buf = IOBuffer()
+    names = String[]
+    newlines = String[]
+    linelengths = Int[]
+    lengths = Int[]
+
+    for i in 1:25
+        newline = rand(("\n", "\r\n"))
+        push!(newlines, newline)
+        len = rand(20:100)
+        push!(linelengths, len)
+        name = random_name()
+        push!(names, name)
+        print(buf, '>', name, newline)
+        nlines = rand(1:10)
+        push!(lengths, nlines * len)
+        for i in 1:nlines
+            print(buf, random_seqline(len), newline)
+        end
+    end
+    return (take!(buf), names, newlines, linelengths, lengths)
+end
+
 @testset "Creating index" begin
+    @test Index(IOBuffer("")) isa Index
+
+    for i in 1:10
+        (buffer, names, newlines, linelengths, lengths) = make_random_indexable_fasta()
+        index = faidx(IOBuffer(buffer))
+        @test index.names == Dict(name => i for (i, name) in enumerate(names))
+        @test index.lengths == lengths
+        obs_lw = [FASTA.linebases_width(index, i) for i in eachindex(lengths)]
+        exp_lw = [(linelengths[i], linelengths[i] + length(newlines[i])) for i in eachindex(lengths)]
+        @test obs_lw == exp_lw
+    end
 end
 
 @testset "Reader with index" begin
-    # Create dummy FASTA
-    # Create index from FASTA
-    # Load reader of dummy FASTA
+    (buffer, names, newlines, linelengths, lengths) = make_random_indexable_fasta()
+    idx = faidx(IOBuffer(buffer))
+    reader = Reader(IOBuffer(buffer), index=idx)
+
+    # Test getindex
+    for (i, name) in enumerate(names)
+        record = reader[name]
+        @test identifier(record) == name
+        @test seqlen(record) == lengths[i]
+    end
+
+    # Test seekrecord
+    for (i, name) in enumerate(names)
+        FASTA.seekrecord(reader, name)
+        record = first(reader)
+        @test identifier(record) == name
+        @test seqlen(record) == lengths[i]
+    end
+
+    # Test extract
+    for (i, name) in enumerate(names)
+        seq = extract(reader, name)
+        record = reader[name]
+        @test ncodeunits(seq) == lengths[i]
+        @test seq == sequence(record)
+
+        start = rand(1:seqlen(record))
+        stop = rand(start:seqlen(record))
+        seq = extract(reader, name, start:stop)
+        seq2 = sequence(record, start:stop)
+        @test seq == seq2
+    end
 end

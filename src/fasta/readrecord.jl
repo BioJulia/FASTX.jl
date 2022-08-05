@@ -41,6 +41,7 @@ machine = let
     header = re">" * description
     
     # Sequence line: Anything except \r, \n and >
+    # Note: Must be consistent with the ByteSet in reader.jl used for seeking
     sequence_line = re"[^\n\r>]+"
     sequence_line.actions[:enter] = [:mark]
     # Action: Append letters to sequence_line
@@ -118,7 +119,10 @@ end
 
 returncode = :(return cs, linenum, found)
 
-context = Automa.CodeGenContext(generator=:goto)
+context = Automa.CodeGenContext(
+    generator=:goto,
+    vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte)
+)
 
 isinteractive() && @info "Generating FASTA parsing code..."
 
