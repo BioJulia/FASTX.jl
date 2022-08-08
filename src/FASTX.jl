@@ -92,7 +92,7 @@ function description(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.description_len)))
 end
 
-import .FASTA: FASTA, validate_fasta, Index, faidx, extract, validate_fasta
+import .FASTA: FASTA, validate_fasta, Index, faidx, extract, validate_fasta, seekrecord
 import .FASTQ: FASTQ, quality, quality_scores, quality_header!, QualityEncoding, validate_fastq
 
 function FASTA.Record(record::FASTQ.Record)
@@ -133,7 +133,7 @@ function sequence(
     record::Record,
     part::UnitRange{Int}=1:seqlen(record)
 )::S where S <: BioSequence
-    return S(sequence(record))
+    return S(sequence(record, part))
 end
 
 # Special method for LongSequence: Can operate on bytes directly
@@ -197,6 +197,7 @@ export
     seqlen,
     Index,
     faidx,
-    extract
+    extract,
+    seekrecord
 
 end # module

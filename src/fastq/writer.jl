@@ -31,31 +31,15 @@ struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read
 end
 
-function BioGenerics.IO.stream(writer::Writer)
-    return writer.output
+function Writer(io::T; quality_header::Union{Nothing, Bool}=nothing) where {T <: TranscodingStream}
+    qstate = quality_header === nothing ? 0x02 : UInt8(quality_header)
+    Writer{T}(io, qstate)
 end
 
-Writer(output::IO; quality_header::Union{Nothing, Bool}=nothing) = Writer(output, quality_header)
+Writer(io::IO; kwargs...) = Writer(NoopStream(io); kwargs...)
 
-"""
-    FASTQ.Writer(output::IO; quality_header=false)
-
-Create a data writer of the FASTQ file format.
-
-# Arguments
-* `output`: data sink
-* `quality_header=nothing`: output the title line at the third line just after '+'.
-  If `nothing`, do so if the record itself contains second header.
-"""
-
-function Writer(output::IO, quality_header::Union{Nothing, Bool})
-    qstate = quality_header === nothing ? 0x02 : UInt8(quality_header)
-    if output isa TranscodingStream
-        return Writer{typeof(output)}(output, qstate)
-    else
-        stream = TranscodingStreams.NoopStream(output)
-        return Writer{typeof(stream)}(stream, qstate)
-    end
+function BioGenerics.IO.stream(writer::Writer)
+    return writer.output
 end
 
 function Base.flush(writer::Writer)

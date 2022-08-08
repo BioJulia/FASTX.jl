@@ -91,7 +91,7 @@ end
     # we don't test width here, that's for later
     target_buffer = IOBuffer()
     writer_buffer = IOBuffer()
-    writer = Writer(writer_buffer, 0)
+    writer = Writer(writer_buffer; width=0)
     for i in 1:50
         name = join(rand('A':'z'), rand(20:30))
         name2 = join(rand('A':'z'), rand(30:40))
@@ -164,7 +164,7 @@ end
             seq = join(rand('A':'Z', seqlen))
             record = Record(header, seq)
             buf = IOBuffer()
-            writer = Writer(buf, width)
+            writer = Writer(buf; width=width)
             write(writer, record)
             flush(writer)
             str = String(take!(buf))
@@ -203,7 +203,7 @@ end
     for string in strings
         read = collect(Reader(IOBuffer(string)))
         buf = IOBuffer()
-        writer = Writer(buf, 0)
+        writer = Writer(buf, width=0)
         for record in read
             write(writer, record)
         end

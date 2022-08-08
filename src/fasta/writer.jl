@@ -35,14 +35,8 @@ function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 
-function Writer(output::IO, width::Integer=70)
-    if output isa TranscodingStream
-        return Writer{typeof(output)}(output, width)
-    else
-        stream = TranscodingStreams.NoopStream(output)
-        return Writer{typeof(stream)}(stream, width)
-    end
-end
+Writer(io::T; width::Integer=70) where {T <: TranscodingStream} = Writer{T}(io, width)
+Writer(io::IO; kwargs...) = Writer(NoopStream(io); kwargs...)
 
 function Base.flush(writer::Writer)
     # This is, bizarrely needed for TranscodingStreams for now.

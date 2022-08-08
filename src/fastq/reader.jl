@@ -1,12 +1,6 @@
 # FASTQ Reader
 # ============
 
-struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    state::State{S}
-    record::Record
-    copy::Bool
-end
-
 """
     FASTQ.Reader(input::IO; copy::Bool=true)
 
@@ -41,15 +35,18 @@ julia> show(collect(quality(record))) # phred 33 encoding by default
 [73, 74, 26, 60]
 ```
 """
-function Reader(input::IO; copy::Bool=true)
-    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-    if !(input isa TranscodingStream)
-        stream = TranscodingStreams.NoopStream(input)
-        return Reader(State(stream, 1, 1, false), record, copy)
-    else
-        return Reader(State(input, 1, 1, false), record, copy)
-    end
+struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    state::State{S}
+    record::Record
+    copy::Bool
 end
+
+function Reader(io::TranscodingStream; copy::Bool=true)
+    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
+    Reader(State(io, 1, 1, false), record, copy)
+end
+
+Reader(io::IO; kwargs...) = Reader(NoopStream(io); kwargs...)
 
 function Base.iterate(rdr::Reader, state=nothing)
     (cs, f) = _read!(rdr, rdr.record)
@@ -99,19 +96,8 @@ function Base.close(reader::Reader)
 end
 
 function index!(record::Record, data::UTF8)
-    stream = TranscodingStreams.NoopStream(IOBuffer(data))
+    stream = NoopStream(IOBuffer(data))
     cs, linenum, found = readrecord!(stream, record, (1, 1))
-    if !found || !allspace(stream)
-        throw(ArgumentError("invalid FASTQ record"))
-    end
+    found || throw(ArgumentError("invalid FASTQ record"))
     return record
-end
-
-function allspace(stream)
-    while !eof(stream)
-        if !isspace(read(stream, Char))
-            return false
-        end
-    end
-    return true
 end

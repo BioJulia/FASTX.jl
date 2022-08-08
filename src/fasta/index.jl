@@ -27,9 +27,9 @@ See also: [FASTA.Reader](@ref)
 
 # Examples
 ```jldoctest
-julia> src = IOBuffer("seqname\t9\t0\t6\t8");
+julia> src = IOBuffer("seqname\\t9\\t0\\t6\\t8");
 
-julia> fna = IOBuffer(">A\nG\n>seqname\nACGTAC\r\nTTG");
+julia> fna = IOBuffer(">A\\nG\\n>seqname\\nACGTAC\\r\\nTTG");
 
 julia> rdr = FASTA.Reader(fna; index=src)
 
@@ -124,7 +124,7 @@ index_actions = Dict{Symbol, Expr}(
         if nnum == 1
             push!(vectors[1], num)
         elseif nnum == 2
-            iszero(num) && error("First offset cannot be zero in a valid FAI index")
+            num < 2 && error("First offset must be at least 2 in a valid FAI index")
             push!(vectors[2], num)
         # Number of basepairs per line obviously cannot exceed the sequence length.
         elseif nnum == 3
@@ -155,6 +155,7 @@ ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, 
     names = Dict{String, Int}()
     num = num2 = 0
     nnum = 0
+    linebases = 0
     linebases_num = 0
     vectors = (Int[], Int[], UInt[])
 
@@ -173,7 +174,7 @@ ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, 
 end
 
 Index(io::IO) = read_faidx(read(io))
-Index(filepath::AbstractString) = open(Index, filepath)
+Index(filepath::AbstractString) = open(i -> Index(i), filepath)
 
 function writeline(io::IO, index::Index, line::Integer, names::Vector{String})
     (linebases, linewidth) = linebases_width(index, line)
@@ -204,14 +205,6 @@ index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
     :identifier => quote
-        # Disturbingly, there is no API to get the absolute position of
-        # an Automa machine operating on a stream. We ought to fix this.
-        # This workaround works ONLY for a NoopStream,
-        # and relies on abusing the internals.
-        buffer_offset = buffer.transcoded - buffer.marginpos + 1
-
-        # markpos start at first byte after >, one-indexed, we want 0-indexed offset
-        identifier_offset = buffer_offset + @markpos() - 1
         identifier = unsafe_string(pointer(data, @markpos), p - @markpos)
     end,
     # Not used in fai files, the newline byte is consistent within one record
@@ -219,6 +212,15 @@ index_fasta_actions = Dict(
     :description => quote
         uses_rn_newline = byte == UInt8('\r')
         no_more_seqlines = false
+
+        # Disturbingly, there is no API to get the absolute position of
+        # an Automa machine operating on a stream. We ought to fix this.
+        # This workaround works ONLY for a NoopStream,
+        # and relies on abusing the internals.
+        buffer_offset = buffer.transcoded - buffer.marginpos + 1
+
+        # We want 0-indexed, p is one-indexed, and we need the offset of first sequence
+        offset = buffer_offset + p + uses_rn_newline
     end,
     :seqline => quote
         # Validate line terminator is same, i.e. no seq have have both \r\n and \n
@@ -246,7 +248,7 @@ index_fasta_actions = Dict(
         
         names[identifier] = record_count
         push!(lengths, seqlen)
-        push!(offsets, identifier_offset)
+        push!(offsets, offset)
         enc_linebases = (seqwidth % UInt)
         enc_linebases |= ifelse(uses_rn_newline, typemin(Int) % UInt, UInt(0))
         push!(encoded_linebases, enc_linebases)
@@ -294,8 +296,16 @@ function seekrecord(io::IO, index::Index, name::AbstractString)
     seekrecord(io, index, index.names[name])
 end
 
-# Compensate for > symbol, hence why -1
-seekrecord(io::IO, index::Index, i::Integer) = seek(io, index.offsets[i] - 1)
+# We seek to previous sequence to find the > start of next sequence
+function seekrecord(io::IO, index::Index, i::Integer)
+    i == 1 && return seekstart(io)
+    linebases, linewidth = linebases_width(index, i-1)
+    len = index.lengths[i-1]
+    prev_offset = index.offsets[i-1]
+    nlines = cld(len, linebases)
+    offset = prev_offset + len + nlines * (linewidth - linebases) 
+    seek(io, offset)
+end
 
 # Note: Current implementation relies on the IO being a NoopStream exactly,
 # no other transcoding stream will do.
@@ -319,8 +329,8 @@ FASTX.FASTA.Index:
   x     5       10      3       4
 ```
 """
-faidx(x::IO) = faidx_(TranscodingStreams.NoopStream(x))
-faidx(x::TranscodingStreams.NoopStream) = faidx_(x)
+faidx(x::IO) = faidx_(NoopStream(x))
+faidx(x::NoopStream) = faidx_(x)
 
 # High-level interface - not sure on this yet!
 """
@@ -332,10 +342,10 @@ If `check`, throw an error if the output file already exists
 
 See also: [`Index`](@ref)
 """
-function faidx(fnapath::AbstractString, faidxpath::AbstractString, check::Bool=true)
+function faidx(fnapath::AbstractString, faidxpath::AbstractString; check::Bool=true)
     check && ispath(faidxpath) && error("Output path $faidxpath already exsists")
     index = open(faidx, fnapath)
-    open(i -> write(i, index), faidxpath)
+    open(i -> write(i, index), faidxpath, "w")
 end
 
-faidx(path::AbstractString, check::Bool=true) = faidx(path, path *".fai", check)
+faidx(path::AbstractString; check::Bool=true) = faidx(path, path * ".fai"; check=check)

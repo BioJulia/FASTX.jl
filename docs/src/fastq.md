@@ -1,3 +1,10 @@
+```@meta
+CurrentModule = FASTX
+DocTestSetup = quote
+    using FASTX
+end
+```
+
 # FASTQ formatted files
 __NB: First read the documentation for FASTX__
 
@@ -78,7 +85,7 @@ julia> collect(quality_scores(record))
 If you want to decode the qualities using another scheme, you can use one of the predefined `QualityEncoding` objects.
 For example, Illumina v 1.3 used PHRED+64:
 
-```jldoctest
+```jldoctest qual
 julia> collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING))
 5-element Vector{Int8}:
  11
@@ -90,7 +97,7 @@ julia> collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING))
 
 Alternatively, `quality_scores` accept a name of the known quality encodings:
 
-```jldoctest
+```jldoctest qual
 julia> collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING)) == collect(quality_scores(record, :illumina13))
 true
 ```

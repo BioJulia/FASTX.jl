@@ -1,3 +1,10 @@
+```@meta
+CurrentModule = FASTX
+DocTestSetup = quote
+    using FASTX, BioSequences
+end
+```
+
 # FASTX
 [![Latest Release](https://img.shields.io/github/release/BioJulia/FASTX.jl.svg)](https://github.com/BioJulia/FASTX.jl/releases/latest)
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/FASTX.jl/blob/master/LICENSE) 
@@ -50,14 +57,14 @@ end
 
 * Write FASTX files
 ```jldoctest
-julia> buffer = IOBuffer()
+julia> buffer = IOBuffer();
 
 julia> FASTQWriter(buffer) do writer
-        write(writer, parse(FASTQRecord, "@header\nTAG\n+\nJJK"))
-        flush(writer)
-        String(take!(buffer))
-    end
-"@header\nTAG\n+\nJJK"
+           write(writer, parse(FASTQRecord, "@header\nTAG\n+\nJJK"))
+           flush(writer)
+           String(take!(buffer))
+       end
+"@header\nTAG\n+\nJJK\n"
 
 ```
 
@@ -99,7 +106,7 @@ true
 Records can be queried for their information, namely identifier, description and sequence (and quality, for FASTQ).
 By default, this returns an `AbstractString` view into the `Record`'s data:
 ```jldoctest
-julia> record = parse(FASTARecord, "ident desc\nUGU\nGA");
+julia> record = parse(FASTARecord, ">ident desc\nUGU\nGA");
 
 julia> (identifier(record), description(record), sequence(record))
 ("ident", "ident desc", "UGUGA")
@@ -143,7 +150,7 @@ Because they carry their own buffers, it's important to remember to close writer
 Readers are iterables of `Record`:
 
 ```jldoctest
-julia> reader = FASTAReader(IOBuffer(">A\nTAG\n>B\nAGA"))
+julia> reader = FASTAReader(IOBuffer(">A\nTAG\n>B\nAGA"));
 
 julia> sequence(first(reader))
 "TAG"
@@ -162,7 +169,7 @@ To squeeze extra performance out, you can pass the keyword `copy=false`.
 This will cause the reader to return the _same_ record over and over, and mutate it into place.
 
 ```jldoctest
-julia> reader = FASTAReader(IOBuffer(">A\nTAG\n>B\nAGA"); copy=false)
+julia> reader = FASTAReader(IOBuffer(">A\nTAG\n>B\nAGA"); copy=false);
 
 julia> rec1 = first(reader); sequence(rec1)
 "TAG"

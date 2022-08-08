@@ -12,7 +12,7 @@ import BioSequences: BioSequences, BioSequence
 import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import StringViews: StringView
-import TranscodingStreams: TranscodingStreams, TranscodingStream
+import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
 import ..FASTX: identifier, description, sequence, UTF8, seqlen
 
 include("quality.jl")

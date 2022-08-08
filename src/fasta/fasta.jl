@@ -15,7 +15,7 @@ import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import BioSequences
 import StringViews: StringView
-import TranscodingStreams: TranscodingStreams, TranscodingStream
+import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
 
 # Trivial use, I only use it here because it's a dep of Automa anyway.
 # Can be removed with no big problems

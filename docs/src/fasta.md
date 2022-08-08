@@ -1,3 +1,10 @@
+```@meta
+CurrentModule = FASTX
+DocTestSetup = quote
+    using FASTX
+end
+```
+
 # FASTA formatted files
 __NB: First read the documentation for FASTX__
 

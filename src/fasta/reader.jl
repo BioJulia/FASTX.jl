@@ -1,13 +1,6 @@
 # FASTA Reader
 # ============
 
-struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    state::State{S}
-    index::Union{Index, Nothing}
-    record::Record
-    copy::Bool
-end
-
 """
     FASTA.Reader(input::IO; index=nothing, copy::Bool=true)
 
@@ -43,28 +36,21 @@ julia> show(map(sequence, records))
 ["TAG", "AGA"]
 ```
 """
-function Reader(
-    input::IO;
-    index::Union{Nothing, Index, IO, AbstractString}=nothing,
-    copy::Bool=true
-)
-    idx = if index isa Index
-        index
-    elseif index isa Union{AbstractString, IO}
-        Index(index)
-    elseif index isa Nothing
-        nothing
-    else
-        @assert false
-    end
-    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-    if !(input isa TranscodingStream)
-        stream = TranscodingStreams.NoopStream(input)
-        return Reader(State(stream, 1, 1, false), idx, record, copy)
-    else
-        return Reader(State(input, 1, 1, false), idx, record, copy)
-    end
+struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    state::State{S}
+    index::Union{Index, Nothing}
+    record::Record
+    copy::Bool
 end
+
+function Reader(io::TranscodingStream; index::Union{Index, Nothing, IO, AbstractString}=nothing, copy::Bool=true)
+    idx = index isa Union{Index, Nothing} ? index : Index(index)
+    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
+    state = State(io, 1, 1, false)
+    Reader(state, idx, record, copy)
+end
+
+Reader(io::IO; kwargs...) = Reader(NoopStream(io); kwargs...)
 
 function Base.iterate(rdr::Reader, state=nothing)
     (cs, f) = _read!(rdr, rdr.record)
@@ -116,16 +102,27 @@ end
 function Base.getindex(reader::Reader, name::AbstractString)
     seekrecord(reader, name)
     record = Record()
-    cs, _, found = readrecord!(TranscodingStreams.NoopStream(reader.state.stream), record, (1, 1))
+    cs, _, found = readrecord!(NoopStream(reader.state.stream), record, (1, 1))
     @assert cs ≥ 0 && found
     return record
 end
 
+"""
+    seekrecord(reader::Reader, i::Union{AbstractString, Integer})
+
+Seek `Reader` to the `i`'th record. The next iterated record with be the `i`'th record.
+`i` can be the identifier of a sequence, or the 1-based record number in the FASTA IO.
+
+The `Reader` needs to be indexed for this to work.
+"""
+function seekrecord end
+
 function seekrecord(reader::Reader, name::AbstractString)
-    if reader.index === nothing
+    index = reader.index
+    if index === nothing
         throw(ArgumentError("no index attached"))
     end
-    seekrecord(reader, reader.index.names[name])
+    seekrecord(reader, index.names[name])
 end
 
 # TODO: `linenum` in reader.state is messed up by this operation
@@ -134,6 +131,7 @@ function seekrecord(reader::Reader, i::Integer)
     seekrecord(reader.state.stream, reader.index, i)
     reader.state.state = machine.start_state
     reader.state.filled = false
+    nothing
 end
 
 """
@@ -146,7 +144,7 @@ If `range` is nothing (the default value), return the entire sequence.
 function extract(
     reader::Reader,
     name::AbstractString,
-    range::Union{Nothing, UnitRange}=nothing
+    range::Union{Nothing, AbstractUnitRange{<:Integer}}=nothing
 )
     # Validate it has index, and index has sequence, and range
     # is inbound
@@ -177,7 +175,7 @@ function extract(
 
     until_first_newline = linebases - start_lineoff_z
     buffer = Vector{UInt8}(undef, stop_offset - start_offset)
-    start_file_offset = index.offsets[index_of_name] + ncodeunits(name) + len_newline + start_offset
+    start_file_offset = index.offsets[index_of_name] + start_offset
     seek(reader.state.stream, start_file_offset)
     read!(reader.state.stream, buffer)
 
@@ -185,17 +183,6 @@ function extract(
     remaining = total_bases - until_first_newline
     write_index = until_first_newline + 1
     read_index = write_index + len_newline
-
-    #=
-    @show start_offset
-    @show stop_offset
-    @show write_index
-    @show read_index
-    @show len_newline
-    @show remaining
-    @show total_bases
-    @show linebases
-    =#
 
     while remaining > 0
         n = min(linebases, remaining)
@@ -222,19 +209,8 @@ function extract(
 end
 
 function index!(record::Record, data::UTF8)
-    stream = TranscodingStreams.NoopStream(IOBuffer(data))
+    stream = NoopStream(IOBuffer(data))
     _, _, found = readrecord!(stream, record, (1, 1))
-    if !found || !allspace(stream)
-        throw(ArgumentError("invalid FASTA record"))
-    end
+    found || throw(ArgumentError("invalid FASTA record"))
     return record
-end
-
-function allspace(stream)
-    while !eof(stream)
-        if !isspace(read(stream, Char))
-            return false
-        end
-    end
-    return true
 end

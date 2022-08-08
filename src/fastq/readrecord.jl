@@ -60,12 +60,6 @@ function appendfrom!(dst, dpos, src, spos, n)
     return dst
 end
 
-function is_same_mem(data, pos1, pos2, len)
-    checkbounds(data, 1:pos1+len-1)
-    checkbounds(data, 1:pos2+len-1)
-    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), pointer(data, pos1), pointer(data, pos2), len) == 0
-end
-
 actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
@@ -224,4 +218,4 @@ julia> validate_fastq(IOBuffer("@i1 r1\nu;ag\n+\nHJKI")) === nothing
 false
 ```
 """
-validate_fastq(io::IO) = validate_fastq(TranscodingStreams.NoopStream(io))
+validate_fastq(io::IO) = validate_fastq(NoopStream(io))

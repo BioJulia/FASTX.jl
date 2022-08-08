@@ -168,4 +168,4 @@ julia> validate_fasta(IOBuffer(">a bc\nT>G\nTA")) === nothing
 false
 ```
 """
-validate_fasta(io::IO) = validate_fasta(TranscodingStreams.NoopStream(io))
+validate_fasta(io::IO) = validate_fasta(NoopStream(io))

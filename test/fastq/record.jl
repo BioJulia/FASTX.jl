@@ -195,10 +195,12 @@ end
 
     # QualityEncoding
     @test_throws Exception QualityEncoding('B':'A', 10)
+    @test_throws Exception QualityEncoding('A':'A', 90)
     @test_throws Exception QualityEncoding('a':'A', 10)
     @test_throws Exception QualityEncoding('Z':'Y', 10)
     @test_throws Exception QualityEncoding('A':'B', -1)
     @test_throws Exception QualityEncoding('α':'β', 10)
+    @test_throws Exception QualityEncoding(Char(0xa5):Char(0xa5), 10)
 
     # Default Quality encoding
     @test collect(quality_scores(records[2])) == [Int8(i) - OFFSET for i in "aabb"]
