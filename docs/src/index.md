@@ -124,14 +124,6 @@ julia> sequence(String, record)
 "UGCCCA"
 ```
 
-The length of the sequence (in bytes, _not_ in characters!) can be accessed with `seqlen(record)`:
-```jldoctest
-julia> record = parse(FASTARecord, ">X\ntaga\nccaa");
-
-julia> seqlen(record)
-8
-```
-
 ### Validate files
 The functions `validate_fasta` and `validate_fastq` can be used to check if an IO
 contains data that can be read as FASTX.

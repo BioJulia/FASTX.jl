@@ -44,7 +44,6 @@ FASTA.Record
 identifier
 description
 sequence
-seqlen
 ```
 
 ## `FASTAReader` and `FASTAWriter`

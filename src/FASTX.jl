@@ -68,11 +68,7 @@ TAGA
 """
 function sequence end
 
-"""
-    seqlen(::Record)::Int
-
-Get the length of the sequence part of a `FASTX` `Record` in number of bytes.
-"""
+# Get the length of the sequence part of a `FASTX` `Record` in number of bytes.
 function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
@@ -194,7 +190,6 @@ export
     quality_scores,
     quality_header!,
     QualityEncoding,
-    seqlen,
     Index,
     faidx,
     extract,

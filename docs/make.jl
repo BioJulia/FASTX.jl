@@ -10,7 +10,8 @@ makedocs(
         "FASTQ" => "fastq.md",
         "FAI" => "fai.md"
     ],
-    authors = "Sabrina J. Ward, Jakob N. Nissen, The BioJulia Organisation and other contributors."
+    authors = "Sabrina J. Ward, Jakob N. Nissen, The BioJulia Organisation and other contributors.",
+    checkdocs = :all
 )
 
 deploydocs(
