@@ -54,7 +54,7 @@ function Base.iterate(rdr::Reader, state=nothing)
         iszero(cs) && return nothing
         # Make sure reader's record in not invalid
         empty!(rdr.record)
-        error("Unexpected error when reading FASTQ file")
+        error("Unexpected end of file when reading FASTA record")
     end
     return if rdr.copy
         (copy(rdr.record), nothing)
@@ -93,11 +93,4 @@ function Base.close(reader::Reader)
         close(reader.state.stream)
     end
     return nothing
-end
-
-function index!(record::Record, data::UTF8)
-    stream = NoopStream(IOBuffer(data))
-    cs, linenum, found = readrecord!(stream, record, (1, 1))
-    found || throw(ArgumentError("invalid FASTQ record"))
-    return record
 end

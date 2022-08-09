@@ -60,7 +60,7 @@ function Base.iterate(rdr::Reader, state=nothing)
         iszero(cs) && return nothing
         # Make sure reader's record in not invalid
         empty!(rdr.record)
-        error("Unexpected error when reading FASTA file")
+        error("Unexpected end of file when reading FASTA record")
     end
     return if rdr.copy
         (copy(rdr.record), nothing)
@@ -208,11 +208,4 @@ function extract(
     # underlying IO, then return result
     seekrecord(reader, index_of_name)
     return String(buffer)
-end
-
-function index!(record::Record, data::UTF8)
-    stream = NoopStream(IOBuffer(data))
-    _, _, found = readrecord!(stream, record, (1, 1))
-    found || throw(ArgumentError("invalid FASTA record"))
-    return record
 end

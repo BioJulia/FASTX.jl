@@ -186,7 +186,7 @@ using Test
         # Copyin conversion do no modify underlying record
         fq = parse(FASTQ.Record, "@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo")
         fa = FASTA.Record(fq)
-        FASTA.index!(fa, ">some_new_data\nTAGATA")
+        fill!(fa.data, UInt8('a'))
         @test description(fq) == "ta_g^ ha||;; "
         @test identifier(fq) == "ta_g^"
         @test sequence(fq) == "TAGJKKm"

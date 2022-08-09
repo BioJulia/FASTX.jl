@@ -112,7 +112,7 @@ index_machine = let
     name.actions[:enter] = [:mark]
     name.actions[:exit] = [:name]
 
-    number = re"[1-9][0-9]*"
+    number = re"[0-9]+"
     number.actions[:all] = [:digit]
     number.actions[:exit] = [:number]
 
@@ -166,6 +166,13 @@ index_actions = Dict{Symbol, Expr}(
     end,
 )
 
+@noinline function throw_index_error(data::Vector{UInt8}, linenum::Integer, p::Integer)
+    p_newline = findprev(isequal(UInt8('\n')), data, p)
+    offset = p_newline === nothing ? 0 : Int(p_newline)
+    col = p - offset
+    error("Error when parsing FAI file: Unexpected byte at index $p (line $linenum col $col)")
+end
+
 ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte))
 @eval function read_faidx(data::Vector{UInt8})
     start = 0
@@ -176,18 +183,15 @@ ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, 
     linebases = 0
     linebases_num = 0
     vectors = (Int[], Int[], UInt[])
+    $(Automa.generate_init_code(ctx, index_machine))
+    p_eof = p_end = length(data)
 
     GC.@preserve data begin
-        #$(Automa.generate_code(index_machine, index_actions))
-        $(Automa.generate_init_code(ctx, index_machine))
-        p_eof = p_end = length(data)
         $(Automa.generate_exec_code(ctx, index_machine, index_actions))
     end
 
     # TODO: Rely on Automa's new error code
-    if !iszero(cs)
-        error("Malformed index at byte $p")
-    end
+    iszero(cs) || throw_index_error(data, linenum, p)
     return Index(names, vectors...)
 end
 

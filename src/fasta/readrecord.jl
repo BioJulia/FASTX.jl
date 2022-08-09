@@ -112,7 +112,7 @@ end
 
 loopcode = quote
     if cs < 0
-        throw(ArgumentError("malformed FASTA file at line $(linenum)"))
+        throw_parser_error(data, p, linenum)
     end
     found && @goto __return__
 end

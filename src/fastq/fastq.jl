@@ -13,7 +13,7 @@ import BioGenerics: BioGenerics
 import BioGenerics.Automa: State
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
-import ..FASTX: identifier, description, sequence, UTF8, seqlen
+import ..FASTX: identifier, description, sequence, UTF8, seqlen, throw_parser_error, truncate
 
 include("quality.jl")
 include("record.jl")

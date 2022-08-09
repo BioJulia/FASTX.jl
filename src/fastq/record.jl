@@ -96,9 +96,27 @@ function Base.empty!(record::Record)
     return record
 end
 
-function Base.parse(::Type{Record}, data::UTF8)
-    record = Record()
-    index!(record, data)
+function Base.parse(::Type{Record}, data::AbstractVector{UInt8})
+    # Error early on empty data to not construct buffers
+    isempty(data) && throw(ArgumentError("Cannot parse empty string as FASTQ record"))
+
+    record = Record(Vector{UInt8}(undef, sizeof(data)), 0, 0, 0)
+    stream = NoopStream(IOBuffer(data), bufsize=sizeof(data))
+    cs, _, found = readrecord!(stream, record, (1, 1))
+    
+    # If found is not set, then the data terminated early
+    found || throw(ArgumentError("Incomplete FASTQ record"))
+    
+    # In this case, the machine ran out of data exactly after one record
+    p = stream.state.buffer1.bufferpos
+    p > sizeof(data) && iszero(cs) && return record
+
+    # Else, we check all trailing data to see it contains only \r\n
+    for i in p-1:sizeof(data)
+        if !in(data[i], (UInt8('\r'), UInt8('\n')))
+            throw(ArgumentError("Invalid trailing data after FASTQ record"))
+        end
+    end
     return record
 end
 
@@ -189,9 +207,9 @@ end
 
 function Base.show(io::IO, record::Record)
     println(io, "FASTQ.Record:")
-    println(io, "  description: ", description(record))
-    println(io, "     sequence: ", sequence(String, record))
-    print(io,   "      quality: ", quality(String, record))
+    println(io, "  description: \"", description(record))
+    println(io, "     sequence: \"", truncate(sequence(record), 40), '"')
+    print(io,   "      quality: \"", truncate(quality(record), 40), '"')
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)

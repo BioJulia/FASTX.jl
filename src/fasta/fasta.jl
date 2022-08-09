@@ -20,7 +20,7 @@ import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
 # Trivial use, I only use it here because it's a dep of Automa anyway.
 # Can be removed with no big problems
 using ScanByte: memchr, ByteSet
-import ..FASTX: identifier, description, sequence, UTF8, seqlen
+import ..FASTX: identifier, description, sequence, UTF8, seqlen, throw_parser_error, truncate
 
 include("record.jl")
 include("readrecord.jl")

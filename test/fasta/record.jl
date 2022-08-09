@@ -97,6 +97,11 @@ end
     record = parse(Record, ">here\nplKn\n.\n  \t\v\n\n  \n \n")
     @test identifier(record) == description(record) == "here"
     @test sequence(String, record) == "plKn.  \t\v   "
+
+    # Trailing extra record
+    @test_throws Exception parse(Record, ">A\nT\n>G\nA\n")
+    @test_throws Exception parse(Record, ">A\nT\n>")
+    @test parse(Record, ">A\nT\n\r\n\r\n") isa Record
 end
 
 @testset "Equality" begin

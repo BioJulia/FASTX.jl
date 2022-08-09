@@ -114,6 +114,11 @@ end
     for string in TEST_BAD_RECORD_STRINGS
         @test_throws Exception Record(string)
     end
+
+    # Trailing extra record
+    @test_throws Exception parse(Record, "@A\nT\n+\nJ\n@B\nU\n+\nK")
+    @test_throws Exception parse(Record, "@A\nT\n+\nJ\n@B\nU\n")
+    @test parse(Record, "@A\nT\n+\nJ\n\r\n") isa Record
 end
 
 @testset "Equality" begin

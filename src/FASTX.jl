@@ -73,13 +73,43 @@ function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
+@noinline function throw_parser_error(data::Vector{UInt8}, p::Integer, line::Integer)
+    byte = data[p]
+    lastnewline = findprev(isequal(UInt8('\n')), data, p)
+    bytestr = if byte in 0x07:0x13 || byte == 0x1b || byte in 0x20:0x7e
+        ''' * Char(byte) * "'"
+    else
+        repr(byte)
+    end
+    buf = IOBuffer()
+    print(
+        buf,
+        "Error when parsing FASTX file. Saw unexpected byte ",
+        bytestr,
+        " on line ",
+        string(line)
+    )
+    if lastnewline !== nothing
+        col = p - lastnewline
+        print(buf, " col ", string(col))
+    end
+    error(String(take!(buf)))
+end
+
+function truncate(s::AbstractString, len::Integer)
+    if length(s) > len
+        return string(String(collect(Iterators.take(s, len - 1))), '…')
+    else
+        return s
+    end
+end
+
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
 
 const Record = Union{FASTA.Record, FASTQ.Record}
 
 # Generic methods
-
 function identifier(record::Record)::StringView
     return StringView(view(record.data, 1:Int(record.identifier_len)))
 end
@@ -110,6 +140,7 @@ function FASTA.Record!(record::FASTQ.Record)
 end
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: Record} = parse(T, String(s))
+Base.parse(::Type{T}, s::Union{String, SubString{String}}) where {T <: Record} = parse(T, codeunits(s))
 
 "Get the indices of `data` that correspond to sequence indices `part`"
 function seq_data_part(record::Record, part::AbstractUnitRange)
