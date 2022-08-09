@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [2.0.0]
-Version 2 is a near-complete rewrite of BioSequences.
+Version 2 is a near-complete rewrite of FASTX.
 It brings strives to provide an easier and more consistent API, while also being
 faster, more memory efficient, and better tested than v1.
 
