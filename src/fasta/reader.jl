@@ -25,15 +25,17 @@ See also: [`FASTA.Record`](@ref), [`FASTA.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rdr = Reader(IOBuffer(">header\\nTAG\\n>another\\nAGA"));
+julia> rdr = FASTAReader(IOBuffer(">header\\nTAG\\n>another\\nAGA"));
 
-julia> records = collect(Reader); close(reader);
+julia> records = collect(rdr); close(rdr);
 
-julia> show(map(identifier, records))
-["header", "another"]
+julia> foreach(println, map(identifier, records))
+header
+another
 
-julia> show(map(sequence, records))
-["TAG", "AGA"]
+julia> foreach(println, map(sequence, records))
+TAG
+AGA
 ```
 """
 struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader

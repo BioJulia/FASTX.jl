@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = FASTX
 DocTestSetup = quote
-    using FASTX, BioSequences
+    using FASTX
 end
 ```
 

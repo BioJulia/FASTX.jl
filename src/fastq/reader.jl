@@ -21,9 +21,9 @@ See also: [`FASTQ.Record`](@ref), [`FASTQ.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rdr = Reader(IOBuffer("@readname\\nGGCC\\n+\\njk;]"));
+julia> rdr = FASTQReader(IOBuffer("@readname\\nGGCC\\n+\\njk;]"));
 
-julia> record = first(Reader); close(reader);
+julia> record = first(rdr); close(rdr);
 
 julia> identifier(record)
 "readname"
@@ -31,8 +31,8 @@ julia> identifier(record)
 julia> sequence(record)
 "GGCC"
 
-julia> show(collect(quality(record))) # phred 33 encoding by default
-[73, 74, 26, 60]
+julia> show(collect(quality_scores(record))) # phred 33 encoding by default
+Int8[73, 74, 26, 60]
 ```
 """
 struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader

@@ -13,7 +13,7 @@ See also: [`FASTQ.Reader`](@ref), [`FASTQ.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = parse(Record, "@ill r1\\nGGC\\n+\\njjk");
+julia> rec = parse(FASTQRecord, "@ill r1\\nGGC\\n+\\njjk");
 
 julia> identifier(rec)
 "ill"
@@ -24,10 +24,10 @@ julia> description(rec)
 julia> sequence(rec)
 "GGC"
 
-julia> show(collect(quality(rec)))
-[73, 73, 74]
+julia> show(collect(quality_scores(rec)))
+Int8[73, 73, 74]
 
-julia> typeof(description(rec)) == typeof(sequence(rec)) isa AbstractString
+julia> typeof(description(rec)) == typeof(sequence(rec)) <: AbstractString
 true
 ```
 """
@@ -220,10 +220,10 @@ If not passed, `part` defaults to the entire quality string.
 ```jldoctest
 julia> rec = parse(FASTQ.Record, "@hdr\\nUAGUCU\\n+\\nCCDFFG");
 
-julia> quality(rec)
+julia> qual = quality(rec)
 "CCDFFG"
 
-julia> quality isa AbstractString
+julia> qual isa AbstractString
 true
 ```
 """

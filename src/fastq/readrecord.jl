@@ -211,10 +211,10 @@ Return `nothing` if it is, and an instance of another type if not.
 
 # Examples
 ```jldoctest
-julia> validate_fastq(IOBuffer("@i1 r1\nuuag\n+\nHJKI")) === nothing
+julia> validate_fastq(IOBuffer("@i1 r1\\nuuag\\n+\\nHJKI")) === nothing
 true
 
-julia> validate_fastq(IOBuffer("@i1 r1\nu;ag\n+\nHJKI")) === nothing
+julia> validate_fastq(IOBuffer("@i1 r1\\nu;ag\\n+\\nHJKI")) === nothing
 false
 ```
 """

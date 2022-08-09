@@ -23,8 +23,6 @@ julia> identifier(record)
 """
 function identifier end
 
-foo() = 1
-
 """
     description(record::Record)::AbstractString
 
@@ -40,7 +38,7 @@ See also: [`identifier`](@ref), [`sequence`](@ref)
 julia> record = parse(FASTA.Record, ">ident_here some descr \\nTAGA");
 
 julia> description(record)
-"ident here some descr "
+"ident_here some descr "
 ```
 """
 function description end

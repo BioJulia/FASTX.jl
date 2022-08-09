@@ -15,7 +15,7 @@ interpret the quality scores of FASTQ records.
 the most common encoding scheme.
 The offset is the PHRED offset.
 
-See also: [`quality`](@ref)
+See also: [`quality_scores`](@ref)
 
 # Examples
 ```jldoctest
@@ -23,7 +23,7 @@ julia> read = parse(FASTQ.Record, "@hdr\\nAGA\\n+\\nabc");
 
 julia> qe = QualityEncoding('a':'z', 16); # hypothetical encoding
 
-julia> collect(quality(read, qe)) == [Int8(i) - 16 for i in "abc"]
+julia> collect(quality_scores(read, qe)) == [Int8(i) - 16 for i in "abc"]
 true
 ```
 """

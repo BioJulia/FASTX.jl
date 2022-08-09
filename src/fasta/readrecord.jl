@@ -161,10 +161,10 @@ Return `nothing` if it is, and an instance of another type if not.
 
 # Examples
 ```jldoctest
-julia> validate_fasta(IOBuffer(">a bc\nTAG\nTA")) === nothing
+julia> validate_fasta(IOBuffer(">a bc\\nTAG\\nTA")) === nothing
 true
 
-julia> validate_fasta(IOBuffer(">a bc\nT>G\nTA")) === nothing
+julia> validate_fasta(IOBuffer(">a bc\\nT>G\\nTA")) === nothing
 false
 ```
 """

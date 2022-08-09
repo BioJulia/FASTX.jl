@@ -14,7 +14,7 @@ See also: [`FASTA.Reader`](@ref), [`FASTA.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = parse(Record, ">some header\\nTAqA\\nCC");
+julia> rec = parse(FASTARecord, ">some header\\nTAqA\\nCC");
 
 julia> identifier(rec)
 "some"
@@ -25,7 +25,7 @@ julia> description(rec)
 julia> sequence(rec)
 "TAqACC"
 
-julia> typeof(description(rec)) == typeof(sequence(rec)) isa AbstractString
+julia> typeof(description(rec)) == typeof(sequence(rec)) <: AbstractString
 true
 ```
 """

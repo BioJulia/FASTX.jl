@@ -268,9 +268,9 @@ end
         "@A\nABCDE\n+\nBDE72", # numbers not in range
     ])
     for record in bad_records
-        @test_throws Exception collect(quality(record, :solexa))
-        @test_throws Exception collect(quality(record, :illumina13))
-        @test_throws Exception collect(quality(record, :illumina15))
+        @test_throws ErrorException collect(quality_scores(record, :solexa))
+        @test_throws ErrorException collect(quality_scores(record, :illumina13))
+        @test_throws ErrorException collect(quality_scores(record, :illumina15))
     end
 end
 

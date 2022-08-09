@@ -1,6 +1,9 @@
 using Documenter, FASTX
 
+DocMeta.setdocmeta!(FASTX, :DocTestSetup, :(using FASTX, BioSequences); recursive=true)
+
 makedocs(
+    modules = [FASTX],
     format = Documenter.HTML(),
     sitename = "FASTX.jl",
     doctest = true,

@@ -27,11 +27,11 @@ See also: [FASTA.Reader](@ref)
 
 # Examples
 ```jldoctest
-julia> src = IOBuffer("seqname\\t9\\t0\\t6\\t8");
+julia> src = IOBuffer("seqname\\t9\\t14\\t6\\t8");
 
 julia> fna = IOBuffer(">A\\nG\\n>seqname\\nACGTAC\\r\\nTTG");
 
-julia> rdr = FASTA.Reader(fna; index=src)
+julia> rdr = FASTA.Reader(fna; index=src);
 
 julia> seekrecord(rdr, "seqname");
 
@@ -323,10 +323,10 @@ See also: [`Index`](@ref)
 
 # Examples
 ```jldoctest
-julia> ind = faidx(IOBuffer(">ab\nTA\nT\n>x y\nGAG\nGA"))
-FASTX.FASTA.Index:
-  ab    3       1       2       3
-  x     5       10      3       4
+julia> ind = faidx(IOBuffer(">ab\\nTA\\nT\\n>x y\\nGAG\\nGA"))
+Index:
+  ab	3	4	2	3
+  x	5	14	3	4
 ```
 """
 faidx(x::IO) = faidx_(NoopStream(x))
