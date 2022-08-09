@@ -27,7 +27,7 @@ See also: [FASTA.Reader](@ref)
 
 # Examples
 ```jldoctest
-julia> src = IOBuffer("seqname\\t9\\t14\\t6\\t8");
+julia> src = IOBuffer("seqname\\t9\\t14\\t6\\t8\\nA\\t1\\t3\\t1\\t2");
 
 julia> fna = IOBuffer(">A\\nG\\n>seqname\\nACGTAC\\r\\nTTG");
 
@@ -47,6 +47,24 @@ struct Index
     # Upper bit is linewidth - linebases - 1, whose only valid values
     # are 0 or 1.
     encoded_linebases::Vector{UInt}
+
+    # According to specs, the index need not be ordered by the offset in the FASTA
+    # file. However, we make sure the Index object is, because it make seeking easier.
+    function Index(
+        names::Dict{String, Int},
+        lengths::Vector{Int},
+        offsets::Vector{Int},
+        encoded_linebases::Vector{UInt}
+    )
+        issorted(offsets) && return new(names, lengths, offsets, encoded_linebases)
+        perm = sortperm(offsets)
+        new(
+            Dict(name => perm[i] for (name, i) in names),
+            lengths[perm],
+            offsets[perm],
+            encoded_linebases[perm]
+        )
+    end
 end
 
 function linebases_width(index::Index, i::Integer)

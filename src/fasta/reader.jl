@@ -110,10 +110,10 @@ function Base.getindex(reader::Reader, name::AbstractString)
 end
 
 """
-    seekrecord(reader::Reader, i::Union{AbstractString, Integer})
+    seekrecord(reader::FASTAReader, i::Union{AbstractString, Integer})
 
 Seek `Reader` to the `i`'th record. The next iterated record with be the `i`'th record.
-`i` can be the identifier of a sequence, or the 1-based record number in the FASTA IO.
+`i` can be the identifier of a sequence, or the 1-based record number in the `Index`.
 
 The `Reader` needs to be indexed for this to work.
 """

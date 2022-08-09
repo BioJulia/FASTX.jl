@@ -1,4 +1,4 @@
-INDEX_GOOD = "abc\t100\t5\t15\t16\r\n^def?@l~2:/\t17\t200\t14\t16"
+INDEX_GOOD = "abc\t100\t5\t15\t16\r\n^def?@l~2:/\t17\t200\t14\t16\nABC\t12\t55\t8\t10"
 
 INDEX_NAME_SPACE = "abc def\t100\t5\t15\t16"
 INDEX_BAD_NAME_1 = "=abc\t100\t5\t15\t16"
@@ -25,11 +25,13 @@ function test_same_index(a::Index, b::Index)
 end
 
 @testset "Parsing index" begin
+    # Test correctly parsed _and ordered_
     ind = Index(IOBuffer(INDEX_GOOD))
     @test ind.names["abc"] == 1
-    @test ind.names["^def?@l~2:/"] == 2
-    @test ind.lengths == [100, 17]
-    @test ind.offsets == [5, 200]
+    @test ind.names["ABC"] == 2
+    @test ind.names["^def?@l~2:/"] == 3
+    @test ind.lengths == [100, 12, 17]
+    @test ind.offsets == [5, 55, 200]
 
     for bad_index in [
         INDEX_NAME_SPACE,
