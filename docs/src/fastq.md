@@ -112,6 +112,8 @@ QualityEncoding
 ### Reference:
 ```@docs
 quality
+quality_scores
+quality_header!
 ```
 
 ## `FASTQReader` and `FASTQWriter`
@@ -124,4 +126,5 @@ If set to a `Bool` value, the `Writer` will override the `Records`, without chan
 ```@docs
 FASTQ.Reader
 FASTQ.Writer
+validate_fastq
 ```

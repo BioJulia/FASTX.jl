@@ -23,7 +23,7 @@ Note that the FAI specs are stricter than FASTX.jl's definition of FASTA,
 such that some valid FASTA records may not be indexable.
 See the specs at: http://www.htslib.org/doc/faidx.html
 
-See also: [FASTA.Reader](@ref)
+See also: [`FASTA.Reader`](@ref)
 
 # Examples
 ```jldoctest

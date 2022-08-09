@@ -132,3 +132,11 @@ DocTestSetup = nothing
 ```
 
 FASTX.jl does not yet support indexing FASTQ files.
+
+### Reference:
+```@docs
+faidx
+seekrecord
+extract
+Index
+```

@@ -55,4 +55,5 @@ Else, it will wrap lines to the given maximal width.
 ```@docs
 FASTA.Reader
 FASTA.Writer
+validate_fasta
 ```
