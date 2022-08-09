@@ -6,8 +6,10 @@ end
 ```
 
 # FASTA index (FAI files)
-FASTX.jl supports FASTA index (FAI) files, see specifcation here: http://www.htslib.org/doc/faidx.html
+FASTX.jl supports FASTA index (FAI) files.
 When a FASTA file is indexed with a FAI file, one can seek records by their name, or extract parts of records easily.
+
+See the FAI specifcation here: http://www.htslib.org/doc/faidx.html
 
 ### Making an `Index`
 A FASTA index (of type `Index`) can be constructed from an `IO` object representing a FAI file:
@@ -39,7 +41,7 @@ by passing an `AbstractString` to `faidx`:
 julia> ispath("/path/to/fasta.fna.fai")
 false
 
-julia> faidx("/path/to/fasta.fna")
+julia> faidx("/path/to/fasta.fna");
 
 julia> ispath("/path/to/fasta.fna.fai")
 true

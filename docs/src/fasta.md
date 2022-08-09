@@ -6,7 +6,7 @@ end
 ```
 
 # FASTA formatted files
-__NB: First read the documentation for FASTX__
+__NB: First read the overview in the sidebar__
 
 FASTA is a text-based file format for representing biological sequences.
 A FASTA file stores a list of sequence records with name, description, and
@@ -27,13 +27,13 @@ Here is an example of a chromosomal sequence:
 ```
 >chrI chromosome 1
 CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACC
-CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
+CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTA
 ```
 
 ## The `FASTARecord`
 FASTA records are, by design, very lax in what they can contain.
 They can contain almost arbitrary byte sequences, including invalid unicode, and trailing whitespace on their sequence lines, which will be interpreted as part of the sequence.
-If you want to have more certainty about the format, you can either check the content of the sequences with a regex, or (preferrably), convert them to the desired `BioSequence` type.
+If you want to have more certainty about the format, you can either check the content of the sequences with a regex, or (preferably), convert them to the desired `BioSequence` type.
 
 ```@docs
 FASTA.Record

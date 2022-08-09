@@ -6,14 +6,14 @@
 
 Mutable struct representing a FASTQ record as parsed from a FASTQ file.
 The content of the record can be queried with the following functions:
-`identifier`, `description`, `sequence`, `seqlen`, `quality`
+`identifier`, `description`, `sequence`, `quality`
 FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
 
-See also: [`FASTQ.Reader`](@ref), [FASTQ.Writer](@ref)
+See also: [`FASTQ.Reader`](@ref), [`FASTQ.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = parse(Record, "@ill r1\nGGC\n+\njjk");
+julia> rec = parse(Record, "@ill r1\\nGGC\\n+\\njjk");
 
 julia> identifier(rec)
 "ill"
@@ -59,15 +59,15 @@ i.e. the line with `+`.
 
 # Examples
 ```
-julia> record = parse(FASTQ.Record, "@A B\nT\n+\nJ");
+julia> record = parse(FASTQ.Record, "@A B\\nT\\n+\\nJ");
 
 julia> string(record)
-"@A B\nT\n+\nJ"
+"@A B\\nT\\n+\\nJ"
 
 julia> quality_header!(record, true);
 
 julia> string(record)
-"@A B\nT\n+A B\nJ"
+"@A B\\nT\\n+A B\\nJ"
 ```
 """
 function quality_header!(record::Record, x::Bool)
@@ -218,7 +218,7 @@ If not passed, `part` defaults to the entire quality string.
 
 # Examples
 ```jldoctest
-julia> rec = parse(FASTQ.Record, "@hdr\nUAGUCU\n+\nCCDFFG");
+julia> rec = parse(FASTQ.Record, "@hdr\\nUAGUCU\\n+\\nCCDFFG");
 
 julia> quality(rec)
 "CCDFFG"

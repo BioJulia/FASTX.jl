@@ -21,7 +21,7 @@ See also: [`FASTQ.Record`](@ref), [`FASTQ.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rdr = Reader(IOBuffer("@readname\nGGCC\n+\njk;]"));
+julia> rdr = Reader(IOBuffer("@readname\\nGGCC\\n+\\njk;]"));
 
 julia> record = first(Reader); close(reader);
 

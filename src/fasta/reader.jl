@@ -25,7 +25,7 @@ See also: [`FASTA.Record`](@ref), [`FASTA.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rdr = Reader(IOBuffer(">header\nTAG\n>another\nAGA"));
+julia> rdr = Reader(IOBuffer(">header\\nTAG\\n>another\\nAGA"));
 
 julia> records = collect(Reader); close(reader);
 

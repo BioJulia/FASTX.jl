@@ -6,7 +6,7 @@ end
 ```
 
 # FASTQ formatted files
-__NB: First read the documentation for FASTX__
+__NB: First read the overview in the sidebar__
 
 FASTQ is a text-based file format for representing DNA sequences along with qualities for each base.
 A FASTQ file stores a list of sequence records in the following format:
@@ -98,7 +98,8 @@ julia> collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING))
 Alternatively, `quality_scores` accept a name of the known quality encodings:
 
 ```jldoctest qual
-julia> collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING)) == collect(quality_scores(record, :illumina13))
+julia> (collect(quality_scores(record, FASTQ.ILLUMINA13_QUAL_ENCODING)) ==
+        collect(quality_scores(record, :illumina13)))
 true
 ```
 

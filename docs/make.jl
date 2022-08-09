@@ -5,7 +5,11 @@ makedocs(
     sitename = "FASTX.jl",
     doctest = true,
     pages = [
-        "FASTX" => "index.md",
+        "Overview" => Any[
+            "Overview" => "index.md",
+            "Records" => "records.md",
+            "File I/O" => "files.md",
+        ],
         "FASTA" => "fasta.md",
         "FASTQ" => "fastq.md",
         "FAI" => "fai.md"

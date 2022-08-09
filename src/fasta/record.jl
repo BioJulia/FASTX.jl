@@ -6,15 +6,15 @@
 
 Mutable struct representing a FASTA record as parsed from a FASTA file.
 The content of the record can be queried with the following functions:
-`identifier`, `description`, `seqlen`, `sequence`.
+`identifier`, `description`, `sequence`.
 
 FASTA records are un-typed, i.e. they are agnostic to what kind of data they contain.
 
-See also: [`FASTA.Reader`](@ref), [FASTA.Writer](@ref)
+See also: [`FASTA.Reader`](@ref), [`FASTA.Writer`](@ref)
 
 # Examples
 ```jldoctest
-julia> rec = parse(Record, ">some header\nTAqA\nCC");
+julia> rec = parse(Record, ">some header\\nTAqA\\nCC");
 
 julia> identifier(rec)
 "some"
@@ -25,7 +25,7 @@ julia> description(rec)
 julia> sequence(rec)
 "TAqACC"
 
-julia> typeof(description(rec)) == typeof(sequence(rec)) == StringView
+julia> typeof(description(rec)) == typeof(sequence(rec)) isa AbstractString
 true
 ```
 """

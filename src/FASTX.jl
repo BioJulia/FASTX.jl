@@ -15,13 +15,15 @@ See also: [`description`](@ref), [`sequence`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = parse(FASTA.Record, ">ident_here some descr \nTAGA");
+julia> record = parse(FASTA.Record, ">ident_here some descr \\nTAGA");
 
 julia> identifier(record)
 "ident_here"
 ```
 """
 function identifier end
+
+foo() = 1
 
 """
     description(record::Record)::AbstractString
@@ -35,10 +37,10 @@ See also: [`identifier`](@ref), [`sequence`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = parse(FASTA.Record, ">ident_here some descr \nTAGA");
+julia> record = parse(FASTA.Record, ">ident_here some descr \\nTAGA");
 
 julia> description(record)
-"some descr "
+"ident here some descr "
 ```
 """
 function description end
@@ -49,14 +51,14 @@ function description end
 Get the sequence of `record`.
 
 `S` can be either a subtype of `BioSequences.BioSequence`, `AbstractString` or `String`.
-If elided, `S` defaults to an `AbstractString`.
+If elided, `S` defaults to an `AbstractString` subtype.
 If `part` argument is given, it returns the specified part of the sequence.
 
 See also: [`identifier`](@ref), [`description`](@ref)
 
 # Examples
 ```jldoctest
-julia> record = parse(FASTQ.Record, "@read1\nTAGA\n+\n;;]]");
+julia> record = parse(FASTQ.Record, "@read1\\nTAGA\\n+\\n;;]]");
 
 julia> sequence(record)
 "TAGA"
