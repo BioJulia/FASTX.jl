@@ -168,7 +168,7 @@ using Test
     end
 
     @testset "Convert FASTQ to FASTA" begin
-        for func in (FASTA.Record, FASTA.Record!)
+        for func in (FASTA.Record, i -> copy!(FASTA.Record(), i))
             rec = func(parse(FASTQ.Record, "@ta_g^ ha||;; \nTAGJKKm\n+\njjkkmmo"))
             @test description(rec) == "ta_g^ ha||;; "
             @test identifier(rec) == "ta_g^"

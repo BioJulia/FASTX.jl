@@ -1,6 +1,4 @@
 machine = let
-    isinteractive() && @info "Compiling FASTQ FSM..." 
-
     re = Automa.RegExp
     
     hspace = re"[ \t\v]"
@@ -47,17 +45,6 @@ machine = let
     fastq = re.opt(record) * re.rep(newline * record) * re.opt(newline)
     
     Automa.compile(fastq)
-end
-
-#write("fastq.dot", Automa.machine2dot(machine))
-#run(`dot -Tsvg -o fastq.svg fastq.dot`)
-
-function appendfrom!(dst, dpos, src, spos, n)
-    if length(dst) < dpos + n - 1
-        resize!(dst, dpos + n - 1)
-    end
-    copyto!(dst, dpos, src, spos, n)
-    return dst
 end
 
 actions = Dict(
@@ -134,16 +121,12 @@ end
 
 returncode = :(return cs, linenum, found)
 
-context = Automa.CodeGenContext(generator=:goto)
-
-isinteractive() && @info "Generating FASTQ parsing code..."
-
 Automa.Stream.generate_reader(
     :readrecord!,
     machine,
     arguments = (:(record::Record), :(state::Tuple{Int,Int})),
     actions = actions,
-    context = context,
+    context = CONTEXT,
     initcode = initcode,
     loopcode = loopcode,
     returncode = returncode
@@ -196,7 +179,7 @@ Automa.Stream.generate_reader(
     machine,
     arguments = (),
     actions= validator_actions,
-    context = context,
+    context = CONTEXT,
     initcode = initcode,
     loopcode = :(cs < 0 && return linenum),
     returncode = :(iszero(cs) ? nothing : linenum)

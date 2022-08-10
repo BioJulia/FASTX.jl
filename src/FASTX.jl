@@ -2,6 +2,7 @@ module FASTX
 
 using StringViews: StringView
 using BioSequences: BioSequence, LongSequence
+using Automa: Automa
 
 """
     identifier(record::Record)::AbstractString
@@ -75,12 +76,14 @@ const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
 @noinline function throw_parser_error(data::Vector{UInt8}, p::Integer, line::Integer)
     byte = data[p]
-    lastnewline = findprev(isequal(UInt8('\n')), data, p)
+    # These bytes are printable in the Julia REPL as single chars e.g. "\t"
     bytestr = if byte in 0x07:0x13 || byte == 0x1b || byte in 0x20:0x7e
-        ''' * Char(byte) * "'"
+        ''' * Char(byte) * '''
     else
         repr(byte)
     end
+    # These chars do not need escaping, e.g. '!', but not '\t'.
+    bytestr = in(byte, 0x20:0x7e) ? bytestr : escape_string(bytestr)
     buf = IOBuffer()
     print(
         buf,
@@ -89,6 +92,9 @@ const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
         " on line ",
         string(line)
     )
+    # Compute column if possible, by looking at last '\n'.
+    # it may not be possible because it may be past the data buffer `data`.
+    lastnewline = findprev(isequal(UInt8('\n')), data, p)
     if lastnewline !== nothing
         col = p - lastnewline
         print(buf, " col ", string(col))
@@ -96,9 +102,10 @@ const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
     error(String(take!(buf)))
 end
 
+# Truncate to at most `len` chars.
 function truncate(s::AbstractString, len::Integer)
     if length(s) > len
-        return string(String(collect(Iterators.take(s, len - 1))), '…')
+        String(first(s, len-1) * '…')
     else
         return s
     end
@@ -107,6 +114,19 @@ end
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
     return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
 end
+
+function appendfrom!(dst::Vector{UInt8}, dpos::Integer, src::Vector{UInt8}, spos::Integer, n::Integer)
+    if length(dst) < dpos + n - 1
+        resize!(dst, dpos + n - 1)
+    end
+    copyto!(dst, dpos, src, spos, n)
+    return dst
+end
+
+CONTEXT = Automa.CodeGenContext(
+    generator=:goto,
+    vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte)
+)
 
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
@@ -126,21 +146,27 @@ import .FASTA: FASTA, validate_fasta, Index, faidx, extract, validate_fasta, see
 import .FASTQ: FASTQ, quality, quality_scores, quality_header!, QualityEncoding, validate_fastq
 
 function FASTA.Record(record::FASTQ.Record)
-    ilen = record.identifier_len
-    dlen = record.description_len
     slen = seqlen(record)
-    tlen = UInt(dlen + slen)
-    FASTA.Record(record.data[1:tlen], ilen, dlen, slen)
+    dlen = record.description_len
+    FASTA.Record(record.data[1:slen+dlen], record.identifier_len, dlen, slen)
 end
 
 """
-    FASTA.Record!(::FASTQ.Record)
+    copy!(::FASTA.Record, ::FASTQ.Record)
 
-Convert the `FASTQ.Record` to a `FASTA.Record`, taking control of the underlying
-data. The FASTQ record cannot be used after this operation.
+Copy the content of the FASTQ record into the FASTA record.
 """
-function FASTA.Record!(record::FASTQ.Record)
-    FASTA.Record(record.data, record.identifier_len, record.description_len, seqlen(record))
+function Base.copy!(dst::FASTA.Record, src::FASTQ.Record)
+    dlen = src.description_len
+    slen = seqlen(src)
+    tlen = UInt(dlen + slen)
+    dstdata = dst.data
+    length(dstdata) < tlen && resize!(dstdata, tlen)
+    copyto!(dstdata, 1, src.data, 1, tlen)
+    dst.identifier_len = src.identifier_len
+    dst.description_len = dlen
+    dst.sequence_len = slen
+    dst
 end
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: Record} = parse(T, String(s))

@@ -56,8 +56,3 @@ UGCCCA
 julia> sequence(String, record)
 "UGCCCA"
 ```
-
-### Reference:
-```@docs
-FASTA.Record!
-```

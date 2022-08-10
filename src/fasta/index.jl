@@ -308,7 +308,7 @@ Automa.Stream.generate_reader(
     machine,
     arguments = (),
     actions = index_fasta_actions,
-    context = context,
+    context = CONTEXT,
     initcode = initcode,
     returncode = returncode
 ) |> eval

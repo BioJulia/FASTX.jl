@@ -10,8 +10,6 @@
 #   This implies all whitespace except newlines, including trailing whitespace, is part
 #   of the sequence.
 machine = let
-    isinteractive() && @info "Compiling FASTA FSM..." 
-
     re = Automa.RegExp
     
     hspace = re"[ \t\v]"
@@ -65,9 +63,6 @@ machine = let
     Automa.compile(fasta)
 end
 
-#write("fasta.dot", Automa.machine2dot(machine))
-#run(`dot -Tsvg -o fasta.svg fasta.dot`)
-
 actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
@@ -94,14 +89,6 @@ actions = Dict(
     end
 )
 
-function appendfrom!(dst, dpos, src, spos, n)
-    if length(dst) < dpos + n - 1
-        resize!(dst, dpos + n - 1)
-    end
-    copyto!(dst, dpos, src, spos, n)
-    return dst
-end
-
 initcode = quote
     pos = 0
     filled = 0
@@ -119,19 +106,12 @@ end
 
 returncode = :(return cs, linenum, found)
 
-context = Automa.CodeGenContext(
-    generator=:goto,
-    vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte)
-)
-
-isinteractive() && @info "Generating FASTA parsing code..."
-
 Automa.Stream.generate_reader(
     :readrecord!,
     machine,
     arguments = (:(record::Record), :(state::Tuple{Int,Int})),
     actions = actions,
-    context = context,
+    context = CONTEXT,
     initcode = initcode,
     loopcode = loopcode,
     returncode = returncode
@@ -145,7 +125,7 @@ Automa.Stream.generate_reader(
     machine,
     arguments = (),
     actions= validator_actions,
-    context = context,
+    context = CONTEXT,
     initcode = :(linenum = 1),
     loopcode = :(cs < 0 && return linenum),
     returncode = :(iszero(cs) ? nothing : linenum)
