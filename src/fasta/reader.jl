@@ -38,18 +38,25 @@ TAG
 AGA
 ```
 """
-struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    state::State{S}
+mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    stream::S
+    automa_state::Int
+    # set to -1 if reader uses seek, then the linenum is
+    # irreversibly lost.
+    encoded_linenum::Int
     index::Union{Index, Nothing}
     record::Record
     copy::Bool
+
+    function Reader{T}(io::T, index::Union{Index, Nothing}, copy::Bool) where {T <: TranscodingStream}
+        record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
+        new{T}(io, 1, 1, index, record, copy)
+    end
 end
 
 function Reader(io::TranscodingStream; index::Union{Index, Nothing, IO, AbstractString}=nothing, copy::Bool=true)
     idx = index isa Union{Index, Nothing} ? index : Index(index)
-    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-    state = State(io, 1, 1, false)
-    Reader(state, idx, record, copy)
+    Reader{typeof(io)}(io, idx, copy)
 end
 
 Reader(io::IO; kwargs...) = Reader(NoopStream(io); kwargs...)
@@ -79,11 +86,11 @@ function Base.read!(rdr::Reader, rec::Record)
 end
 
 function _read!(rdr::Reader, rec::Record)
-    cs, ln, f = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum))
-    rdr.state.state = cs
-    rdr.state.linenum = ln
-    rdr.state.filled = f
-    return (cs, f)
+    enc_linenum = rdr.encoded_linenum
+    cs, ln, found = readrecord!(rdr.stream, rec, (rdr.automa_state, enc_linenum))
+    rdr.automa_state = cs
+    enc_linenum > -1 && (rdr.encoded_linenum = ln)
+    return (cs, found)
 end
 
 function Base.eltype(::Type{<:Reader})
@@ -91,20 +98,15 @@ function Base.eltype(::Type{<:Reader})
 end
 
 function BioGenerics.IO.stream(reader::Reader)
-    return reader.state.stream
+    return reader.stream
 end
 
-function Base.close(reader::Reader)
-    if reader.state.stream isa IO
-        close(reader.state.stream)
-    end
-    return nothing
-end
+Base.close(reader::Reader) = close(reader.stream)
 
 function Base.getindex(reader::Reader, name::AbstractString)
     seekrecord(reader, name)
     record = Record()
-    cs, _, found = readrecord!(NoopStream(reader.state.stream), record, (1, 1))
+    cs, _, found = readrecord!(NoopStream(reader.stream), record, (1, 1))
     @assert cs ≥ 0 && found
     return record
 end
@@ -127,12 +129,11 @@ function seekrecord(reader::Reader, name::AbstractString)
     seekrecord(reader, index.names[name])
 end
 
-# TODO: `linenum` in reader.state is messed up by this operation
-# It is not easily recovered.
 function seekrecord(reader::Reader, i::Integer)
-    seekrecord(reader.state.stream, reader.index, i)
-    reader.state.state = machine.start_state
-    reader.state.filled = false
+    seekrecord(reader.stream, reader.index, i)
+    reader.automa_state = machine.start_state
+    # Make linenum unrecoverably lost
+    reader.encoded_linenum = -1
     nothing
 end
 
@@ -178,8 +179,8 @@ function extract(
     until_first_newline = linebases - start_lineoff_z
     buffer = Vector{UInt8}(undef, stop_offset - start_offset)
     start_file_offset = index.offsets[index_of_name] + start_offset
-    seek(reader.state.stream, start_file_offset)
-    read!(reader.state.stream, buffer)
+    seek(reader.stream, start_file_offset)
+    read!(reader.stream, buffer)
 
     # Now remove newlines in buffer by shifting the non-newline content
     remaining = total_bases - until_first_newline

@@ -10,7 +10,6 @@ import Automa.RegExp: @re_str
 import Automa.Stream: @mark, @markpos, @relpos, @abspos
 import BioSequences: BioSequences, BioSequence
 import BioGenerics: BioGenerics
-import BioGenerics.Automa: State
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
 import ..FASTX: identifier, description, sequence, UTF8, seqlen, throw_parser_error, truncate, memcmp, appendfrom!, CONTEXT

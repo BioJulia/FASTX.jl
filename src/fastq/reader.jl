@@ -35,17 +35,20 @@ julia> show(collect(quality_scores(record))) # phred 33 encoding by default
 Int8[73, 74, 26, 60]
 ```
 """
-struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    state::State{S}
+mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
+    stream::S
+    automa_state::Int
+    linenum::Int
     record::Record
     copy::Bool
+
+    function Reader{T}(io::T, copy::Bool) where {T <: TranscodingStream}
+        record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
+        new{T}(io, 1, 1, record, copy)
+    end
 end
 
-function Reader(io::TranscodingStream; copy::Bool=true)
-    record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-    Reader(State(io, 1, 1, false), record, copy)
-end
-
+Reader(io::TranscodingStream; copy::Bool=true) = Reader{typeof(io)}(io, copy)
 Reader(io::IO; kwargs...) = Reader(NoopStream(io); kwargs...)
 
 function Base.iterate(rdr::Reader, state=nothing)
@@ -73,24 +76,16 @@ function Base.read!(rdr::Reader, rec::Record)
 end
 
 function _read!(rdr::Reader, rec::Record)
-    (cs, ln, f) = readrecord!(rdr.state.stream, rec, (rdr.state.state, rdr.state.linenum))
-    rdr.state.state = cs
-    rdr.state.linenum = ln
-    rdr.state.filled = f
-    return (cs, f)
+    (cs, ln, found) = readrecord!(rdr.stream, rec, (rdr.automa_state, rdr.linenum))
+    rdr.automa_state = cs
+    rdr.linenum = ln
+    return (cs, found)
 end
 
 function Base.eltype(::Type{<:Reader})
     return Record
 end
 
-function BioGenerics.IO.stream(reader::Reader)
-    return reader.state.stream
-end
+BioGenerics.IO.stream(reader::Reader) = reader.stream
+Base.close(reader::Reader) = close(reader.stream)
 
-function Base.close(reader::Reader)
-    if reader.state.stream isa IO
-        close(reader.state.stream)
-    end
-    return nothing
-end

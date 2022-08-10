@@ -12,7 +12,6 @@ import Automa
 import Automa.RegExp: @re_str
 import Automa.Stream: @mark, @markpos, @relpos, @abspos
 import BioGenerics: BioGenerics
-import BioGenerics.Automa: State
 import BioSequences
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
