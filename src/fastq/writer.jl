@@ -26,9 +26,15 @@ julia> FASTQ.Writer(open("some_file.fq", "w")) do writer
 end
 ```
 """
-struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
+mutable struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S
     quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read
+
+    function Writer{S}(output::S, quality_header::UInt8) where {S <: TranscodingStream}
+        finalizer(new{S}(output, quality_header)) do writer
+            close(writer.output)
+        end
+    end
 end
 
 function Writer(io::T; quality_header::Union{Nothing, Bool}=nothing) where {T <: TranscodingStream}

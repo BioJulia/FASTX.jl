@@ -25,10 +25,16 @@ julia> FASTA.Writer(open("some_file.fna", "w")) do writer
 end
 ```
 """
-struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
+mutable struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
     output::S
     # maximum sequence width (no limit when width ≤ 0)
     width::Int
+
+    function Writer{S}(output::S, width::Int) where {S <: TranscodingStream}
+        finalizer(new{S}(output, width)) do writer
+            close(writer.output)
+        end
+    end
 end
 
 function BioGenerics.IO.stream(writer::Writer)
