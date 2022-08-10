@@ -32,7 +32,7 @@ mutable struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
 
     function Writer{S}(output::S, quality_header::UInt8) where {S <: TranscodingStream}
         finalizer(new{S}(output, quality_header)) do writer
-            close(writer.output)
+            @async close(writer.output)
         end
     end
 end
