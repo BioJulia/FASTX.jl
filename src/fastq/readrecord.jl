@@ -168,8 +168,9 @@ validator_actions = Dict(
     # Verify the second description is identical to the first,
     :header2_description => quote
         let n = @relpos(p-1)
-            if n != description_len || !iszero(memcmp(pointer(headerbuffer), pointer(data, p-n), n%UInt))
-                return linenum
+            n == description_len || return linenum
+            GC.@preserve headerbuffer begin
+                iszero(memcmp(pointer(headerbuffer), pointer(data, p-n), n%UInt)) || return linenum
             end
         end
     end,
