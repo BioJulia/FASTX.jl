@@ -104,6 +104,10 @@ function truncate(s::AbstractString, len::Integer)
     end
 end
 
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
+    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
+end
+
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
 

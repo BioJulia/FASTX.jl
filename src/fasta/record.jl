@@ -148,10 +148,6 @@ function Base.show(io::IO, record::Record)
     print(io,   "   sequence: \"", truncate(sequence(record), 40), '"')
 end
 
-function memcmp(p1::Ptr, p2::Ptr, n::Integer)
-    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
-end
-
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
     # The description length is informative of the record's content
