@@ -75,7 +75,10 @@ function Base.write(writer::Writer, record::Record)
         n += write(output, "\n+")
         # Write description in second header if either the writer is set to do that,
         # or writer is set to look at record, and record has second header
-        if writer.quality_header == 0x01 || (writer.quality_header == 0x02 && has_extra_description(record))
+        if (
+            writer.quality_header == 0x01 ||
+            (writer.quality_header == 0x02 && has_extra_description(record))
+        )
             n += unsafe_write(output, pointer(data), desclen)
         end
 

@@ -73,7 +73,7 @@ function Base.write(writer::Writer, record::Record)
             while p ≤ p_end
                 w = min(width, p_end - p + 1)
                 n += unsafe_write(output, p, w)
-                n += write(output, '\n')
+                n += write(output, UInt8('\n'))
                 p += w
             end
         end
