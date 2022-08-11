@@ -41,7 +41,7 @@ AGA
 mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
     stream::S
     automa_state::Int
-    # set to -1 if reader uses seek, then the linenum is
+    # set to typemin(Int) if reader uses seek, then the linenum is
     # irreversibly lost.
     encoded_linenum::Int
     index::Union{Index, Nothing}
@@ -89,7 +89,9 @@ function _read!(rdr::Reader, rec::Record)
     enc_linenum = rdr.encoded_linenum
     cs, ln, found = readrecord!(rdr.stream, rec, (rdr.automa_state, enc_linenum))
     rdr.automa_state = cs
-    enc_linenum > -1 && (rdr.encoded_linenum = ln)
+    # If enc_linenum is < 0, then it was unknown when entering readrecord!,
+    # and so ln is meaningless.
+    enc_linenum > 0 && (rdr.encoded_linenum = ln)
     return (cs, found)
 end
 
@@ -133,7 +135,7 @@ function seekrecord(reader::Reader, i::Integer)
     seekrecord(reader.stream, reader.index, i)
     reader.automa_state = machine.start_state
     # Make linenum unrecoverably lost
-    reader.encoded_linenum = -1
+    reader.encoded_linenum = typemin(Int)
     nothing
 end
 

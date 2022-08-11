@@ -147,9 +147,9 @@ BADFNA_UNPARSEABLE = "dfklgjs\r\r\r\r\n\n\n\n"
         BADFNA_INCONSISTENT_SEQWIDTH_1,
         BADFNA_INCONSISTENT_SEQWIDTH_2
     ]
-        @test_throws ErrorException faidx(IOBuffer(bad_case))
+        @test_throws Exception faidx(IOBuffer(bad_case))
     end
-    @test_throws ArgumentError faidx(IOBuffer(BADFNA_UNPARSEABLE))
+    @test_throws Exception faidx(IOBuffer(BADFNA_UNPARSEABLE))
 end
 
 @testset "Reader with index" begin

@@ -99,7 +99,7 @@ end
 
 loopcode = quote
     if cs < 0
-        throw_parser_error(data, p, linenum)
+        throw_parser_error(data, p, linenum < 0 ? nothing : linenum)
     end
     found && @goto __return__
 end

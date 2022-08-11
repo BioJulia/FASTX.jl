@@ -298,7 +298,7 @@ end
 
 returncode = quote
     if cs < 0
-        throw(ArgumentError("malformed FASTA file at line $(linenum)"))
+        throw_parser_error(data, p, linenum)
     end
     return Index(names, lengths, offsets, encoded_linebases)
 end
@@ -368,6 +368,7 @@ function faidx(fnapath::AbstractString, faidxpath::AbstractString; check::Bool=t
     check && ispath(faidxpath) && error("Output path $faidxpath already exsists")
     index = open(faidx, fnapath)
     open(i -> write(i, index), faidxpath, "w")
+    index
 end
 
 faidx(path::AbstractString; check::Bool=true) = faidx(path, path * ".fai"; check=check)

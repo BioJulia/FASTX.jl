@@ -74,7 +74,12 @@ function seqlen end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
-@noinline function throw_parser_error(data::Vector{UInt8}, p::Integer, line::Integer)
+# line is nothing if the reader does not have line information after random IO access.
+@noinline function throw_parser_error(
+    data::Vector{UInt8},
+    p::Integer,
+    line::Union{Integer, Nothing}
+)
     byte = data[p]
     # These bytes are printable in the Julia REPL as single chars e.g. "\t"
     bytestr = if byte in 0x07:0x13 || byte == 0x1b || byte in 0x20:0x7e
@@ -88,16 +93,18 @@ const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
     print(
         buf,
         "Error when parsing FASTX file. Saw unexpected byte ",
-        bytestr,
-        " on line ",
-        string(line)
+        bytestr
     )
-    # Compute column if possible, by looking at last '\n'.
-    # it may not be possible because it may be past the data buffer `data`.
-    lastnewline = findprev(isequal(UInt8('\n')), data, p)
-    if lastnewline !== nothing
-        col = p - lastnewline
-        print(buf, " col ", string(col))
+    if line !== nothing
+        print(buf, " on line ", string(line))
+
+        # Compute column if possible, by looking at last '\n'.
+        # it may not be possible because it may be past the data buffer `data`.
+        lastnewline = findprev(isequal(UInt8('\n')), data, p)
+        if lastnewline !== nothing
+            col = p - lastnewline
+            print(buf, " col ", string(col))
+        end
     end
     error(String(take!(buf)))
 end
