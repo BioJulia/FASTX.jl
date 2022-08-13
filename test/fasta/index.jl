@@ -99,7 +99,7 @@ function make_random_indexable_fasta()
     linelengths = Int[]
     lengths = Int[]
 
-    for i in 1:25
+    for i in 1:15
         newline = rand(("\n", "\r\n"))
         push!(newlines, newline)
         len = rand(100:1000)
@@ -163,8 +163,10 @@ end
     name = tempname()
     open(i -> write(i, idx), name, "w")
     reader3 = Reader(IOBuffer(buffer), index=name)
+    reader4 = index!(Reader(IOBuffer(buffer)), name)
+    reader5 = index!(Reader(IOBuffer(buffer)), idx)
 
-    for reader in [reader1, reader2, reader3]
+    for reader in [reader1, reader2, reader3, reader4, reader5]
         # Test getindex
         inames = shuffle!(collect(enumerate(names)))
 

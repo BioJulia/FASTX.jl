@@ -55,11 +55,25 @@ mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
 end
 
 function Reader(io::TranscodingStream; index::Union{Index, Nothing, IO, AbstractString}=nothing, copy::Bool=true)
-    idx = index isa Union{Index, Nothing} ? index : Index(index)
-    Reader{typeof(io)}(io, idx, copy)
+    index!(Reader{typeof(io)}(io, nothing, copy), index)
 end
 
 Reader(io::IO; kwargs...) = Reader(NoopStream(io); kwargs...)
+
+"""
+    index!(r::FASTA.Reader, ind::Union{Nothing, Index, IO, AbstractString})
+
+Set the index of `r`, and return `r`.
+If `ind` isa `Union{Nothing, Index}`, directly set the index to `ind`.
+If `ind` isa `IO`, parse the index from the FAI-formatted IO first.
+If `ind` isa `AbstractString`, treat it as the path to a FAI file to parse.
+
+See also: [`Index`](@ref), [`FASTA.Reader`](@ref)
+"""
+function index! end
+
+index!(reader::Reader, index::Union{Index, Nothing}) = (reader.index = index; reader)
+index!(reader::Reader, index::Union{IO, AbstractString}) = (reader.index = Index(index); reader)
 
 function Base.iterate(rdr::Reader, state=nothing)
     (cs, f) = _read!(rdr, rdr.record)

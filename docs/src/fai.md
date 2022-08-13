@@ -74,6 +74,12 @@ julia> idx = faidx(IOBuffer(str));
 julia> rdr = FASTAReader(IOBuffer(str), index=idx);
 ```
 
+You can also add a index to an existing reader using the `index!` function:
+
+```@docs
+index!
+```
+
 ### Seeking using an `Index`
 With an `Index` attached to a `Reader`, you can do the following operation in O(1) time.
 In these examples, we will use the following FASTA file:
