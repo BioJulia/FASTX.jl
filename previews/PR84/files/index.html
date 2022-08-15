@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>File I/O · FASTX.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="FASTX.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">FASTX.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><span class="tocitem">Overview</span><ul><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../records/">Records</a></li><li class="is-active"><a class="tocitem" href>File I/O</a></li></ul></li><li><a class="tocitem" href="../fasta/">FASTA</a></li><li><a class="tocitem" href="../fastq/">FASTQ</a></li><li><a class="tocitem" href="../fai/">FAI</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Overview</a></li><li class="is-active"><a href>File I/O</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>File I/O</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/BioJulia/FASTX.jl/blob/master/docs/src/files.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="FASTX-formatted-files"><a class="docs-heading-anchor" href="#FASTX-formatted-files">FASTX formatted files</a><a id="FASTX-formatted-files-1"></a><a class="docs-heading-anchor-permalink" href="#FASTX-formatted-files" title="Permalink"></a></h1><h3 id="Validate-files"><a class="docs-heading-anchor" href="#Validate-files">Validate files</a><a id="Validate-files-1"></a><a class="docs-heading-anchor-permalink" href="#Validate-files" title="Permalink"></a></h3><p>The functions <code>validate_fasta</code> and <code>validate_fastq</code> can be used to check if an <code>IO</code> contains data that can be read as FASTX. They return <code>nothing</code> if the IO is correctly formatted, and another value if not.</p><p>They are significantly faster than parsing the whole file into records, and are memory efficient. Be aware that the validators mutate the IO by reading it, so make sure to reset the IO before using it to parse FASTX files.</p><pre><code class="language-julia-repl hljs">julia&gt; io = IOBuffer(&quot;&gt;header\r\nAGG\nKK&quot;);
+
+julia&gt; validate_fasta(io) === nothing
+true
+
+julia&gt; read(io) # NB: IO is now exhausted
+UInt8[]
+
+julia&gt; validate_fastq(IOBuffer(&quot;@header\nTTT\n+\njkm&quot;)) === nothing
+true</code></pre><h3 id="Readers-and-writers"><a class="docs-heading-anchor" href="#Readers-and-writers">Readers and writers</a><a id="Readers-and-writers-1"></a><a class="docs-heading-anchor-permalink" href="#Readers-and-writers" title="Permalink"></a></h3><p>A <code>Reader</code> and a <code>Writer</code> are structs that wrap an IO, and allows efficient reading/writing of FASTX <code>Record</code>s. For FASTA, use <code>FASTA.Reader</code> and <code>FASTA.Writer</code>, and for FASTQ - well I&#39;m sure you&#39;ve guessed it.</p><p>Readers and writers take control over the underlying IO, and manipulating the IO underneath a Reader/Writer, e.g. by flushing or closing it, cause them to behave in an undefined manner.</p><p>Closing readers/writers closes the underlying IO. Because they carry their own buffers, it&#39;s important to remember to close writers in particular, else the results may not be fully written to the file.</p><p>Readers are iterables of <code>Record</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; reader = FASTAReader(IOBuffer(&quot;&gt;A\nTAG\n&gt;B\nAGA&quot;));
+
+julia&gt; record = first(reader); typeof(record) == FASTA.Record
+true
+
+julia&gt; sequence(record)
+&quot;TAG&quot;
+
+julia&gt; # NB! Readers are mutable iterators as can be seen here:
+
+julia&gt; sequence(first(reader))
+&quot;AGA&quot;
+
+julia&gt; iterate(reader) === nothing # now empty
+true
+
+julia&gt; close(reader)</code></pre><p>They are normally more than fast enough as they are. To squeeze extra performance out, you can pass the keyword <code>copy=false</code>. This will cause the reader to return the <em>same</em> record over and over, and mutate it into place.</p><pre><code class="language-julia-repl hljs">julia&gt; reader = FASTAReader(IOBuffer(&quot;&gt;A\nTAG\n&gt;B\nAGA&quot;); copy=false);
+
+julia&gt; rec1 = first(reader); sequence(rec1)
+&quot;TAG&quot;
+
+julia&gt; rec2 = first(reader); sequence(rec2)
+&quot;AGA&quot;
+
+julia&gt; rec1 === rec2
+true
+
+julia&gt; sequence(rec1)
+&quot;AGA&quot;
+
+julia&gt; close(reader)</code></pre><p>When using readers and writers, be careful that they carry their own buffer, meaning that the underlying IO may not be updated immediately after reading/writing:</p><pre><code class="language-julia-repl hljs">julia&gt; io = IOBuffer();
+
+julia&gt; writer = FASTAWriter(io);
+
+julia&gt; write(writer, parse(FASTARecord, &quot;&gt;ABC\nDEF&quot;));
+
+julia&gt; take!(io) # NB: Empty!
+UInt8[]</code></pre><p>To use it correctly, either call <code>flush</code>, or close the writer first (which also closes the underlying stream). It is recommended to use readers and writers to <code>do</code> syntax in the form:</p><pre><code class="language-julia hljs">Writer(open(my_file)) do writer
+    for record in my_records
+        write(writer, record)
+    end
+end</code></pre><p>Which will work for must underlying IO types.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../records/">« Records</a><a class="docs-footer-nextpage" href="../fasta/">FASTA »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Monday 15 August 2022 15:27">Monday 15 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
