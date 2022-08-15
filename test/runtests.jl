@@ -5,5 +5,5 @@ using FASTX
 FASTX.retest() 
 =#
 
-include("TestFASTX.jl")
-retest(TestFASTX)
+include("FASTXTests.jl")
+retest(FASTXTests)
