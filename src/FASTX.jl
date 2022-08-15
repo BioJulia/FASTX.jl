@@ -4,6 +4,13 @@ using StringViews: StringView
 using BioSequences: BioSequence, LongSequence
 using Automa: Automa
 
+# using ReTest
+#
+# @testset "Inline test placeholder" begin
+#     @test false
+# end
+
+
 """
     identifier(record::Record)::AbstractString
 

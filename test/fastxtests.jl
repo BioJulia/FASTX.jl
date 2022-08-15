@@ -1,6 +1,7 @@
 # Common tests
 @testset "FASTX" begin
     @testset "Copying to LongSequence" begin
+        @test true
         strings = [
             "ATCGTAGTAC",         # DNA 2
             "AACGMYKATNwhdvAC",   # DNA 4

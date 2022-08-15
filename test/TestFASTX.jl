@@ -1,5 +1,8 @@
 module TestFASTX
 
+export TestFASTA
+export TestFASTQ
+
 using ReTest
 using FASTX: FASTA, FASTQ, identifier, description, sequence, quality
 using BioSequences: LongDNA, LongAA, LongRNA
