@@ -9,17 +9,12 @@ using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_for
 using StringViews: StringView
 using TranscodingStreams: NoopStream
 
-@testset "Record" begin
-    include("fasta/record.jl")
-end
-@testset "IO" begin
-    include("fasta/io.jl")
-end
-@testset "Index" begin
-    include("fasta/index.jl")
-end
-@testset "Specimens" begin
-    include("fasta/specimens.jl")
-end
+const VALID_INDEX_CHARS = append!(vcat('0':'9', 'A':'Z', 'a':'z'), collect("!#\$%&+./:;?@^_|~-"))
+const VALID_SEQ_BYTES = [i for i in 0x00:0xff if i ∉ UInt8.(Tuple(">\r\n"))]
+
+include("record.jl")
+include("io.jl")
+include("index.jl")
+include("specimens.jl")
 
 end # module TestFASTA

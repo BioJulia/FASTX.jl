@@ -7,7 +7,3 @@ FASTX.retest()
 
 include("TestFASTX.jl")
 retest(TestFASTX)
-include("TestFASTA.jl")
-retest(TestFASTA)
-include("TestFASTQ.jl")
-retest(TestFASTQ)

@@ -1,3 +1,5 @@
+@testset "Index" begin
+    
 INDEX_GOOD = "abc\t100\t5\t15\t16\r\n^def?@l~2:/\t17\t200\t14\t16\nABC\t12\t55\t8\t10"
 
 INDEX_NAME_SPACE = "abc def\t100\t5\t15\t16"
@@ -47,9 +49,6 @@ end
         @test_throws ErrorException Index(IOBuffer(bad_index))
     end
 end
-
-const VALID_INDEX_CHARS = append!(vcat('0':'9', 'A':'Z', 'a':'z'), collect("!#\$%&+./:;?@^_|~-"))
-const VALID_SEQ_BYTES = [i for i in 0x00:0xff if i ∉ UInt8.(Tuple(">\r\n"))]
 
 random_name() = join(rand(VALID_INDEX_CHARS, rand(10:25)))
 random_seqline(len::Integer) = String(rand(VALID_SEQ_BYTES, len))
@@ -253,3 +252,5 @@ UUGC
 
     @test extract(reader, "seq1", 3:5) == "GAA"
 end
+
+end # testset Index

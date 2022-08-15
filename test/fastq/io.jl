@@ -1,3 +1,5 @@
+@testset "IO" begin
+
 @testset "Reader basics" begin
     # Empty reader
     reader = Reader(IOBuffer(""))
@@ -164,3 +166,5 @@ end
     str2 = iowrite(records2)
     @test str == str2
 end
+
+end # testset IO

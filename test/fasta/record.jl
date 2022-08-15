@@ -1,3 +1,5 @@
+@testset "Record" begin
+
 # Only using empty records here
 @testset "Basic properties" begin
     # Equality
@@ -179,3 +181,5 @@ end
     @test !isequal(records[3], records[2])
     @test length(unique(records)) == length(records) - 1
 end
+
+end # testset Record
