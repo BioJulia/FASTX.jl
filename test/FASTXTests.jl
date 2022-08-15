@@ -1,4 +1,4 @@
-module TestFASTX
+module FASTXTests
 
 export TestFASTA
 export TestFASTQ
@@ -13,4 +13,4 @@ include("fasta/TestFASTA.jl")
 include("fastq/TestFASTQ.jl")
 
 
-end # module TestFASTX
+end # module FASTXTests
