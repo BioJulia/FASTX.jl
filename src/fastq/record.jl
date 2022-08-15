@@ -1,110 +1,203 @@
 # FASTQ Record
 # ============
 
+"""
+    FASTQ.Record
+
+Mutable struct representing a FASTQ record as parsed from a FASTQ file.
+The content of the record can be queried with the following functions:
+`identifier`, `description`, `sequence`, `quality`
+FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
+
+See also: [`FASTQ.Reader`](@ref), [`FASTQ.Writer`](@ref)
+
+# Examples
+```jldoctest
+julia> rec = parse(FASTQRecord, "@ill r1\\nGGC\\n+\\njjk");
+
+julia> identifier(rec)
+"ill"
+
+julia> description(rec)
+"ill r1"
+
+julia> sequence(rec)
+"GGC"
+
+julia> show(collect(quality_scores(rec)))
+Int8[73, 73, 74]
+
+julia> typeof(description(rec)) == typeof(sequence(rec)) <: AbstractString
+true
+```
+"""
 mutable struct Record
-    # data and filled range
+    # Contains: description, then sequence, then quality, then any noncoding bytes.
+    # all rest, including newlines and the @ and + symbol, are not stored.
+    # The second description after + must be identical to first description.
+    # The quality is not corrected for offset, i.e. it is stored as it in the input file
     data::Vector{UInt8}
-    filled::UnitRange{Int}
-    # indexes
-    identifier::UnitRange{Int}
-    description::UnitRange{Int}
-    sequence::UnitRange{Int}
-    quality::UnitRange{Int}
+    
+    identifier_len::Int32
+    description_len::Int32
+
+    # Top bit stores whether the description is repeated after the +
+    has_description_seq_len::UInt
+end
+
+@inline seqlen(record::Record)::Int = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
+has_extra_description(record::Record) = record.has_description_seq_len ≥ (typemin(Int) % UInt)
+
+# Number of stored bytes in data field
+filled(record::Record) = record.description_len + 2 * seqlen(record)
+
+"""
+    quality_header!(record::Record, x::Bool)
+
+Set whether the record repeats its header on the quality comment line,
+i.e. the line with `+`.
+
+# Examples
+```
+julia> record = parse(FASTQ.Record, "@A B\\nT\\n+\\nJ");
+
+julia> string(record)
+"@A B\\nT\\n+\\nJ"
+
+julia> quality_header!(record, true);
+
+julia> string(record)
+"@A B\\nT\\n+A B\\nJ"
+```
+"""
+function quality_header!(record::Record, x::Bool)
+    bits = record.has_description_seq_len
+    y = if x
+        bits | (typemin(Int) % UInt)
+    else
+        bits & (typemax(Int) % UInt)
+    end
+    record.has_description_seq_len = y
+    record
 end
 
 """
     FASTQ.Record()
 
-Create an unfilled FASTQ record.
+Create the default FASTQ record.
 """
-function Record()
-    return Record(UInt8[], 1:0, 1:0, 1:0, 1:0, 1:0)
+Record() = Record(UInt8[], 0, 0, 0)
+
+function Base.empty!(record::Record)
+    # Do not truncate the underlying data buffer
+    record.identifier_len = 0
+    record.description_len = 0
+    record.has_description_seq_len = 0
+    return record
 end
 
-"""
-    FASTQ.Record(data::Vector{UInt8})
+function Base.parse(::Type{Record}, data::AbstractVector{UInt8})
+    # Error early on empty data to not construct buffers
+    isempty(data) && throw(ArgumentError("Cannot parse empty string as FASTQ record"))
 
-Create a FASTQ record object from `data`.
+    record = Record(Vector{UInt8}(undef, sizeof(data)), 0, 0, 0)
+    stream = NoopStream(IOBuffer(data), bufsize=sizeof(data))
+    cs, _, found = readrecord!(stream, record, (1, 1))
+    
+    # If found is not set, then the data terminated early
+    found || throw(ArgumentError("Incomplete FASTQ record"))
+    
+    # In this case, the machine ran out of data exactly after one record
+    p = stream.state.buffer1.bufferpos
+    p > sizeof(data) && iszero(cs) && return record
 
-This function verifies and indexes fields for accessors.
-
-!!! warning
-    Note that the ownership of `data` is transferred to a new record object.
-    Editing the input data will edit the record, and is not advised after
-    construction of the record.
-"""
-function Record(data::Vector{UInt8})
-    record = Record(data, 1:0, 1:0, 1:0, 1:0, 1:0)
-    index!(record)
+    # Else, we check all trailing data to see it contains only \r\n
+    for i in p-1:sizeof(data)
+        if !in(data[i], (UInt8('\r'), UInt8('\n')))
+            throw(ArgumentError("Invalid trailing data after FASTQ record"))
+        end
+    end
     return record
 end
 
 """
-    FASTQ.Record(str::AbstractString)
+    FASTQ.Record(description, sequence, quality; offset=33)
 
-Create a FASTQ record object from `str`.
-
-This function verifies and indexes fields for accessors.
+Create a FASTQ record from `description`, `sequence` and `quality`.
+Arguments:
+* `description::AbstractString`
+* `sequence::Union{AbstractString, BioSequence}`,
+* `quality::Union{AbstractString, Vector{<:Number}}`
+* Keyword argument `offset` (if `quality isa Vector`): PHRED offset
 """
-function Record(str::AbstractString)
-    return Record(Vector{UInt8}(str))
-end
-
-Base.parse(::Record, str::AbstractString) = Record(str)
-
-"""
-    FASTQ.Record(identifier, sequence, quality; offset=33)
-
-Create a FASTQ record from `identifier`, `sequence` and `quality`.
-"""
-function Record(identifier::AbstractString, sequence, quality::Vector; offset=33)
-    return Record(identifier, nothing, sequence, quality, offset=offset)
-end
-
-"""
-    FASTQ.Record(identifier, description, sequence, quality; offset=33)
-
-Create a FASTQ record from `identifier`, `description`, `sequence` and `quality`.
-"""
-function Record(identifier::AbstractString, description::Union{AbstractString,Nothing}, sequence, quality::Vector; offset=33)
-    if length(sequence) != length(quality)
-        throw(ArgumentError("the length of sequence doesn't match the length of quality"))
+function Record(
+    description::AbstractString,
+    sequence::Union{AbstractString, BioSequence},
+    quality::AbstractString
+)
+    seqlen = sequence isa AbstractString ? ncodeunits(sequence) : length(sequence)
+    if seqlen != ncodeunits(quality)
+        throw(ArgumentError("Byte length of sequence doesn't match codeunits of quality"))
     end
     buf = IOBuffer()
-    print(buf, '@', identifier)
-    if description != nothing
-        print(buf, ' ', description)
-    end
-    print(buf, '\n')
-    print(buf, sequence, '\n')
-    print(buf, "+\n")
-    ascii_quality = convert(Vector{UInt8}, quality .+ offset)
-    write(buf, ascii_quality, '\n')
-    return Record(take!(buf))
+    print(buf,
+        '@', description, '\n',
+        sequence, "\n+\n",
+        quality
+    )
+    parse(Record, take!(buf))
+end
+
+function Record(
+    description::AbstractString,
+    sequence::Union{AbstractString, BioSequence},
+    quality::Vector{<:Number};
+    offset::Integer=33
+)
+    ascii_quality = String([UInt8(q + offset) for q in quality])
+    Record(description, sequence, ascii_quality)
 end
 
 function Base.:(==)(record1::Record, record2::Record)
-    if isfilled(record1) == isfilled(record2) == true
-        r1 = record1.filled
-        r2 = record2.filled
-        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
-    else
-        return isfilled(record1) == isfilled(record2) == false
+    record1.description_len == record2.description_len || return false
+    filled1 = filled(record1)
+    filled1 == filled(record2) || return false
+    (data1, data2) = (record1.data, record2.data)
+    GC.@preserve data1 data2 begin
+        return memcmp(pointer(data1), pointer(data2), filled1) == 0
     end
 end
 
 function Base.copy(record::Record)
     return Record(
-        record.data[record.filled],
-        record.filled,
-        record.identifier,
-        record.description,
-        record.sequence,
-        record.quality)
+        record.data[1:filled(record)],
+        record.identifier_len,
+        record.description_len,
+       record.has_description_seq_len
+    )
 end
 
 function Base.write(io::IO, record::Record)
-    return unsafe_write(io, pointer(record.data, first(record.filled)), length(record.filled))
+    data = record.data
+    len = UInt(seqlen(record))
+    desclen = UInt(record.description_len)
+    GC.@preserve data begin
+        # Header line
+        nbytes = write(io, UInt8('@'))
+        nbytes += unsafe_write(io, pointer(data), desclen)
+        nbytes += write(io, '\n')
+        # Sequence
+        nbytes += unsafe_write(io, pointer(data) + desclen, len)
+        # + line, with additional description if applicable
+        nbytes += write(io, UInt8('\n'), UInt8('+'))
+        if has_extra_description(record)
+            nbytes += unsafe_write(io, pointer(data), desclen)
+        end
+        # Quality
+        nbytes += write(io, '\n')
+        nbytes += unsafe_write(io, pointer(data) + desclen + len, len)
+    end
+    return nbytes
 end
 
 function Base.print(io::IO, record::Record)
@@ -113,241 +206,87 @@ function Base.print(io::IO, record::Record)
 end
 
 function Base.show(io::IO, record::Record)
-    print(io, summary(record), ':')
-    if isfilled(record)
-        println(io)
-        println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
-        println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-        println(io, "     sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
-          print(io, "      quality: ", hasquality(record) ? quality(record) : "<missing>")
-    else
-        print(io, " <not filled>")
-    end
+    println(io, "FASTQ.Record:")
+    println(io, "  description: \"", description(record))
+    println(io, "     sequence: \"", truncate(sequence(record), 40), '"')
+    print(io,   "      quality: \"", truncate(quality(record), 40), '"')
 end
-
-function initialize!(record::Record)
-    record.filled = 1:0
-    record.identifier = 1:0
-    record.description = 1:0
-    record.sequence = 1:0
-    record.quality = 1:0
-    return record
-end
-
-function BioGenerics.isfilled(record::Record)
-    return !isempty(record.filled)
-end
-
-function memcmp(p1::Ptr, p2::Ptr, n::Integer)
-    return ccall(:memcmp, Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t), p1, p2, n)
-end
-
 
 # Accessor functions
 # ------------------
 
-"""
-    identifier(record::Record)::Union{String,Nothing}
-
-Get the sequence identifier of `record`.
-
-!!! note
-    Returns `nothing` if the record has no identifier.
-"""
-function identifier(record::Record)::Union{String,Nothing}
-    checkfilled(record)
-    if !hasidentifier(record)
-        return nothing
-    end
-    return String(record.data[record.identifier])
+function quality_indices(record::Record, part::UnitRange{<:Integer})
+    start, stop = first(part), last(part)
+    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
+    offset = record.description_len + seqlen(record)
+    start+offset:stop+offset
 end
 
 """
-    hasidentifier(record::Record)
+    quality([T::Type{String, StringView}], record::FASTQ.Record, [part::UnitRange])
 
-Checks whether or not the `record` has an identifier.
+Get the ASCII quality of `record` at positions `part` as type `T`.
+If not passed, `T` defaults to `StringView`.
+If not passed, `part` defaults to the entire quality string.
+
+# Examples
+```jldoctest
+julia> rec = parse(FASTQ.Record, "@hdr\\nUAGUCU\\n+\\nCCDFFG");
+
+julia> qual = quality(rec)
+"CCDFFG"
+
+julia> qual isa AbstractString
+true
+```
 """
-function hasidentifier(record::Record)
-    return isfilled(record)
+function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    quality(StringView, record, part)
 end
 
-
-"""
-    description(record::Record)::Union{String, Nothing}
-
-Get the description of `record`.
-
-!!! note
-    Returns `nothing` if `record` has no description.
-"""
-function description(record::Record)::Union{String, Nothing}
-    checkfilled(record)
-    if !hasdescription(record)
-        nothing
-    end
-    return String(record.data[record.description])
+function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    String(record.data[quality_indices(record, part)])
 end
 
-"""
-    hasdescription(record::Record)
-
-Checks whether or not the `record` has a description.
-"""
-function hasdescription(record::Record)
-    return isfilled(record) && record.description != 1:0
+function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    StringView(view(record.data, quality_indices(record, part)))
 end
 
-function Base.copy!(dest::BioSequences.LongSequence, src::Record)
-    resize!(dest, seqlen(src) % UInt)
-    copyto!(dest, 1, src, 1, seqlen(src))
+function quality_scores(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+    quality_scores(record, DEFAULT_ENCODING, part)
 end
 
 """
-    header(record::Record)::Union{String, Nothing}
+    quality_scores(record::FASTQ.Record, [encoding::QualityEncoding], [part::UnitRange])
 
-Returns the stripped header line of `record`, or `nothing` if it was empty.
+Get an iterator of PHRED base quality scores of `record` at positions `part`.
+This iterator is corrupted if the record is mutated.
+By default, `part` is the whole sequence.
+By default, the encoding is PHRED33 Sanger encoding, but may be specified with a `QualityEncoding` object
 """
-function header(record::Record)::Union{String, Nothing}
-    id, de = record.identifier, record.description
-    isempty(id) && isempty(de) && return nothing
-    range = isempty(de) ? id : (isempty(id) ? de : first(id):last(de))
-    return String(record.data[range])
-end
-
-"""
-    Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-
-Copy all of the sequence data from the fastq record `src` to a biological
-sequence `dest`. `dest` must have a length greater or equal to the length of
-the sequence represented in the fastq record. The first n elements of `dest` are
-overwritten, the other elements are left untouched.
-"""
-function Base.copyto!(dest::BioSequences.LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, seqlen(src))
-end
-
-"""
-    Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-
-Copy an N long block of sequence data from the fastq record `src`, starting at
-position `soff`, to the `BioSequence` dest, starting at position `doff`.
-"""
-function Base.copyto!(dest::BioSequences.LongSequence, doff, src::Record, soff, N)
-    checkfilled(src)
-    if !hassequence(src)
-        missingerror(:sequence)
-    end
-    return copyto!(dest, doff, src.data, src.sequence[soff], N)
-end
-
-"""
-    sequence_iter(T, record::Record)
-
-Yields an iterator of the sequence, with elements of type `T`. `T` is constructed
-through `T(Char(x))` for each byte `x`. E.g. `sequence_iter(DNA, record)`.
-Mutating the record will corrupt the iterator.
-"""
-function sequence_iter(::Type{T}, record::Record,
-    part::UnitRange{<:Integer}=1:lastindex(record.sequence)) where {T <: BioSymbols.BioSymbol}
-    checkfilled(record)
-    seqpart = record.sequence[part]
+function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
+    start, stop = first(part), last(part)
+    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
     data = record.data
-    return (T(Char(@inbounds (data[i]))) for i in seqpart)
+    offset = record.description_len + seqlen(record) 
+    return Iterators.map(offset+start:offset+stop) do i
+        v = data[i]
+        decode_quality(encoding, v)
+    end
 end
 
-"""
-    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])
-
-Get the sequence of `record`.
-
-`S` can be either a subtype of `BioSequences.LongSequence` or `String`.
-If `part` argument is given, it returns the specified part of the sequence.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fastq record, you can use `Base.copyto!`.
-"""
-function sequence(::Type{S}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::S where S <: BioSequences.LongSequence
-    checkfilled(record)
-    seqpart = record.sequence[part]
-    return S(@view(record.data[seqpart]))
-end
-
-"""
-    sequence(::Type{String}, record::Record, [part::UnitRange{Int}])::String
-
-Get the sequence of `record` as a String.
-If `part` argument is given, it returns the specified part of the sequence.
-"""
-function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::String
-    checkfilled(record)
-    return String(record.data[record.sequence[part]])
-end
-
-"""
-    sequence(record::Record, [part::UnitRange{Int}])::BioSequences.DNASequence
-
-Get the sequence of `record`.
-
-!!! note
-    This method makes a new sequence object every time.
-    If you have a sequence already and want to fill it with the sequence
-    data contained in a fastq record, you can use `Base.copyto!`.
-"""
-function sequence(record::Record, part::UnitRange{Int}=1:lastindex(record.sequence))::BioSequences.LongDNA{4}
-    return sequence(BioSequences.LongDNA{4}, record, part)
-end
-
-"""
-    hassequence(record::Record)
-
-Checks whether or not a sequence record contains a sequence.
-
-!!! note
-    Zero-length sequences are allowed in records.
-"""
-function hassequence(record::Record)
-    # zero-length sequence may exist
-    return isfilled(record)
-end
-
-"Get the length of the fastq record's sequence."
-@inline seqlen(record::Record) = last(record.sequence) - first(record.sequence) + 1
-
-"""
-    quality_iter(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
-
-Get an iterator of base quality of `record`. This iterator is corrupted if the record is mutated.
-"""
-function quality_iter(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))
-    checkfilled(record)
-    offs = convert(UInt8, offset)
-    part = record.quality[part]
-    data = record.data
-    return (@inbounds(data[i]) - offs for i in part)
-end
-
-"""
-    quality(record::Record, [offset::Integer=33, [part::UnitRange]])::Vector{UInt8}
-
-Get the base quality of `record`.
-"""
-function quality(record::Record, offset::Integer=33, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
-    collect(quality_iter(record, offset, part))
-end
 """
     quality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}
 
-Get the base quality of `record` by decoding with `encoding_name`.
+Get an iterator of base quality of the slice `part` of `record`'s quality.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
-
-!!! note
-    Returns `nothing` if the record has no quality string.
 """
-function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:lastindex(record.quality))::Vector{UInt8}
-    checkfilled(record)
+function quality_scores(
+    record::Record,
+    encoding_name::Symbol,
+    part::UnitRange{<:Integer}=1:seqlen(record)
+)
     encoding = (
         encoding_name == :sanger     ?     SANGER_QUAL_ENCODING :
         encoding_name == :solexa     ?     SOLEXA_QUAL_ENCODING :
@@ -355,55 +294,10 @@ function quality(record::Record, encoding_name::Symbol, part::UnitRange{Int}=1:l
         encoding_name == :illumina15 ? ILLUMINA15_QUAL_ENCODING :
         encoding_name == :illumina18 ? ILLUMINA18_QUAL_ENCODING :
         throw(ArgumentError("quality encoding ':$(encoding_name)' is not supported")))
-    quality = Vector{UInt8}(undef, length(part))
-    if !isempty(part)
-        qpart = record.quality[part]
-        check_quality_string(encoding, record.data, first(qpart), last(qpart))
-        decode_quality_string!(encoding, record.data, quality, first(qpart), last(qpart))
-    end
-    return quality
-end
-
-"""
-    hasquality(record::Record)
-
-Check whether the given FASTQ `record` has a quality string.
-"""
-function hasquality(record::Record)
-    return isfilled(record)
-end
-
-function BioGenerics.seqname(record::Record)
-    return identifier(record)
-end
-
-function BioGenerics.hasseqname(record::Record)
-    return hasidentifier(record)
-end
-
-function BioGenerics.sequence(record::Record)
-    return sequence(record)
-end
-
-function BioGenerics.sequence(::Type{S}, record::Record) where S <: BioSequences.LongSequence
-    return sequence(S, record)
-end
-
-function BioGenerics.hassequence(record::Record)
-    return hassequence(record)
+    quality_scores(record, encoding, part)
 end
 
 function Base.hash(record::Record, h::UInt)
-    return hash(identifier(record), hash(description(record), hash(sequence(record),
-                hash(quality(record), h))))
-end
-
-
-# Helper functions
-# ----------------
-
-function checkfilled(record)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled FASTQ record"))
-    end
+    h = hash(record.description_len, h)
+    hash(view(record.data, filled(record)), h)
 end

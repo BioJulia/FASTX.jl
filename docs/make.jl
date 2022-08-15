@@ -1,28 +1,29 @@
 using Documenter, FASTX
 
-# Build documentation.
+DocMeta.setdocmeta!(FASTX, :DocTestSetup, :(using FASTX, BioSequences); recursive=true)
 
 makedocs(
+    modules = [FASTX],
     format = Documenter.HTML(),
-    modules = [FASTX, FASTX.FASTQ, FASTX.FASTA],
     sitename = "FASTX.jl",
-    doctest = false,
-    strict = false,
+    doctest = true,
     pages = [
-        "Home" => "index.md",
-        "Manual" => [
-            "FASTA formatted files" => "manual/fasta.md",
-            "FASTQ formatted files" => "manual/fastq.md"
+        "Overview" => Any[
+            "Overview" => "index.md",
+            "Records" => "records.md",
+            "File I/O" => "files.md",
         ],
-        "Library" => [
-            "Public" => "lib/public.md"
-        ]
+        "FASTA" => "fasta.md",
+        "FASTQ" => "fastq.md",
+        "FAI" => "fai.md"
     ],
-    authors = "Ben J. Ward, The BioJulia Organisation and other contributors."
+    authors = "Sabrina J. Ward, Jakob N. Nissen, The BioJulia Organisation and other contributors.",
+    checkdocs = :all
 )
 
 deploydocs(
     repo = "github.com/BioJulia/FASTX.jl.git",
+    push_preview = true,
     deps = nothing,
     make = nothing
 )

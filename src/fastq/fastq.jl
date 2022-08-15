@@ -1,22 +1,23 @@
+"""
+    FASTA
+
+Module under FASTX with code related to FASTA files.
+"""
 module FASTQ
 
 import Automa
 import Automa.RegExp: @re_str
 import Automa.Stream: @mark, @markpos, @relpos, @abspos
-import BioSymbols
-import BioSequences
-import BioGenerics: BioGenerics, isfilled
-import BioGenerics.Automa: State
-import TranscodingStreams: TranscodingStreams, TranscodingStream
-import ..FASTX: identifier, hasidentifier,
-    description, hasdescription, header,
-    sequence, hassequence
+import BioSequences: BioSequences, BioSequence
+import BioGenerics: BioGenerics
+import StringViews: StringView
+import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
+import ..FASTX: identifier, description, sequence, UTF8, seqlen, throw_parser_error, truncate, memcmp, appendfrom!, CONTEXT
 
 include("quality.jl")
 include("record.jl")
 include("readrecord.jl")
 include("reader.jl")
 include("writer.jl")
-include("fastqread.jl")
 
 end
