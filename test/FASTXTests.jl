@@ -8,7 +8,7 @@ using FASTX: FASTA, FASTQ, identifier, description, sequence, quality
 using BioSequences: LongDNA, LongAA, LongRNA
 using Random: rand!
 
-include("fastxtests.jl")
+include("maintests.jl")
 include("fasta/TestFASTA.jl")
 include("fastq/TestFASTQ.jl")
 
