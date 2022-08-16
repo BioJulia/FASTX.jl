@@ -46,7 +46,7 @@ mutable struct Record
 end
 
 filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
-@inline seqlen(record::Record)::Int = record.sequence_len
+@inline seqsize(record::Record)::Int = record.sequence_len
 
 """
     FASTA.Record()

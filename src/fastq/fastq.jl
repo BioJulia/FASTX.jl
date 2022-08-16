@@ -12,7 +12,7 @@ import BioSequences: BioSequences, BioSequence
 import BioGenerics: BioGenerics
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
-import ..FASTX: identifier, description, sequence, UTF8, seqlen, throw_parser_error, truncate, memcmp, appendfrom!, CONTEXT
+import ..FASTX: identifier, description, sequence, UTF8, seqsize, throw_parser_error, truncate, memcmp, appendfrom!, CONTEXT
 
 include("quality.jl")
 include("record.jl")
