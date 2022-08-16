@@ -207,7 +207,7 @@ end
 
 function Base.show(io::IO, record::Record)
     println(io, "FASTQ.Record:")
-    println(io, "  description: \"", description(record))
+    println(io, "  description: \"", description(record), '"')
     println(io, "     sequence: \"", truncate(sequence(record), 40), '"')
     print(io,   "      quality: \"", truncate(quality(record), 40), '"')
 end
