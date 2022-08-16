@@ -7,16 +7,7 @@
 5. Run tests early and often!
 
 ```julia-repl
-❯ julia --project
-               _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.7.3 (2022-05-06)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
-|__/                   |
-
+❯ julia --project -q
 julia> using Revise
 
 julia> push!(LOAD_PATH, "./test")
