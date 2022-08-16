@@ -34,6 +34,7 @@ mutable struct Record
     # without newlines, or the initial > symbol, and then any unused trailing bytes
     data::Vector{UInt8}
 
+    # These lengths are in bytes, not chars
     # Identifier is data[1:identifier_len]
     identifier_len::Int32
 
@@ -140,8 +141,8 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     println(io)
-    println(io, "description: \"", description(record), '"')
-    print(io,   "   sequence: \"", truncate(sequence(record), 40), '"')
+    println(io, "  description: \"", description(record), '"')
+    print(io,   "     sequence: \"", truncate(sequence(record), 40), '"')
 end
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?
