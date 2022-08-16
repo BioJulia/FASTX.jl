@@ -1,11 +1,10 @@
 [deps]
 BioGenerics = "47718e42-2ac5-11e9-14af-e5595289c2ea"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
-FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 FormatSpecimens = "3372ea36-2a1a-11e9-3eb7-996970b6ffbd"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
 StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 
 [compat]

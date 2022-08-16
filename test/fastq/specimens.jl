@@ -1,3 +1,6 @@
+@testset "Specimens" begin
+
+
 @testset "Valid specimens" begin
     # All valid specimens should be read, written, re-read, and the
     # second read should be identical.
@@ -44,3 +47,5 @@ end
         @test !isnothing(open(validate_fastq, path))
     end
 end
+
+end # testset Specimens

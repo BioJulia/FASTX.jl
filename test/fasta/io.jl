@@ -1,3 +1,5 @@
+@testset "IO" begin
+
 
 @testset "Reader basics" begin
     # Empty reader
@@ -215,5 +217,4 @@ end
     end
 end
 
-@testset "Index" begin
-end
+end # testset IO
