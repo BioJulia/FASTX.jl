@@ -38,6 +38,7 @@ mutable struct Record
     # The quality is not corrected for offset, i.e. it is stored as it in the input file
     data::Vector{UInt8}
     
+    # In bytes, not chars
     identifier_len::Int32
     description_len::Int32
 
@@ -45,11 +46,11 @@ mutable struct Record
     has_description_seq_len::UInt
 end
 
-@inline seqlen(record::Record)::Int = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
+@inline seqsize(record::Record)::Int = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
 has_extra_description(record::Record) = record.has_description_seq_len ≥ (typemin(Int) % UInt)
 
 # Number of stored bytes in data field
-filled(record::Record) = record.description_len + 2 * seqlen(record)
+filled(record::Record) = record.description_len + 2 * seqsize(record)
 
 """
     quality_header!(record::Record, x::Bool)
@@ -135,8 +136,8 @@ function Record(
     sequence::Union{AbstractString, BioSequence},
     quality::AbstractString
 )
-    seqlen = sequence isa AbstractString ? ncodeunits(sequence) : length(sequence)
-    if seqlen != ncodeunits(quality)
+    seqsize = sequence isa AbstractString ? ncodeunits(sequence) : length(sequence)
+    if seqsize != ncodeunits(quality)
         throw(ArgumentError("Byte length of sequence doesn't match codeunits of quality"))
     end
     buf = IOBuffer()
@@ -179,7 +180,7 @@ end
 
 function Base.write(io::IO, record::Record)
     data = record.data
-    len = UInt(seqlen(record))
+    len = UInt(seqsize(record))
     desclen = UInt(record.description_len)
     GC.@preserve data begin
         # Header line
@@ -217,8 +218,8 @@ end
 
 function quality_indices(record::Record, part::UnitRange{<:Integer})
     start, stop = first(part), last(part)
-    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
-    offset = record.description_len + seqlen(record)
+    (start < 1 || stop > seqsize(record)) && throw(BoundsError(record, start:stop))
+    offset = record.description_len + seqsize(record)
     start+offset:stop+offset
 end
 
@@ -240,19 +241,19 @@ julia> qual isa AbstractString
 true
 ```
 """
-function quality(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality(record::Record, part::UnitRange{<:Integer}=1:seqsize(record))
     quality(StringView, record, part)
 end
 
-function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality(::Type{String}, record::Record, part::UnitRange{<:Integer}=1:seqsize(record))
     String(record.data[quality_indices(record, part)])
 end
 
-function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=1:seqsize(record))
     StringView(view(record.data, quality_indices(record, part)))
 end
 
-function quality_scores(record::Record, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality_scores(record::Record, part::UnitRange{<:Integer}=1:seqsize(record))
     quality_scores(record, DEFAULT_ENCODING, part)
 end
 
@@ -264,11 +265,11 @@ This iterator is corrupted if the record is mutated.
 By default, `part` is the whole sequence.
 By default, the encoding is PHRED33 Sanger encoding, but may be specified with a `QualityEncoding` object
 """
-function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqlen(record))
+function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqsize(record))
     start, stop = first(part), last(part)
-    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
+    (start < 1 || stop > seqsize(record)) && throw(BoundsError(record, start:stop))
     data = record.data
-    offset = record.description_len + seqlen(record) 
+    offset = record.description_len + seqsize(record) 
     return Iterators.map(offset+start:offset+stop) do i
         v = data[i]
         decode_quality(encoding, v)
@@ -285,7 +286,7 @@ The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumin
 function quality_scores(
     record::Record,
     encoding_name::Symbol,
-    part::UnitRange{<:Integer}=1:seqlen(record)
+    part::UnitRange{<:Integer}=1:seqsize(record)
 )
     encoding = (
         encoding_name == :sanger     ?     SANGER_QUAL_ENCODING :

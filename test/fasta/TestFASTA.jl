@@ -2,7 +2,7 @@ module TestFASTA
     
 using ReTest
 using FASTX.FASTA: FASTA, Record, identifier, description, sequence,
-    Reader, Writer, Index, index!, validate_fasta, faidx, seqlen, extract, seekrecord
+    Reader, Writer, Index, index!, validate_fasta, faidx, seqsize, extract, seekrecord
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
 using Random: rand!, shuffle!
 using FormatSpecimens: list_valid_specimens, list_invalid_specimens, path_of_format, filename, hastag

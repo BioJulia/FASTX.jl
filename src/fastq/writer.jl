@@ -60,7 +60,7 @@ function Base.write(writer::Writer, record::Record)
     data = record.data
 
     desclen = UInt(record.description_len)
-    seqlength = UInt(seqlen(record))
+    seqlength = UInt(seqsize(record))
 
     GC.@preserve data begin
         # Header

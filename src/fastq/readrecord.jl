@@ -92,7 +92,7 @@ actions = Dict(
     # Verify the length of quality and sequence is identical, then copy bytes over
     :quality => quote
         let n = @relpos(p-1)
-            n == seqlen(record) || error("Length of quality must be identical to length of sequence")
+            n == seqsize(record) || error("Length of quality must be identical to length of sequence")
             appendfrom!(record.data, filled + 1, data, @markpos, n)
         end
     end,

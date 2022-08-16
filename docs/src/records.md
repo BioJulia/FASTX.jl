@@ -56,3 +56,19 @@ UGCCCA
 julia> sequence(String, record)
 "UGCCCA"
 ```
+
+The number of bytes in the sequence of a `Record` can be queried using `seqsize`:
+```jldoctest
+julia> record = parse(FASTARecord, ">abc\nUGC\nCCA");
+
+julia> seqsize(record)
+6
+```
+
+### Reference:
+```@docs
+identifier
+description
+sequence
+seqsize
+```

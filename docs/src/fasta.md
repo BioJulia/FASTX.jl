@@ -39,13 +39,6 @@ If you want to have more certainty about the format, you can either check the co
 FASTA.Record
 ```
 
-### Reference:
-```@docs
-identifier
-description
-sequence
-```
-
 ## `FASTAReader` and `FASTAWriter`
 `FASTAWriter` can optionally be passed the keyword `width` to control the line width.
 If this is zero or negative, it will write all record sequences on a single line.

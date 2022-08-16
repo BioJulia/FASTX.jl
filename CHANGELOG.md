@@ -25,6 +25,8 @@ work with v2. I recommend upgrading your packages using a static analysis tool l
 * `identifier`, `description`, `sequence` and `quality` now returns an `AbstractString` by default.
   Although it is an implementation detail, it uses zero-copy string views for performance.
 * You can no longer construct a record using e.g. `Record(::String)`. Instead, use `parse(Record, ::String)`.
+* `seqlen` is renamed `seqsize` to emphasize that it returns the data size of the sequence,
+  not necessarily its length.
 
 #### Readers/writers
 * All readers/writers now take any other arguments than the main IO as a keyword for clarity

@@ -69,8 +69,24 @@ TAGA
 """
 function sequence end
 
-# Get the length of the sequence part of a `FASTX` `Record` in number of bytes.
-function seqlen end
+"""
+    seqsize(::Record)::Int
+
+Get the number of bytes in the sequence of a `Record`.
+Note that in the presence of non-ASCII characters, this may differ from `length(sequence(record))`.
+
+See also: [`sequence`](@ref)
+
+# Examples
+```jldoctest
+julia> seqsize(parse(FASTA.Record, ">hdr\\nKRRLPW\\nYHS"))
+9
+
+julia> seqsize(parse(FASTA.Record, ">hdr\\nαβγδϵ"))
+10
+```
+"""
+function seqsize end
 
 const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
 
@@ -153,7 +169,7 @@ import .FASTA: FASTA, validate_fasta, Index, faidx, index!, extract, validate_fa
 import .FASTQ: FASTQ, quality, quality_scores, quality_header!, QualityEncoding, validate_fastq
 
 function FASTA.Record(record::FASTQ.Record)
-    slen = seqlen(record)
+    slen = seqsize(record)
     dlen = record.description_len
     FASTA.Record(record.data[1:slen+dlen], record.identifier_len, dlen, slen)
 end
@@ -165,7 +181,7 @@ Copy the content of the FASTQ record into the FASTA record.
 """
 function Base.copy!(dst::FASTA.Record, src::FASTQ.Record)
     dlen = src.description_len
-    slen = seqlen(src)
+    slen = seqsize(src)
     tlen = UInt(dlen + slen)
     dstdata = dst.data
     length(dstdata) < tlen && resize!(dstdata, tlen)
@@ -182,20 +198,20 @@ Base.parse(::Type{T}, s::Union{String, SubString{String}}) where {T <: Record} =
 "Get the indices of `data` that correspond to sequence indices `part`"
 function seq_data_part(record::Record, part::AbstractUnitRange)
     start, stop = first(part), last(part)
-    (start < 1 || stop > seqlen(record)) && throw(BoundsError(record, start:stop))
+    (start < 1 || stop > seqsize(record)) && throw(BoundsError(record, start:stop))
     Int(record.description_len) + start:Int(record.description_len) + stop
 end
 
-sequence(record::Record, part::UnitRange{Int}=1:seqlen(record)) = sequence(StringView, record, part)
+sequence(record::Record, part::UnitRange{Int}=1:seqsize(record)) = sequence(StringView, record, part)
 
-function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:seqlen(record))
+function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:seqsize(record))
     return StringView(view(record.data, seq_data_part(record, part)))
 end
 
 function sequence(
     ::Type{S},
     record::Record,
-    part::UnitRange{Int}=1:seqlen(record)
+    part::UnitRange{Int}=1:seqsize(record)
 )::S where S <: BioSequence
     return S(sequence(record, part))
 end
@@ -205,7 +221,7 @@ end
 function sequence(
     ::Type{S},
     record::Record,
-    part::UnitRange{Int}=1:seqlen(record)
+    part::UnitRange{Int}=1:seqsize(record)
 )::S where S <: LongSequence
     return S(@view(record.data[seq_data_part(record, part)]))
 end
@@ -213,18 +229,18 @@ end
 function sequence(
     ::Type{String},
     record::Record,
-    part::UnitRange{Int}=1:seqlen(record)
+    part::UnitRange{Int}=1:seqsize(record)
 )::String
     return String(record.data[seq_data_part(record, part)])
 end
 
 function Base.copy!(dest::LongSequence, src::Record)
-    resize!(dest, UInt(seqlen(src)))
-    copyto!(dest, 1, src, 1, seqlen(src))
+    resize!(dest, UInt(seqsize(src)))
+    copyto!(dest, 1, src, 1, seqsize(src))
 end
 
 function Base.copyto!(dest::LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, seqlen(src))
+    return copyto!(dest, 1, src, 1, seqsize(src))
 end
 
 function Base.copyto!(dest::LongSequence, doff, src::Record, soff, N)
@@ -254,6 +270,7 @@ export
     identifier,
     description,
     sequence,
+    seqsize,
     quality,
     quality_scores,
     quality_header!,

@@ -172,7 +172,7 @@ end
         for (i, name) in inames
             record = reader[name]
             @test identifier(record) == name
-            @test seqlen(record) == lengths[i]
+            @test seqsize(record) == lengths[i]
         end
 
         # Test seekrecord
@@ -180,7 +180,7 @@ end
             FASTA.seekrecord(reader, name)
             record = first(reader)
             @test identifier(record) == name
-            @test seqlen(record) == lengths[i]
+            @test seqsize(record) == lengths[i]
         end
 
         # Test extract
@@ -190,8 +190,8 @@ end
             @test ncodeunits(seq) == lengths[i]
             @test seq == sequence(record)
 
-            start = rand(1:seqlen(record))
-            stop = rand(start:seqlen(record))
+            start = rand(1:seqsize(record))
+            stop = rand(start:seqsize(record))
             seq = extract(reader, name, start:stop)
             seq2 = sequence(record, start:stop)
             @test seq == seq2
