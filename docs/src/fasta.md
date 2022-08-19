@@ -6,6 +6,7 @@ end
 ```
 
 # FASTA formatted files
+
 __NB: First read the overview in the sidebar__
 
 FASTA is a text-based file format for representing biological sequences.
