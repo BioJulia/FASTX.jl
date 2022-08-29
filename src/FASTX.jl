@@ -1,7 +1,7 @@
 module FASTX
 
 using StringViews: StringView
-using BioSequences: BioSequence, LongSequence
+using BioSequences: BioSequences, BioSequence, LongSequence
 using Automa: Automa
 
 """
@@ -255,6 +255,8 @@ const FASTAReader = FASTA.Reader
 const FASTQReader = FASTQ.Reader
 const FASTAWriter = FASTA.Writer
 const FASTQWriter = FASTQ.Writer
+
+include("workload.jl")
 
 export
     FASTA,
