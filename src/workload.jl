@@ -3,10 +3,10 @@ using SnoopPrecompile
 @precompile_all_calls begin
     fasta = ">abc def\nTAG\nTA"
     fastq = "@ABC DEF\nTAGC\n+ABC DEF\nJJJJ"
-    records = [
+    records = (
         parse(FASTA.Record, fasta),
         parse(FASTQ.Record, fastq)
-    ]
+    )
     for record in records
         identifier(record)
         description(record)
@@ -18,7 +18,7 @@ using SnoopPrecompile
     end
 
     # FASTQ specific
-    record = last(records)
+    record::FASTQ.Record = last(records)
     quality(record)
     collect(quality_scores(record))
 
