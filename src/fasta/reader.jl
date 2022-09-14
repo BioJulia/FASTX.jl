@@ -146,12 +146,16 @@ function seekrecord(reader::Reader, name::AbstractString)
 end
 
 function seekrecord(reader::Reader, i::Integer)
-    seekrecord(reader.stream, reader.index, i)
-    reader.automa_state = machine.start_state
+    index = reader.index
+    index === nothing && error("no index attached")
+    seekrecord(reader.stream, index, i)
+    reader.automa_state = 1
     # Make linenum unrecoverably lost
     reader.encoded_linenum = typemin(Int)
     nothing
 end
+
+const UNALLOWED_BYTESET = Val(ByteSet((UInt8('\n'), UInt8('\r'), UInt8('>'))))
 
 """
     extract(reader::Reader, name::AbstractString, range::Union{Nothing, UnitRange})
@@ -216,7 +220,7 @@ function extract(
     # Now check that there are no bad bytes in our buffer
     # Note: This ByteSet must correspond to the allowed bytes in
     # the FASTA machine to ensure we can seek the same FASTA files we can read
-    badpos = memchr(buffer, Val(ByteSet((UInt8('\n'), UInt8('\r'), UInt8('>')))))
+    badpos = memchr(buffer, UNALLOWED_BYTESET)
     if badpos !== nothing
         error("Invalid byte in FASTA sequence line: $(buffer[badpos])")
     end

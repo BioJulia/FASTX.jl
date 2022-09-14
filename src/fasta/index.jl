@@ -327,6 +327,7 @@ function seekrecord(io::IO, index::Index, i::Integer)
     nlines = cld(len, linebases)
     offset = prev_offset + len + nlines * (linewidth - linebases) 
     seek(io, offset)
+    return nothing
 end
 
 # Note: Current implementation relies on the IO being a NoopStream exactly,
