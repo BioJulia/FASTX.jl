@@ -1,7 +1,6 @@
 module FASTX
 
 using StringViews: StringView
-using BioSequences: BioSequences, BioSequence, LongSequence
 using Automa: Automa
 
 """
@@ -209,44 +208,11 @@ function sequence(::Type{StringView}, record::Record, part::UnitRange{Int}=1:seq
 end
 
 function sequence(
-    ::Type{S},
-    record::Record,
-    part::UnitRange{Int}=1:seqsize(record)
-)::S where S <: BioSequence
-    return S(sequence(record, part))
-end
-
-# Special method for LongSequence: Can operate on bytes directly
-# and more efficiently
-function sequence(
-    ::Type{S},
-    record::Record,
-    part::UnitRange{Int}=1:seqsize(record)
-)::S where S <: LongSequence
-    return S(@view(record.data[seq_data_part(record, part)]))
-end
-
-function sequence(
     ::Type{String},
     record::Record,
     part::UnitRange{Int}=1:seqsize(record)
 )::String
     return String(record.data[seq_data_part(record, part)])
-end
-
-function Base.copy!(dest::LongSequence, src::Record)
-    resize!(dest, UInt(seqsize(src)))
-    copyto!(dest, 1, src, 1, seqsize(src))
-end
-
-function Base.copyto!(dest::LongSequence, src::Record)
-    return copyto!(dest, 1, src, 1, seqsize(src))
-end
-
-function Base.copyto!(dest::LongSequence, doff, src::Record, soff, N)
-    # This check is here to prevent boundserror when indexing src.sequence
-    iszero(N) && return dest
-    return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 
 const FASTARecord = FASTA.Record
@@ -255,6 +221,10 @@ const FASTAReader = FASTA.Reader
 const FASTQReader = FASTQ.Reader
 const FASTAWriter = FASTA.Writer
 const FASTQWriter = FASTQ.Writer
+
+if !isdefined(Base, :get_extension)
+    include("../ext/BioSequencesExt.jl")
+  end
 
 include("workload.jl")
 

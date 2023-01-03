@@ -133,7 +133,7 @@ Arguments:
 """
 function Record(
     description::AbstractString,
-    sequence::Union{AbstractString, BioSequence},
+    sequence::AbstractString,
     quality::AbstractString
 )
     seqsize = sequence isa AbstractString ? ncodeunits(sequence) : length(sequence)
@@ -151,7 +151,7 @@ end
 
 function Record(
     description::AbstractString,
-    sequence::Union{AbstractString, BioSequence},
+    sequence::AbstractString,
     quality::Vector{<:Number};
     offset::Integer=33
 )

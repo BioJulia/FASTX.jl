@@ -94,7 +94,7 @@ end
 
 Create a FASTA record object from `description` and `sequence`.
 """
-function Record(description::AbstractString, sequence::Union{BioSequences.BioSequence, AbstractString})
+function Record(description::AbstractString, sequence::AbstractString)
     buf = IOBuffer()
     print(buf, '>', description, '\n')
     # If the sequence is empty, we need to print a newline in order to not
