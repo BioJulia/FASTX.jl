@@ -16,9 +16,9 @@ using SnoopPrecompile: @precompile_setup, @precompile_all_calls
             description(record)
             seqsize(record)
             sequence(record)
-            sequence(BioSequences.LongDNA{2}, record)
-            sequence(BioSequences.LongDNA{4}, record)
-            sequence(BioSequences.LongAA, record)
+            sequence(String, record)
+            sequence(String, record)
+            sequence(String, record)
         end
 
         # FASTQ specific
