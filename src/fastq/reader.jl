@@ -67,7 +67,7 @@ function Base.iterate(rdr::Reader, state=nothing)
 end
 
 function Base.read!(rdr::Reader, rec::Record)
-    (cs, f) = _read!(rdr, rdr.record)
+    (cs, f) = _read!(rdr, rec)
     if !f
         cs == 0 && throw(EOFError())
         throw(ArgumentError("malformed FASTQ file"))
