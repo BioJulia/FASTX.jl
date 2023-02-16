@@ -27,6 +27,16 @@
     @test records[1] != records[3]
     close(reader)
 
+    # Test Base.read! works
+    reader = Reader(IOBuffer(">header string\r\nYWBL\nKKL\r\n>another\nAAGTC"))
+    record = Record()
+    read!(reader, record)
+    @test identifier(record) == "header"
+    @test description(record) == "header string"
+    @test sequence(record) == "YWBLKKL"
+    (record, _) = iterate(reader)
+    @test (description(record), sequence(record)) == ("another", "AAGTC")
+
     # Does not copy on iteration if copy=false
     # in this case it will iterate the same object which
     # will just be overwritten.

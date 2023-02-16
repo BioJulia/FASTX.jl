@@ -29,6 +29,17 @@
     @test records[1] != records[3]
     close(reader)
 
+    # Test Base.read! works
+    reader = Reader(IOBuffer("@HWI:HDR TEXT\nTAGGCTAG\n+\nKM@BCAAC\n@A\nTAG\n+\nJJK\n"))
+    record = Record()
+    read!(reader, record)
+    @test identifier(record) == "HWI:HDR"
+    @test description(record) == "HWI:HDR TEXT"
+    @test sequence(record) == "TAGGCTAG"
+    @test quality(record) == "KM@BCAAC"
+    (record, _) = iterate(reader)
+    @test (description(record), sequence(record), quality(record)) == ("A", "TAG", "JJK")
+
     # Does not copy on iteration if copy=false
     # See comments in equivalent FASTA tests
     reader = Reader(IOBuffer(copy_str); copy=false)
