@@ -105,4 +105,4 @@ Writer(open(my_file)) do writer
 end
 ```
 
-Which will work for must underlying IO types.
+Which will work for most underlying IO types.
