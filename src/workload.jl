@@ -1,12 +1,12 @@
-using SnoopPrecompile: @precompile_setup, @precompile_all_calls
+using PrecompileTools: @setup_workload, @compile_workload
 
-@precompile_setup begin
+@setup_workload begin
     fasta_path = joinpath(dirname(@__DIR__), "test", "test.fasta")
     fastq_path = joinpath(dirname(@__DIR__), "test", "test.fastq")
     fasta = read(fasta_path, String)
     fastq = read(fastq_path, String)
 
-    @precompile_all_calls begin
+    @compile_workload begin
         records = (
             parse(FASTA.Record, fasta),
             parse(FASTQ.Record, fastq)
