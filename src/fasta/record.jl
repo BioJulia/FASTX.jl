@@ -122,6 +122,16 @@ function Base.copy(record::Record)
     )
 end
 
+function Base.copy!(dst::Record, src::Record)
+    n = filled(src)
+    length(dst.data) < n && resize!(dst.data, n)
+    unsafe_copyto!(dst.data, 1, src.data, 1, n)
+    dst.identifier_len = src.identifier_len
+    dst.description_len = src.description_len
+    dst.sequence_len = src.sequence_len
+    dst
+end
+
 function Base.write(io::IO, record::Record)
     data = record.data
     write(io, UInt8('>'))

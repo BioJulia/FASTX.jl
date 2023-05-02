@@ -10,11 +10,6 @@
     empty!(record)
     @test record == record2
 
-    # Copying
-    cp = copy(record)
-    @test record == cp
-    @test record.data !== cp.data
-
     # Components of empty records
     @test identifier(record) isa AbstractString
     @test isempty(identifier(record))
@@ -127,6 +122,25 @@ end
     @test record == cp
     @test identifier(cp) == description(record) == "abc"
     @test sequence(String, cp) == "OOJMQQ"
+end
+
+@testset "Copying" begin 
+    record = parse(Record, ">some_identifier \tmy_description  | text\nAAT\nTA\nCCG")
+    resize!(record.data, 1000)
+    cp = copy(record)
+
+    @test record !== cp
+    @test record == cp
+    @test sequence(record) == sequence(cp)
+    @test identifier(record) == identifier(cp)
+    @test description(record) == description(cp)
+    @test record.data !== cp.data
+
+    record = parse(Record, ">another record\r\nUAGWMPK\nKKLLAAM")
+    @test record != cp
+    copy!(record, cp)
+    @test record !== cp
+    @test record == cp
 end
 
 # Get sequence as String/StringView
