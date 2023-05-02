@@ -10,13 +10,6 @@
     empty!(record)
     @test record == record2
 
-    # Copying
-    resize!(record.data, 1000)
-    cp = copy(record)
-    empty!(record.data)
-    @test record == cp
-    @test record.data !== cp.data
-
     # Components of empty records
     @test identifier(record) == ""
     @test description(record) == ""
@@ -120,6 +113,28 @@ end
         @test sequence(rec) == "AAGG"
         @test quality(rec) == "jjll"
     end
+end
+
+@testset "Copying" begin 
+    record = parse(Record, "@A\nTGGAA\n+\nJJJAA")
+    resize!(record.data, 1000)
+    cp = copy(record)
+
+    @test record !== cp
+    @test record == cp
+    @test sequence(record) == sequence(cp)
+    @test identifier(record) == identifier(cp)
+    @test description(record) == description(cp)
+    @test quality(record) == quality(cp)
+    @test record.data !== cp.data
+    # Test that we don't unnecessarily copy noncoding data
+    @test length(record.data) > length(cp.data)
+
+    record = parse(Record, "@some other record\r\nTAGA\r\n+\r\nJJJK")
+    @test record != cp
+    copy!(record, cp)
+    @test record !== cp
+    @test record == cp
 end
 
 @testset "Get sequence as String/StringView" begin
