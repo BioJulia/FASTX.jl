@@ -98,11 +98,20 @@ UInt8[]
 To use it correctly, either call `flush`, or close the writer first (which also closes the underlying stream).
 It is recommended to use readers and writers to `do` syntax in the form:
 ```julia
-Writer(open(my_file)) do writer
+FASTAWriter(open(my_path, "w")) do writer
     for record in my_records
         write(writer, record)
     end
 end
 ```
 
-Which will work for most underlying IO types.
+Which will work for most underlying IO types, and will close the writer when the function returns (hence also closing the underlying IO).
+
+Alternatively, the following syntax may be used:
+```julia
+open(FASTAWriter, my_path) do writer
+    for record in my_records
+        write(writer, record)
+    end
+end
+```
