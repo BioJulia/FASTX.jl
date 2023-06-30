@@ -1,7 +1,7 @@
 name = "FASTX"
 uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 authors = ["Sabrina J. Ward <sabrinajward@protonmail.com>", "Jakob N. Nissen <jakobnybonissen@gmail.com>"]
-version = "2.1.0"
+version = "2.1.1"
 
 [weakdeps]
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
@@ -22,7 +22,7 @@ BioSequencesExt = "BioSequences"
 Automa = "0.8"
 BioGenerics = "0.1.2"
 BioSequences = "3"
-ScanByte = "0.3"
+ScanByte = "0.4"
 PrecompileTools = "1"
 StringViews = "1"
 TranscodingStreams = "0.9.5"
