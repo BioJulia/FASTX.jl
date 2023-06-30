@@ -3,35 +3,35 @@ uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 authors = ["Sabrina J. Ward <sabrinajward@protonmail.com>", "Jakob N. Nissen <jakobnybonissen@gmail.com>"]
 version = "2.1.0"
 
-[weakdeps]
-BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
-
 [deps]
 Automa = "67c07d97-cdcb-5c2c-af73-a7f9c32a568b"
 BioGenerics = "47718e42-2ac5-11e9-14af-e5595289c2ea"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
-ScanByte = "7b38b023-a4d7-4c5e-8d43-3f3097f304eb"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+ScanByte = "7b38b023-a4d7-4c5e-8d43-3f3097f304eb"
 StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-
-[extensions]
-BioSequencesExt = "BioSequences"
 
 [compat]
 Automa = "0.8"
 BioGenerics = "0.1.2"
 BioSequences = "3"
-ScanByte = "0.3"
 PrecompileTools = "1"
+ScanByte = "0.3, 0.4"
 StringViews = "1"
 TranscodingStreams = "0.9.5"
 julia = "1.6"
 
+[extensions]
+BioSequencesExt = "BioSequences"
+
 [extras]
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
-BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 
 [targets]
 test = ["BioSequences", "Random", "ReTest"]
+
+[weakdeps]
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
