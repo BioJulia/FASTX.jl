@@ -9,11 +9,12 @@
 """
     QualityEncoding(range::StepRange{Char}, offset::Integer)
 
-FASTQ PHRED quality encoding scheme. `QualityEncoding` objects are used to
+FASTQ quality encoding scheme. `QualityEncoding` objects are used to
 interpret the quality scores of FASTQ records.
 `range` is a range of allowed ASCII chars in the encoding, e.g. `'!':'~'` for
 the most common encoding scheme.
-The offset is the PHRED offset.
+The offset is the ASCII offset, i.e. a character with ASCII value `x` encodes
+the value `x - offset`.
 
 See also: [`quality_scores`](@ref)
 
@@ -44,9 +45,7 @@ struct QualityEncoding
         elseif high > 127
             error("Quality encoding only works with ASCII charsets")
         elseif offset < 0
-            error("Quality offset must be non-negative")    
-        elseif low < offset
-            error("Low end of in quality encoding range cannot be less than offset")
+            error("Quality offset must be non-negative")
         else
             return new(low, high, off)
         end
@@ -57,7 +56,7 @@ end
 const SANGER_QUAL_ENCODING     = QualityEncoding('!':'~', 33)
 
 "Solexa (Solexa+64) quality score encoding"
-const SOLEXA_QUAL_ENCODING     = QualityEncoding('@':'~', 64)
+const SOLEXA_QUAL_ENCODING     = QualityEncoding(';':'~', 64)
 
 "Illumina 1.3 (Phred+64) quality score encoding"
 const ILLUMINA13_QUAL_ENCODING = QualityEncoding('@':'~', 64)
