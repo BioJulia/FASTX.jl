@@ -4,6 +4,7 @@ module TestFASTQ
 const OFFSET = 33
 
 using ReTest
+using FASTX: FASTQ
 using FASTX.FASTQ: Record, Reader, Writer, identifier, description,
     sequence, quality, quality_scores, QualityEncoding, quality_header!, validate_fastq
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str

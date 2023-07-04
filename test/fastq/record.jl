@@ -191,7 +191,6 @@ end
 
     # QualityEncoding
     @test_throws Exception QualityEncoding('B':'A', 10)
-    @test_throws Exception QualityEncoding('A':'A', 90)
     @test_throws Exception QualityEncoding('a':'A', 10)
     @test_throws Exception QualityEncoding('Z':'Y', 10)
     @test_throws Exception QualityEncoding('A':'B', -1)
@@ -207,6 +206,10 @@ end
     @test_throws BoundsError quality_scores(records[2], 0:4)
     @test_throws BoundsError quality_scores(records[2], 2:5)
     @test_throws BoundsError quality_scores(records[2], 5:5)
+
+    # Solexa encoding is weird in thay it can be negative
+    rec = Record("abc", "TAG", [20, 0, -5]; offset=64)
+    @test collect(quality_scores(rec, FASTQ.SOLEXA_QUAL_ENCODING)) == [20, 0, -5]
 
     # Custom quality encoding
     CustomQE = QualityEncoding('A':'Z', 12)
