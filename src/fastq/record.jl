@@ -217,6 +217,15 @@ function Base.print(io::IO, record::Record)
 end
 
 function Base.show(io::IO, record::Record)
+    print(io,
+        summary(record), '(',
+        repr(description(record)), ", \"",
+        truncate(sequence(record), 20), "\", \"",
+        truncate(quality(record), 20), "\")",
+    )
+end
+
+function Base.show(io::IO, ::MIME"text/plain", record::Record)
     println(io, "FASTQ.Record:")
     println(io, "  description: \"", description(record), '"')
     println(io, "     sequence: \"", truncate(sequence(record), 40), '"')

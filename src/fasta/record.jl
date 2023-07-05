@@ -149,11 +149,20 @@ function Base.print(io::IO, record::Record)
 end
 
 function Base.show(io::IO, record::Record)
+    print(io,
+        summary(record), '(', repr(description(record)), ", \"", truncate(sequence(record), 40), "\")"
+    )
+end
+
+
+function Base.show(io::IO, ::MIME"text/plain", record::Record)
     print(io, summary(record), ':')
     println(io)
     println(io, "  description: \"", description(record), '"')
     print(io,   "     sequence: \"", truncate(sequence(record), 40), '"')
 end
+
+
 
 # TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
