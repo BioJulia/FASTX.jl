@@ -87,8 +87,6 @@ julia> seqsize(parse(FASTA.Record, ">hdr\\nαβγδϵ"))
 """
 function seqsize end
 
-const UTF8 = Union{AbstractVector{UInt8}, String, SubString{String}}
-
 # line is nothing if the reader does not have line information after random IO access.
 @noinline function throw_parser_error(
     data::Vector{UInt8},
@@ -147,7 +145,7 @@ end
 
 CONTEXT = Automa.CodeGenContext(
     generator=:goto,
-    vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte)
+    vars=Automa.Variables(;p=:p, p_end=:p_end, cs=:cs, data=:data, mem=:mem, byte=:byte)
 )
 
 include("fasta/fasta.jl")

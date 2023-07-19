@@ -1,48 +1,34 @@
 machine = let
-    re = Automa.RegExp
-    
     hspace = re"[ \t\v]"
     
     header1 = let
-        identifier = re.rep(re.any() \ re.space())
-        identifier.actions[:enter] = [:mark]
-        identifier.actions[:exit]  = [:header1_identifier]
+        identifier = onexit!(onenter!(Re.rep(Re.any() \ Re.space()), :mark), :header1_identifier)
         
         # Description here means "after whitespace", not whole line
-        description = re.cat(re.any() \ re.space(), re"[^\r\n]*")
-        re.cat('@', identifier, re.opt(re.cat(re.rep1(hspace), re.opt(description))))
+        description = (Re.any() \ Re.space()) * re"[^\r\n]*"
+        '@' * identifier * Re.opt(Re.rep1(hspace) * Re.opt(description))
     end
-    header1.actions[:exit] = [:header1_description]
+    onexit!(header1, :header1_description)
     
-    sequence = re"[A-z]*"
-    sequence.actions[:enter] = [:mark]
-    sequence.actions[:exit]  = [:sequence]
+    sequence = onexit!(onenter!(re"[A-z]*", :mark), :sequence)
     
     # The pattern recognized by header2 should be identical to header1
     # with the only difference being that h1 is split into identifier
     # and description
     header2 = let
-        description2 = re"[^\r\n]+"
-        description2.actions[:enter] = [:mark]
-        description2.actions[:exit]  = [:header2_description]
-        re.cat('+', re.opt(description2))
+        description2 = onexit!(onenter!(re"[^\r\n]+", :mark), :header2_description)
+        '+' * Re.opt(description2)
     end
     
-    quality = re"[!-~]*"
-    quality.actions[:enter] = [:mark]
-    quality.actions[:exit]  = [:quality]
+    quality = onexit!(onenter!(re"[!-~]*", :mark), :quality)
     
     newline = let
-        lf = re"\n"
-        lf.actions[:enter] = [:countline]
-        re.cat(re.opt('\r'), lf)
+        lf = onenter!(re"\n", :countline)
+        Re.opt('\r') * lf
     end
     
-    record = re.cat(header1, newline, sequence, newline, header2, newline, quality)
-    record.actions[:enter] = [:mark]
-    record.actions[:exit] = [:record]
-    
-    fastq = re.opt(record) * re.rep(newline * record) * re.opt(newline)
+    record = onexit!(onenter!(header1 * newline * sequence * newline * header2 * newline * quality, :mark), :record)
+    fastq = Re.opt(record) * Re.rep(newline * record) * Re.opt(newline)
     
     Automa.compile(fastq)
 end
@@ -121,7 +107,7 @@ end
 
 returncode = :(return cs, linenum, found)
 
-Automa.Stream.generate_reader(
+Automa.generate_reader(
     :readrecord!,
     machine,
     arguments = (:(record::Record), :(state::Tuple{Int,Int})),
@@ -174,7 +160,7 @@ initcode = quote
     headerbuffer = Vector{UInt8}(undef, 1024)
 end
 
-Automa.Stream.generate_reader(
+Automa.generate_reader(
     :validate_fastq,
     machine,
     arguments = (),

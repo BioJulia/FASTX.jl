@@ -100,24 +100,17 @@ function Base.show(io::IO, index::Index)
 end
 
 index_machine = let
-    re = Automa.RegExp
     newline = let
-        lf = re"\n"
-        lf.actions[:enter] = [:countline]
-        re.opt('\r') * lf
+        lf = onenter!(re"\n", :countline)
+        Re.opt('\r') * lf
     end
 
     # The specs refer to the SAM specs, which contain this regex
-    name = re"[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*"
-    name.actions[:enter] = [:mark]
-    name.actions[:exit] = [:name]
-
-    number = re"[0-9]+"
-    number.actions[:all] = [:digit]
-    number.actions[:exit] = [:number]
+    name = onexit!(onenter!(re"[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*", :mark), :name)
+    number = onexit!(onall!(re"[0-9]+", :digit), :number)
 
     line = name * re"\t" * number * re"\t" * number * re"\t" * number * re"\t" * number
-    fai = re.opt(line * re.rep(newline * line)) * re.rep(newline)
+    fai = Re.opt(line * Re.rep(newline * line)) * Re.rep(newline)
     Automa.compile(fai)
 end
 
@@ -173,7 +166,6 @@ index_actions = Dict{Symbol, Expr}(
     error("Error when parsing FAI file: Unexpected byte at index $p (line $linenum col $col)")
 end
 
-ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, :cs, :data, :mem, :byte))
 @eval function read_faidx(data::Vector{UInt8})
     start = 0
     linenum = 1
@@ -183,15 +175,9 @@ ctx = Automa.CodeGenContext(vars=Automa.Variables(:p, :p_end, :p_eof, :ts, :te, 
     linebases = 0
     linebases_num = 0
     vectors = (Int[], Int[], UInt[])
-    $(Automa.generate_init_code(ctx, index_machine))
-    p_eof = p_end = length(data)
 
-    GC.@preserve data begin
-        $(Automa.generate_exec_code(ctx, index_machine, index_actions))
-    end
+    $(Automa.generate_code(CONTEXT, index_machine, index_actions))
 
-    # TODO: Rely on Automa's new error code
-    iszero(cs) || throw_index_error(data, linenum, p)
     return Index(names, vectors...)
 end
 
@@ -303,10 +289,9 @@ returncode = quote
     return Index(names, lengths, offsets, encoded_linebases)
 end
 
-Automa.Stream.generate_reader(
+Automa.generate_reader(
     :faidx_,
     machine,
-    arguments = (),
     actions = index_fasta_actions,
     context = CONTEXT,
     initcode = initcode,
