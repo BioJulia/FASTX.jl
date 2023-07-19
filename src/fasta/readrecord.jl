@@ -10,55 +10,41 @@
 #   This implies all whitespace except newlines, including trailing whitespace, is part
 #   of the sequence.
 machine = let
-    re = Automa.RegExp
-    
     hspace = re"[ \t\v]"
     newline = let
-        lf = re"\n"
-        lf.actions[:enter] = [:countline]
-        re.opt('\r') * lf
+        lf = onenter!(re"\n", :countline)
+        Re.opt('\r') * lf
     end
     space = hspace | newline
     
     # Identifier: Leading non-space
-    identifier = re.rep(re.any() \ re.space())
-    identifier.actions[:enter] = [:mark]
-    # Action: Store length of identifier
-    identifier.actions[:exit]  = [:identifier]
+    identifier = onexit!(onenter!(Re.rep(Re.any() \ Re.space()), :mark), :identifier)
     
     # Description here include trailing whitespace.
     # This is needed for the FSM, since the description can contain arbitrary
     # whitespace, the only way to know the description ends is to encounter a newline.
     # NB: Make sure to also change the Index machine to match this is you change it.
-    description = identifier * re.opt(hspace * re"[^\r\n]*")
-
-    # Action: Store length of description and append description to record.data
-    description.actions[:exit]  = [:description]
+    description = onexit!(identifier * Re.opt(hspace * re"[^\r\n]*"), :description)
 
     # Header: '>' then description
     header = re">" * description
     
     # Sequence line: Anything except \r, \n and >
-    # Note: Must be consistent with the ByteSet in reader.jl used for seeking
-    sequence_line = re"[^\n\r>]+"
-    sequence_line.actions[:enter] = [:mark]
-    # Action: Append letters to sequence_line
-    sequence_line.actions[:exit]  = [:seqline]
+    # Note: Must be consistent with the disallowed bytes in reader.jl used for seeking
+    sequence_line = onexit!(onenter!(re"[^\n\r>]+", :mark), :seqline)
 
     # Sequence: This is intentionally very liberal with whitespace.
     # Any trailing whitespace is simply considered part of the sequence.
     # Is this bad? Maybe.
-    sequence = re.rep1(re.opt(sequence_line) * re.rep1(newline))
+    sequence = Re.rep1(Re.opt(sequence_line) * Re.rep1(newline))
     
     # We have sequence_eof to allow the final sequence to not end in whitespace
-    sequence_eof = re.opt(sequence_line) * re.rep(re.rep1(newline) * re.opt(sequence_line))
+    sequence_eof = Re.opt(sequence_line) * Re.rep(Re.rep1(newline) * Re.opt(sequence_line))
 
-    record = header * newline * sequence
-    record.actions[:exit] = [:record]
-    record_eof = header * newline * sequence_eof
-    record_eof.actions[:exit] = [:record]
+    record = onexit!(header * newline * sequence, :record)
+    record_eof = onexit!(header * newline * sequence_eof, :record)
 
-    fasta = re.rep(space) * re.rep(record) * re.opt(record_eof)
+    fasta = Re.rep(space) * Re.rep(record) * Re.opt(record_eof)
     
     Automa.compile(fasta)
 end
@@ -106,7 +92,7 @@ end
 
 returncode = :(return cs, linenum, found)
 
-Automa.Stream.generate_reader(
+Automa.generate_reader(
     :readrecord!,
     machine,
     arguments = (:(record::Record), :(state::Tuple{Int,Int})),
@@ -120,7 +106,7 @@ Automa.Stream.generate_reader(
 validator_actions = Dict(k => quote nothing end for k in keys(actions))
 validator_actions[:countline] = :(linenum += 1)
 
-Automa.Stream.generate_reader(
+Automa.generate_reader(
     :validate_fasta,
     machine,
     arguments = (),

@@ -8,17 +8,13 @@ Module under FASTX with code related to FASTA files.
 """
 module FASTA
 
-import Automa
-import Automa.RegExp: @re_str
-import Automa.Stream: @mark, @markpos, @relpos, @abspos
+using Automa: Automa, @re_str, @mark, @markpos, @relpos, @abspos, onenter!, onexit!, onall!
 import BioGenerics: BioGenerics
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
+import ..FASTX: identifier, description, sequence, seqsize, truncate, memcmp, appendfrom!, CONTEXT, throw_parser_error
 
-# Trivial use, I only use it here because it's a dep of Automa anyway.
-# Can be removed with no big problems
-using ScanByte: memchr, ByteSet
-import ..FASTX: identifier, description, sequence, UTF8, seqsize, throw_parser_error, truncate, memcmp, appendfrom!, CONTEXT
+const Re = Automa.RegExp
 
 include("record.jl")
 include("readrecord.jl")
