@@ -3,7 +3,7 @@ module TestFASTQ
 # Default offset for quality
 const OFFSET = 33
 
-using ReTest
+using Test
 using FASTX: FASTQ
 using FASTX.FASTQ: Record, Reader, Writer, identifier, description,
     sequence, quality, quality_scores, QualityEncoding, quality_header!, validate_fastq

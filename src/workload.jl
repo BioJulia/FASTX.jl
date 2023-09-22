@@ -1,8 +1,8 @@
 using PrecompileTools: @setup_workload, @compile_workload
 
 @setup_workload begin
-    fasta_path = joinpath(dirname(@__DIR__), "test", "test.fasta")
-    fastq_path = joinpath(dirname(@__DIR__), "test", "test.fastq")
+    fasta_path = joinpath(dirname(@__DIR__), "test", "data", "test.fasta")
+    fastq_path = joinpath(dirname(@__DIR__), "test", "data", "test.fastq")
     fasta = read(fasta_path, String)
     fastq = read(fastq_path, String)
 
