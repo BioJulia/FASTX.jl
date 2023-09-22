@@ -33,6 +33,12 @@ tcagTTAAGATGGGAT
 ###EEEEEEEEE##E#
 ```
 
+Where:
+* `identifier` is `"FSRRS4401BE7HA"`
+* `description` is also `"FSRRS4401BE7HA"`
+* `sequence` is `"tcagTTAAGATGGGAT"`
+* `quality` is `"###EEEEEEEEE##E#"`
+
 ## The `FASTQRecord`
 `FASTQRecord`s optionally have the description repeated on the third line.
 This can be toggled with `quality_header!(::Record, ::Bool)`:
@@ -124,6 +130,7 @@ If set to a `Bool` value, the `Writer` will override the `Records`, without chan
 
 ### Reference:
 ```@docs
+FASTQ
 FASTQ.Reader
 FASTQ.Writer
 validate_fastq

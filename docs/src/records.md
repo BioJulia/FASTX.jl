@@ -16,7 +16,7 @@ TAGATGAA
 AA
 ```
 Is stored in a `FASTA.Record` object roughly as its constituent bytes, plus some metadata.
-There is no notion in the record object of being a DNA or RNA sequence - it's simply a bytearray.
+There is no notion in the record object of being a DNA or RNA sequence - it's simply an array of bytes.
 
 Records can be constructed from raw parts (i.e. description and sequence and, for FASTQ, quality), where
 * `description::AbstractString`
