@@ -7,7 +7,7 @@ end
 
 # FASTX formatted files
 
-### Readers and writers
+### Readers and writers - basics
 A `Reader` and a `Writer` are structs that wrap an IO, and allows efficient reading/writing of FASTX `Record`s.
 For FASTA, use `FASTAReader` and `FASTAWriter`, and for FASTQ - well I'm sure you've guessed it.
 
@@ -75,6 +75,8 @@ UInt8[]
 ```
 
 To use it correctly, either call `flush`, or close the writer first (which also closes the underlying stream).
+
+### Readers and writers with do-syntax
 It is recommended to use readers and writers to `do` syntax in the form:
 ```jldoctest
 julia> FASTAWriter(open(tempname(), "w")) do writer
@@ -118,6 +120,26 @@ true
 ```
 
 However, this latter syntax does not easily extend to different types of IO, such as gzip compressed streams.
+
+### `rdr` and `wtr` macros
+The `rdr` and `wtr` macros use the passed file name to determine the FASTX reader or writer to use - including any compression file extensions.
+Since this both uses heuristics, and the macro is a little opaque to users, it is recommended to use these macros for ephemeral REPL work, and not in packages where the more explicit forms are preferred.
+
+The macro call `rdr"seqs.fna.gz"` expands to
+```julia
+FASTAReader(GzipDecompressorStream(open("seqs.fna.gz"; lock=false)))
+```
+
+To use rdr `rdr` and `wtr` macros with `do`-syntax, use the `defer` function.
+The only purpose of the defer function is to enable `do`-syntax:
+
+```julia
+record = FASTARecord("my_header", "TAGAG")
+
+defer(wtr"seqs.fna.gz") do writer
+    write(writer, record)
+end
+```
 
 ### Validate files
 The functions `validate_fasta` and `validate_fastq` can be used to check if an `IO`
