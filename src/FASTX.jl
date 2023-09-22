@@ -2,6 +2,7 @@ module FASTX
 
 using StringViews: StringView
 using Automa: Automa
+using BioGenerics: BioGenerics, defer, @rdr_str, @wtr_str
 
 """
     identifier(record::Record)::AbstractString
@@ -220,6 +221,11 @@ const FASTQReader = FASTQ.Reader
 const FASTAWriter = FASTA.Writer
 const FASTQWriter = FASTQ.Writer
 
+const FASTA_EXTENSIONS = Union{Val{:fa}, Val{:fasta}, Val{:faa}, Val{:fna}}
+
+BioGenerics.readertype(::FASTA_EXTENSIONS, arg) = FASTAReader
+BioGenerics.writertype(::FASTA_EXTENSIONS, arg) = FASTAWriter
+
 if !isdefined(Base, :get_extension)
     include("../ext/BioSequencesExt.jl")
   end
@@ -249,6 +255,11 @@ export
     faidx,
     index!,
     extract,
-    seekrecord
+    seekrecord,
+
+    # Re-export from BioGenerics
+    defer,
+    @rdr_str,
+    @wtr_str
 
 end # module
