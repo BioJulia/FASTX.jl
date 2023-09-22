@@ -28,8 +28,9 @@ julia = "1.6"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+FormatSpecimens = "3372ea36-2a1a-11e9-3eb7-996970b6ffbd"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BioSequences", "Random", "ReTest"]
+test = ["BioSequences", "Random", "Test", "FormatSpecimens"]

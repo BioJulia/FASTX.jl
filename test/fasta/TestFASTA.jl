@@ -1,6 +1,6 @@
 module TestFASTA
-    
-using ReTest
+
+using Test    
 using FASTX.FASTA: FASTA, Record, identifier, description, sequence,
     Reader, Writer, Index, index!, validate_fasta, faidx, seqsize, extract, seekrecord
 using BioSequences: LongDNA, LongRNA, LongAA, @dna_str, @rna_str, @aa_str
