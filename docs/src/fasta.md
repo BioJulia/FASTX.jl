@@ -31,6 +31,11 @@ CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACC
 CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTA
 ```
 
+Here:
+* The `identifier` is `"chrI"`
+* The `description` is `"chrI chromosome 1"`, containing the identifier
+* The sequence is the DNA sequence `"CCACA..."`
+
 ## The `FASTARecord`
 FASTA records are, by design, very lax in what they can contain.
 They can contain almost arbitrary byte sequences, including invalid unicode, and trailing whitespace on their sequence lines, which will be interpreted as part of the sequence.
@@ -47,6 +52,7 @@ Else, it will wrap lines to the given maximal width.
 
 ### Reference:
 ```@docs
+FASTA
 FASTA.Reader
 FASTA.Writer
 validate_fasta

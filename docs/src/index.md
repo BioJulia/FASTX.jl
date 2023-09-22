@@ -23,22 +23,67 @@ Press `]` to enter pkg mode again, and enter the following:
 ```
 
 ## Quickstart
-"FASTX" is a shorthand for the two related formats FASTA and FASTQ,
-which are handled by the two modules `FASTX.FASTA` and `FASTX.FASTQ`, respectively.
+See more documentation in the sections in the sidebar.
 
-* Construct records from raw parts
+### Read FASTA or FASTQ files
+It is preferred to use the `do` syntax to automatically close the file when you're done with it:
 ```jldoctest
-julia> record = FASTARecord("some header", dna"TAGAAGA");
-
-julia> (identifier(record), description(record), sequence(record))
-("some", "some header", "TAGAAGA")
-
-julia> sequence(LongDNA{2}, record)
-7nt DNA Sequence:
-TAGAAGA
+julia> FASTAReader(open("../test/data/test.fasta")) do reader
+           for record in reader
+               println(identifier(record))
+           end
+       end
+abc
 ```
 
-* Validate files
+Alternatively, you can open and close the reader manually:
+
+```jldoctest
+julia> reader = FASTAReader(open("../test/data/test.fasta"));
+
+julia> for record in reader
+           println(identifier(record))
+       end
+abc
+       
+julia> close(reader)
+```
+
+### Write FASTA or FASTQ files
+```jldoctest
+julia> FASTQWriter(open(tempname(), "w")) do writer
+           write(writer, FASTQRecord("abc", "TAG", "ABC"))
+       end
+15
+```
+
+### Read and write Gzip compressed FASTA files
+```jldoctest
+julia> using CodecZlib
+
+julia> FASTAReader(GzipDecompressorStream(open("../test/data/seqs.fna.gz"))) do reader
+           for record in reader
+               println(identifier(record))
+           end
+       end
+seqa
+seqb
+
+julia> FASTQWriter(GzipCompressorStream(open(tempname(), "w"))) do writer
+           write(writer, FASTQRecord("header", "sequence", "quality!"))
+       end
+28
+```
+
+### Construct FASTA or FASTQ records from raw parts
+```jldoctest
+julia> fasta_record = FASTARecord("some header", dna"TAGAAGA");
+
+julia> fastq_record = FASTQRecord("read1", "TAGA", "ABCD");
+```
+
+### Validate that a file (or an arbitrary `IO`) is well-formatted
+The `validate_fast*` functions return `nothing` if the IO is well formatted
 ```jldoctest
 julia> validate_fasta(IOBuffer(">ABC\nDEF")) === nothing
 true
@@ -47,30 +92,14 @@ julia> validate_fastq(IOBuffer("@ABC\nTAG\n+\nDDD")) === nothing
 true
 ```
 
-* Read FASTX files
-```julia
-record = FASTAReader(first, IOBuffer(">ABC\nDEF"))
+To check if files are well-formatted:
+```jldoctest
+julia> open(validate_fasta, "../test/data/test.fasta") === nothing
+true
 
-sequence(record) == "DEF" # should be true
-
-# Or with do-syntax
-FASTAReader(GzipDecompressorStream(open(path))) do reader
-    for record in reader
-        # do something with record
-    end
-end
+julia> open(validate_fasta, "Project.toml") === nothing
+false
 ```
-
-* Write FASTX files
-```julia
-FASTQWriter(open(path, "w")) do writer
-    for record in records
-        write(writer, record)
-    end
-end
-```
-
-See more details in the sections in the sidebar.
 
 ## Contributing
 We appreciate contributions from users including reporting bugs, fixing
@@ -78,3 +107,4 @@ issues, improving performance and adding new features.
 
 Take a look at the [contributing files](https://github.com/BioJulia/Contributing)
 detailed contributor and maintainer guidelines, and code of conduct.
+

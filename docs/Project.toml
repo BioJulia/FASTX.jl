@@ -1,7 +1,10 @@
 [deps]
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 
 [compat]
 BioSequences = "3"
-Documenter = "0.27" 
+Documenter = "1"
+CodecZlib = "0.7"

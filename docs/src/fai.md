@@ -22,8 +22,8 @@ true
 ```
 
 Or from a path representing a FAI file:
-```julia
-julia> Index("/path/to/file.fai")
+```jldoctest
+julia> Index("../test/data/test.fasta.fai");
 ```
 
 Alternatively, a FASTA file can be indexed to produce an `Index` using `faidx`.
@@ -37,13 +37,15 @@ Index:
 Alternatively, a FASTA file can be indexed, and the index immediately written to a FAI file,
 by passing an `AbstractString` to `faidx`:
 
-```julia
-julia> ispath("/path/to/fasta.fna.fai")
+```jldoctest
+julia> rm("../test/data/test.fasta.fai") # remove existing fai
+
+julia> ispath("../test/data/test.fasta.fai")
 false
 
-julia> faidx("/path/to/fasta.fna");
+julia> faidx("../test/data/test.fasta");
 
-julia> ispath("/path/to/fasta.fna.fai")
+julia> ispath("../test/data/test.fasta.fai")
 true
 ```
 
@@ -59,6 +61,21 @@ true
 julia> Index(IOBuffer(str))
 ERROR
 [...]
+```
+
+### Writing a FAI file
+If you have an `Index` object, you can simply `write` it to an IO:
+```jldoctest
+julia> index = open(i -> Index(i), "../test/data/test.fasta.fai");
+
+julia> filename = tempname();
+
+julia> open(i -> write(i, index), filename, "w");
+
+julia> index2 = open(i -> Index(i), filename);
+
+julia> string(index) == string(index2)
+true
 ```
 
 ### Attaching an `Index` to a `Reader`

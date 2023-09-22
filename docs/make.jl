@@ -9,7 +9,7 @@ makedocs(
     doctest = true,
     pages = [
         "Overview" => Any[
-            "Overview" => "index.md",
+            "Quickstart" => "index.md",
             "Records" => "records.md",
             "File I/O" => "files.md",
         ],
@@ -18,7 +18,7 @@ makedocs(
         "FAI" => "fai.md"
     ],
     authors = "Sabrina J. Ward, Jakob N. Nissen, The BioJulia Organisation and other contributors.",
-    checkdocs = :all
+    checkdocs = :exports
 )
 
 deploydocs(
