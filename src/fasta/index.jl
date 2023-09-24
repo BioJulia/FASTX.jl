@@ -209,6 +209,12 @@ function Base.write(io::IO, index::Index)
     n
 end
 
+function Base.print(io::IO, index::Index)
+    buffer = IOBuffer()
+    write(buffer, index)
+    String(take!(buffer))
+end
+
 index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),

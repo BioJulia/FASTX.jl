@@ -24,6 +24,7 @@ function test_same_index(a::Index, b::Index)
     @test a.lengths == b.lengths
     @test a.offsets == b.offsets
     @test a.encoded_linebases == b.encoded_linebases
+    @test string(a) == string(b)
 end
 
 @testset "Parsing index" begin
