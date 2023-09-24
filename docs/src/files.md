@@ -133,12 +133,18 @@ FASTAReader(GzipDecompressorStream(open("seqs.fna.gz"; lock=false)))
 To use rdr `rdr` and `wtr` macros with `do`-syntax, use the `defer` function.
 The only purpose of the defer function is to enable `do`-syntax:
 
-```julia
-record = FASTARecord("my_header", "TAGAG")
+```jldoctest
+julia> using CodecZlib # for gzip files
 
-defer(wtr"seqs.fna.gz") do writer
-    write(writer, record)
-end
+julia> defer(rdr"../test/data/test.fasta") do reader
+           println(identifier(first(reader)))
+       end
+abc
+
+julia> defer(wtr"seqs.fna.gz") do writer 
+           write(writer, FASTARecord("my_header", "TAGAG"))
+       end
+17
 ```
 
 ### Validate files

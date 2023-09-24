@@ -79,14 +79,16 @@ For added convenience, you can also use the reader and writer macros `rdr""` and
 These macros use the file extensions to determine the biological sequence reader or writer type, and any file compresion.
 To use these macros with the `do`-syntax, you can use the `defer` function. Hence, the above code block can also be written in the following equivalent way:
 
-```julia
-using CodecZlib
+```jldoctest
+julia> using CodecZlib
 
-defer(rdr"seqs.fna.gz") do reader
-    for record in reader
-        println(identifier(record))
-    end
-end
+julia> defer(rdr"../test/data/seqs.fna.gz") do reader
+           for record in reader
+               println(identifier(record))
+           end
+       end
+seqa
+seqb
 ```
 
 ### Construct FASTA or FASTQ records from raw parts
