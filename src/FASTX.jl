@@ -2,7 +2,7 @@ module FASTX
 
 using StringViews: StringView
 using Automa: Automa
-using BioGenerics: BioGenerics, defer, @rdr_str, @wtr_str
+using BioGenerics: BioGenerics, @rdr_str, @wtr_str
 
 """
     identifier(record::Record)::AbstractString
@@ -258,7 +258,6 @@ export
     seekrecord,
 
     # Re-export from BioGenerics
-    defer,
     @rdr_str,
     @wtr_str
 
