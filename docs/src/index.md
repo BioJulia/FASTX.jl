@@ -75,6 +75,22 @@ julia> FASTQWriter(GzipCompressorStream(open(tempname(), "w"))) do writer
 28
 ```
 
+For added convenience, you can also use the reader and writer macros `rdr""` and `wtr""`.
+These macros use the file extensions to determine the biological sequence reader or writer type, and any file compresion.
+To use these macros with the `do`-syntax, you can use `open` as normal. Hence, the above code block can also be written in the following equivalent way:
+
+```jldoctest
+julia> using CodecZlib
+
+julia> open(rdr"../test/data/seqs.fna.gz") do reader
+           for record in reader
+               println(identifier(record))
+           end
+       end
+seqa
+seqb
+```
+
 ### Construct FASTA or FASTQ records from raw parts
 ```jldoctest
 julia> fasta_record = FASTARecord("some header", dna"TAGAAGA");

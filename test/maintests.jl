@@ -1,3 +1,5 @@
+using CodecZlib
+
 # Common tests
 @testset "FASTX" begin
     @testset "Copying to LongSequence" begin
