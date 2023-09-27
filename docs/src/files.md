@@ -7,7 +7,7 @@ end
 
 # FASTX formatted files
 
-### Readers and writers - basics
+### Readers and writers
 A `Reader` and a `Writer` are structs that wrap an IO, and allows efficient reading/writing of FASTX `Record`s.
 For FASTA, use `FASTAReader` and `FASTAWriter`, and for FASTQ - well I'm sure you've guessed it.
 
@@ -96,28 +96,6 @@ julia> open(FASTAWriter, tempname()) do writer
 ```
 
 However, this latter syntax does not easily extend to different types of IO, such as gzip compressed streams.
-
-### Validate files
-The functions `validate_fasta` and `validate_fastq` can be used to check if an `IO`
-contains data that can be read as FASTX.
-They return `nothing` if the IO is correctly formatted, and another value if not.
-
-They are significantly faster than parsing the whole file into records,
-and are memory efficient.
-Be aware that the validators mutate the IO by reading it, so make sure to reset the IO before using it to parse FASTX files.
-
-```jldoctest
-julia> io = IOBuffer(">header\r\nAGG\nKK");
-
-julia> validate_fasta(io) === nothing
-true
-
-julia> read(io) # NB: IO is now exhausted
-UInt8[]
-
-julia> validate_fastq(IOBuffer("@header\nTTT\n+\njkm")) === nothing
-true
-```
 
 However, this latter syntax does not easily extend to different types of IO, such as gzip compressed streams.
 
