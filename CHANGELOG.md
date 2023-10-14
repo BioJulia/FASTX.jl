@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.1.4]
+* Add Base.print(::IO, ::Index)
+* Touch up documentation
+* Bump TranscodingStreams to 0.10
+
+## [2.1.3]
+* Add short-form show for records
+* Migrate to Automa v1
+* Drop ReTest test dep
+
 ## [2.1.2]
 ### Bugfix
 * Allow non-PHRED quality scores, such as Solexa scores, which can be negative (#104)
