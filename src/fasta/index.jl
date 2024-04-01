@@ -209,12 +209,6 @@ function Base.write(io::IO, index::Index)
     n
 end
 
-function Base.print(io::IO, index::Index)
-    buffer = IOBuffer()
-    write(buffer, index)
-    String(take!(buffer))
-end
-
 index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
@@ -226,15 +220,9 @@ index_fasta_actions = Dict(
     :description => quote
         uses_rn_newline = byte == UInt8('\r')
         no_more_seqlines = false
-
-        # Disturbingly, there is no API to get the absolute position of
-        # an Automa machine operating on a stream. We ought to fix this.
-        # This workaround works ONLY for a NoopStream,
-        # and relies on abusing the internals.
-        buffer_offset = buffer.transcoded - buffer.marginpos + 1
-
-        # We want 0-indexed, p is one-indexed, and we need the offset of first sequence
-        offset = buffer_offset + p + uses_rn_newline
+        # +1 for > symbol, +1 for newline, +1 if \r is used
+        offset += p - @markpos() + uses_rn_newline + 2
+        last_offset = offset
     end,
     :seqline => quote
         # Validate line terminator is same, i.e. no seq have have both \r\n and \n
@@ -254,6 +242,7 @@ index_fasta_actions = Dict(
             elseif current_seqwidth < seqwidth
                 no_more_seqlines = true
             end
+            offset += current_seqwidth + 1 + uses_rn_newline
             seqlen += current_seqwidth
         end
     end,
@@ -262,7 +251,7 @@ index_fasta_actions = Dict(
         
         names[identifier] = record_count
         push!(lengths, seqlen)
-        push!(offsets, offset)
+        push!(offsets, last_offset)
         enc_linebases = (seqwidth % UInt)
         enc_linebases |= ifelse(uses_rn_newline, typemin(Int) % UInt, UInt(0))
         push!(encoded_linebases, enc_linebases)
@@ -278,6 +267,8 @@ initcode = quote
     offsets = Int[]
     encoded_linebases = UInt[]
 
+    offset = 0
+    last_offset = 0
     seqwidth = -1
     seqlen = 0
     linenum = 1
