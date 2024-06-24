@@ -9,7 +9,7 @@ using Automa: Automa, @re_str, @mark, @markpos, @relpos, @abspos, onenter!, onex
 import BioGenerics: BioGenerics
 import StringViews: StringView
 import TranscodingStreams: TranscodingStreams, TranscodingStream, NoopStream
-import ..FASTX: identifier, description, sequence, seqsize, truncate, memcmp, appendfrom!, CONTEXT
+import ..FASTX: identifier, description, sequence, seqsize, truncate, memcmp, appendfrom!, CONTEXT, throw_parser_error
 
 const Re = Automa.RegExp
 
