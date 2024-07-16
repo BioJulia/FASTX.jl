@@ -3,9 +3,6 @@ uuid = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 authors = ["Sabrina J. Ward <sabrinajward@protonmail.com>", "Jakob N. Nissen <jakobnybonissen@gmail.com>"]
 version = "2.1.7"
 
-[weakdeps]
-BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
-
 [deps]
 Automa = "67c07d97-cdcb-5c2c-af73-a7f9c32a568b"
 BioGenerics = "47718e42-2ac5-11e9-14af-e5595289c2ea"
@@ -14,12 +11,15 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 
+[weakdeps]
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+
 [extensions]
 BioSequencesExt = "BioSequences"
 
 [compat]
 Automa = "1"
-BioGenerics = "0.1.2"
+BioGenerics = "0.1.3"
 BioSequences = "3"
 PrecompileTools = "1"
 StringViews = "1"
@@ -27,10 +27,11 @@ TranscodingStreams = "0.9.5, 0.10, 0.11"
 julia = "1.6"
 
 [extras]
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 FormatSpecimens = "3372ea36-2a1a-11e9-3eb7-996970b6ffbd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BioSequences", "Random", "Test", "FormatSpecimens"]
+test = ["BioSequences", "CodecZlib", "Random", "Test", "FormatSpecimens"]
