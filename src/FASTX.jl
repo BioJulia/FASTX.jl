@@ -220,10 +220,6 @@ const FASTQReader = FASTQ.Reader
 const FASTAWriter = FASTA.Writer
 const FASTQWriter = FASTQ.Writer
 
-if !isdefined(Base, :get_extension)
-    include("../ext/BioSequencesExt.jl")
-  end
-
 include("workload.jl")
 
 export
