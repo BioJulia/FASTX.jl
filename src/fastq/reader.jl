@@ -36,15 +36,15 @@ Int8[73, 74, 26, 60]
 ```
 """
 mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    stream::S
+    const stream::S
+    const record::Record
     automa_state::Int
     linenum::Int
-    record::Record
     copy::Bool
 
     function Reader{T}(io::T, copy::Bool) where {T <: TranscodingStream}
         record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-        new{T}(io, 1, 1, record, copy)
+        new{T}(io, record, 1, 1, copy)
     end
 end
 

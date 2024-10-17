@@ -27,8 +27,8 @@ end
 ```
 """
 mutable struct Writer{S <: TranscodingStream} <: BioGenerics.IO.AbstractWriter
-    output::S
-    quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read
+    const output::S
+    const quality_header::UInt8 # 0x00: No, 0x01: Yes, 0x02: Same as when read
 
     function Writer{S}(output::S, quality_header::UInt8) where {S <: TranscodingStream}
         finalizer(new{S}(output, quality_header)) do writer
