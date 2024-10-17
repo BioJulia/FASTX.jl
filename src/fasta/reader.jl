@@ -39,18 +39,18 @@ AGA
 ```
 """
 mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
-    stream::S
+    const stream::S
+    const record::Record
     automa_state::Int
     # set to typemin(Int) if reader uses seek, then the linenum is
     # irreversibly lost.
     encoded_linenum::Int
     index::Union{Index, Nothing}
-    record::Record
     copy::Bool
 
     function Reader{T}(io::T, index::Union{Index, Nothing}, copy::Bool) where {T <: TranscodingStream}
         record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
-        new{T}(io, 1, 1, index, record, copy)
+        new{T}(io, record, 1, 1, index, copy)
     end
 end
 

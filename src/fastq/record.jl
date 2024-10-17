@@ -36,7 +36,7 @@ mutable struct Record
     # all rest, including newlines and the @ and + symbol, are not stored.
     # The second description after + must be identical to first description.
     # The quality is not corrected for offset, i.e. it is stored as it in the input file
-    data::Vector{UInt8}
+    const data::Vector{UInt8}
     
     # In bytes, not chars
     identifier_len::Int32

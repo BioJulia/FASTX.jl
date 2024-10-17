@@ -32,7 +32,7 @@ true
 mutable struct Record
     # Data contains the description, then the sequence immediately after
     # without newlines, or the initial > symbol, and then any unused trailing bytes
-    data::Vector{UInt8}
+    const data::Vector{UInt8}
 
     # These lengths are in bytes, not chars
     # Identifier is data[1:identifier_len]
