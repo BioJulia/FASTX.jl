@@ -272,6 +272,28 @@ function quality(::Type{StringView}, record::Record, part::UnitRange{<:Integer}=
     StringView(view(record.data, quality_indices(record, part)))
 end
 
+"""
+    QualityScores
+
+Ab object of this type is returned by [`quality_scores`](@ref).
+The only supported interfaces of this type is `length`, and `iterate`.
+"""
+struct QualityScores
+    # TODO: Change to Memory at 1.11
+    vec::Vector{UInt8}
+    part::UnitRange{Int}
+    encoding::QualityEncoding
+end
+
+Base.length(x::QualityScores) = length(x.part)
+Base.eltype(::Type{QualityScores}) = Int8
+
+function Base.iterate(x::QualityScores, state=first(x.part))
+    state > last(x.part) && return nothing
+    byte = @inbounds x.vec[state]
+    (decode_quality(x.encoding, byte), state + 1)
+end
+
 function quality_scores(record::Record, part::UnitRange{<:Integer}=1:seqsize(record))
     quality_scores(record, DEFAULT_ENCODING, part)
 end
@@ -287,12 +309,12 @@ By default, the encoding is PHRED33 Sanger encoding, but may be specified with a
 function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqsize(record))
     start, stop = first(part), last(part)
     (start < 1 || stop > seqsize(record)) && throw(BoundsError(record, start:stop))
-    data = record.data
-    offset = record.description_len + seqsize(record) 
-    return Iterators.map(offset+start:offset+stop) do i
-        v = data[i]
-        decode_quality(encoding, v)
-    end
+    offset = record.description_len + seqsize(record)
+    QualityScores(
+        record.data,
+        offset+start:offset+stop,
+        encoding,
+    )
 end
 
 """
