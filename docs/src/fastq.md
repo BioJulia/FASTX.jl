@@ -25,6 +25,13 @@ Where the "identifier" is the first part of the description up to the first whit
 
 The description may optionally be present on the third line, and if so, must be identical to the description on the first line.
 
+FASTX supports the four-line FASTQ representation shown above. The sequence and
+quality must each occupy exactly one line; wrapped or multiline FASTQ records are
+not supported. A sequence line may contain any printable, non-space ASCII
+character (`!` through `~`). FASTX does not otherwise restrict the sequence to a
+biological alphabet: convert it to a suitable `BioSequence` or validate it
+separately when such restrictions are required.
+
 Here is an example of one record from a FASTQ file:
 ```
 @FSRRS4401BE7HA

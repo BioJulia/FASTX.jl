@@ -83,6 +83,18 @@ end
 
     @test records[3] == records[1]
 
+    # Sequence lines accept exactly the printable, non-space ASCII range.
+    printable = String(UInt8.(0x21:0x7e))
+    printable_record = parse(Record, "@ascii\n$printable\n+\n$(repeat('I', ncodeunits(printable)))")
+    @test sequence(String, printable_record) == printable
+    @test validate_fastq(IOBuffer("@ascii\n$printable\n+\n$(repeat('I', ncodeunits(printable)))")) === nothing
+
+    for invalid_sequence in ("A A", "A\tA", "A\x7fA")
+        input = "@ascii\n$invalid_sequence\n+\n$(repeat('I', ncodeunits(invalid_sequence)))"
+        @test_throws Exception parse(Record, input)
+        @test validate_fastq(IOBuffer(input)) !== nothing
+    end
+
     # Throws when constructing bad examples
     for string in TEST_BAD_RECORD_STRINGS
         @test_throws Exception Record(string)

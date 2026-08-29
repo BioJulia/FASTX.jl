@@ -10,7 +10,9 @@ machine = let
     end
     onexit!(header1, :header1_description)
     
-    sequence = onexit!(onenter!(re"[A-z]*", :mark), :sequence)
+    # FASTQ records are untyped, so accept every printable, non-space ASCII
+    # byte and leave biological alphabet validation to the caller.
+    sequence = onexit!(onenter!(re"[!-~]*", :mark), :sequence)
     
     # The pattern recognized by header2 should be identical to header1
     # with the only difference being that h1 is split into identifier
@@ -184,7 +186,7 @@ Return `nothing` if it is, and an instance of another type if not.
 julia> validate_fastq(IOBuffer("@i1 r1\\nuuag\\n+\\nHJKI")) === nothing
 true
 
-julia> validate_fastq(IOBuffer("@i1 r1\\nu;ag\\n+\\nHJKI")) === nothing
+julia> validate_fastq(IOBuffer("@i1 r1\\nuu ag\\n+\\nHJKI")) === nothing
 false
 ```
 """
