@@ -9,13 +9,17 @@ end
 FASTX files are considered a sequence of `Record`s, `FASTA.Record` for FASTA files and `FASTQ.Record` for FASTQ.
 For convenience, `FASTARecord` and `FASTQRecord` are aliases of `FASTA.Record` and `FASTQ.Record`.
 
-A `Record` object represent the text of the FASTX record as it is, e.g the following FASTA record:
+A `Record` object stores a normalized form of a FASTX record's source text, e.g. the following FASTA record:
 ```
 >some header here
 TAGATGAA
 AA
 ```
-Is stored in a `FASTA.Record` object roughly as its constituent bytes, plus some metadata.
+is stored in a `FASTA.Record` object roughly as its constituent bytes, plus some metadata.
+Only the header and sequence text (and, for FASTQ, quality text) are retained.
+`Record` does not store uninformative data such as line-break locations or the
+optional second description following `+` in a FASTQ record. Consequently,
+records that differ only in that data are identical.
 There is no notion in the record object of being a DNA or RNA sequence - it's simply an array of bytes.
 
 Records can be constructed from raw parts (i.e. description and sequence and, for FASTQ, quality), where
