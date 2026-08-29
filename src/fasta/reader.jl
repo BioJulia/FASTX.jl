@@ -122,7 +122,7 @@ Base.close(reader::Reader) = close(reader.stream)
 function Base.getindex(reader::Reader, name::AbstractString)
     seekrecord(reader, name)
     record = Record()
-    cs, _, found = readrecord!(NoopStream(reader.stream), record, (1, 1))
+    cs, found = _read!(reader, record)
     @assert cs ≥ 0 && found
     return record
 end

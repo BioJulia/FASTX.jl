@@ -228,6 +228,14 @@ end
     @test_throws Exception extract(reader, "A")
 end
 
+@testset "Indexed lookup resumes iteration" begin
+    data = ">A\nAA\n>B\nBB\n>C\nCC\n"
+    reader = Reader(IOBuffer(data), index=faidx(IOBuffer(data)))
+
+    @test identifier(reader["B"]) == "B"
+    @test map(identifier, collect(reader)) == ["C"]
+end
+
 @testset "Faidx existing file" begin
     name1 = tempname()
     name2 = tempname()
