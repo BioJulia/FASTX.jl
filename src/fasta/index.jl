@@ -58,8 +58,9 @@ struct Index
     )
         issorted(offsets) && return new(names, lengths, offsets, encoded_linebases)
         perm = sortperm(offsets)
+        inverse_perm = invperm(perm)
         new(
-            Dict(name => perm[i] for (name, i) in names),
+            Dict(name => inverse_perm[i] for (name, i) in names),
             lengths[perm],
             offsets[perm],
             encoded_linebases[perm]

@@ -51,6 +51,22 @@ end
     end
 end
 
+@testset "Unsorted index" begin
+    fasta = ">B\nBBBBB\n>C\nCCCCC\n>A\nAAAAA\n"
+    # The offsets are deliberately in the order A, B, C, which requires a
+    # non-self-inverse permutation to restore their order in the FASTA file.
+    fai = "A\t5\t21\t5\t6\nB\t5\t3\t5\t6\nC\t5\t12\t5\t6\n"
+    index = Index(IOBuffer(fai))
+    reader = Reader(IOBuffer(fasta), index=index)
+
+    @test index.names == Dict("A" => 3, "B" => 1, "C" => 2)
+    for (name, sequence_) in [("A", "AAAAA"), ("B", "BBBBB"), ("C", "CCCCC")]
+        seekrecord(reader, name)
+        @test identifier(first(reader)) == name
+        @test extract(reader, name) == sequence_
+    end
+end
+
 random_name() = join(rand(VALID_INDEX_CHARS, rand(10:25)))
 random_seqline(len::Integer) = String(rand(VALID_SEQ_BYTES, len))
 function make_random_index()
