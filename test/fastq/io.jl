@@ -6,6 +6,18 @@
     @test isnothing(iterate(reader))
     close(reader)
 
+    # Malformed records should identify the format in the iterator error.
+    reader = Reader(IOBuffer("@A\nTAG\n"))
+    err = try
+        collect(reader)
+        nothing
+    catch err
+        err
+    end
+    @test err isa ErrorException
+    @test sprint(showerror, err) == "Unexpected end of file when reading FASTQ record"
+    close(reader)
+
     # Resumable
     reader = Reader(IOBuffer("@A\nTAG\n+\nJJK\n@B C\nMNB\n+B C\nLLL"))
     record = first(iterate(reader))

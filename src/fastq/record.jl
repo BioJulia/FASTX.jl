@@ -295,8 +295,8 @@ end
 """
     QualityScores
 
-Ab object of this type is returned by [`quality_scores`](@ref).
-The only supported interfaces of this type is `length`, and `iterate`.
+An object of this type is returned by [`quality_scores`](@ref).
+The only supported interfaces of this type are `length` and `iterate`.
 """
 struct QualityScores
     # TODO: Change to Memory at 1.11
@@ -340,9 +340,10 @@ function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRan
 end
 
 """
-    quality(record::Record, encoding_name::Symbol, [part::UnitRange])::Vector{UInt8}
+    quality_scores(record::Record, encoding_name::Symbol, [part::UnitRange])
 
-Get an iterator of base quality of the slice `part` of `record`'s quality.
+Get a lazy iterator of base quality scores for the slice `part` of `record`'s quality.
+The iterator has `Int8` elements.
 
 The `encoding_name` can be either `:sanger`, `:solexa`, `:illumina13`, `:illumina15`, or `:illumina18`.
 """

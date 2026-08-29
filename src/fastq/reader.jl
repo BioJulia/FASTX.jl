@@ -61,7 +61,7 @@ function Base.iterate(rdr::Reader, state=nothing)
         iszero(cs) && return nothing
         # Make sure reader's record in not invalid
         empty!(rdr.record)
-        error("Unexpected end of file when reading FASTA record")
+        error("Unexpected end of file when reading FASTQ record")
     end
     return if rdr.copy
         (copy(rdr.record), nothing)
