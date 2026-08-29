@@ -136,6 +136,13 @@ end
 BADFNA_LINEENDINGS = ">abc\nTA\nAG\n>def\r\nAA\nGA\r\nGG"
 BADFNA_INCONSISTENT_SEQWIDTH_1 = ">A\nTT\nTTT\nT"
 BADFNA_INCONSISTENT_SEQWIDTH_2 = ">A\nTTT\nTT\nTT"
+BADFNA_EMPTY_SEQLINES = [
+    "\n\n>A\nAA\n",
+    ">A\n\nAA\n",
+    ">A\nAA\n\n",
+    ">A\nAA\n\n>B\nBB\n",
+    ">A\n",
+]
 
 BADFNA_UNPARSEABLE = "dfklgjs\r\r\r\r\n\n\n\n"
 
@@ -163,6 +170,12 @@ BADFNA_UNPARSEABLE = "dfklgjs\r\r\r\r\n\n\n\n"
         BADFNA_INCONSISTENT_SEQWIDTH_1,
         BADFNA_INCONSISTENT_SEQWIDTH_2
     ]
+        @test_throws Exception faidx(IOBuffer(bad_case))
+    end
+    # The general parser accepts blank lines, but FAI cannot represent their
+    # effect on byte offsets and sequence line widths.
+    for bad_case in BADFNA_EMPTY_SEQLINES
+        @test validate_fasta(IOBuffer(bad_case)) === nothing
         @test_throws Exception faidx(IOBuffer(bad_case))
     end
     @test_throws Exception faidx(IOBuffer(BADFNA_UNPARSEABLE))
