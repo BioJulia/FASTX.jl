@@ -121,6 +121,7 @@ index_actions = Dict{Symbol, Expr}(
     :name => quote
         let n = p - start
             name = unsafe_string(pointer(data, start), n)
+            haskey(names, name) && error("Duplicate FAI sequence name on line ", string(linenum))
             names[name] = linenum
         end
     end,
