@@ -6,6 +6,10 @@
 
 Create a buffered data reader of the FASTQ file format.
 The reader is a `BioGenerics.IO.AbstractReader`, a stateful iterator of `FASTQ.Record`.
+Only four-line FASTQ records are supported: the sequence and quality must each
+occupy exactly one line. Wrapped or multiline records are rejected. Sequence
+lines may contain any printable, non-space ASCII character (`!` through `~`);
+the reader does not enforce a biological alphabet.
 Readers take ownership of the underlying IO. Mutating or closing the underlying IO
 not using the reader is undefined behaviour.
 Closing the Reader also closes the underlying IO.

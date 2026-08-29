@@ -8,6 +8,10 @@ Mutable struct representing a FASTQ record as parsed from a FASTQ file.
 The content of the record can be queried with the following functions:
 `identifier`, `description`, `sequence`, `quality`
 FASTQ records are un-typed, i.e. they are agnostic to what kind of data they contain.
+They use the four-line FASTQ representation and do not support wrapped sequence
+or quality lines. A sequence may contain any printable, non-space ASCII
+character (`!` through `~`); convert it to a `BioSequence` or validate it
+separately when a biological alphabet is required.
 
 See also: [`FASTQ.Reader`](@ref), [`FASTQ.Writer`](@ref)
 
@@ -137,6 +141,8 @@ end
     FASTQ.Record(description, sequence, quality; offset=33)
 
 Create a FASTQ record from `description`, `sequence` and `quality`.
+The sequence may contain any printable, non-space ASCII character (`!` through
+`~`). Wrapped or multiline sequence and quality strings are not supported.
 Arguments:
 * `description::AbstractString`
 * `sequence::Union{AbstractString, BioSequence}`,
