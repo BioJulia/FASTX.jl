@@ -43,7 +43,7 @@ function BioGenerics.IO.stream(writer::Writer)
     return writer.output
 end
 
-Writer(io::T; width::Integer=70) where {T <: TranscodingStream} = Writer{T}(io, width)
+Writer(io::T; width::Integer=70) where {T <: TranscodingStream} = Writer{T}(io, Int(width))
 Writer(io::IO; kwargs...) = Writer(NoopStream(io); kwargs...)
 
 function Base.flush(writer::Writer)
