@@ -43,7 +43,7 @@ mutable struct Reader{S <: TranscodingStream} <: BioGenerics.IO.AbstractReader
     copy::Bool
 
     function Reader{T}(io::T, copy::Bool) where {T <: TranscodingStream}
-        record = Record(Vector{UInt8}(undef, 2048), 0, 0, 0)
+        record = unsafe_new_record(Vector{UInt8}(undef, 2048), Int32(0), Int32(0), UInt(0))
         new{T}(io, record, 1, 1, copy)
     end
 end
@@ -88,4 +88,3 @@ end
 
 BioGenerics.IO.stream(reader::Reader) = reader.stream
 Base.close(reader::Reader) = close(reader.stream)
-

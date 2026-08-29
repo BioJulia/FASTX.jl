@@ -93,10 +93,11 @@ end
     test_writer(records, r"^>\n\n>\n\n$")
 
     # Does not write uncoding bytes in records
-    records = [
-        Record(codeunits("someheader hereAACCGGTT"), 10, 15, 3),
-        Record(codeunits("fewhjlkdsjepis.."), 0, 0, 0)
-    ]
+    record = Record("someheader here", "AAC")
+    append!(record.data, codeunits("CGGTT"))
+    empty_record = Record()
+    append!(empty_record.data, codeunits("fewhjlkdsjepis.."))
+    records = [record, empty_record]
     test_writer(records, r"^>someheader here\nAAC\n>\n\n")
 
     # Lots of records to exercise the IO a little more

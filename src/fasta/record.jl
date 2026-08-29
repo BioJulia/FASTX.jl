@@ -43,6 +43,18 @@ mutable struct Record
 
     # Sequence is data[description_len+1 : description_len+sequence_len]
     sequence_len::Int
+
+    # Internal constructor that bypasses Record's public constructors. Callers must ensure that
+    # `0 <= identifier_len <= description_len`, that `sequence_len >= 0`, and
+    # that `description_len + sequence_len <= length(data)`.
+    global function unsafe_new_record(
+        data::Vector{UInt8},
+        identifier_len::Int32,
+        description_len::Int32,
+        sequence_len::Int,
+    )
+        new(data, identifier_len, description_len, sequence_len)
+    end
 end
 
 filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
@@ -54,7 +66,7 @@ filled(x::Record) = Int(x.description_len) + Int(x.sequence_len)
 Create the default FASTA record.
 """
 function Record()
-    return Record(Vector{UInt8}(), 0, 0, 0)
+    return unsafe_new_record(UInt8[], Int32(0), Int32(0), 0)
 end
 
 function Base.empty!(record::Record)
@@ -69,7 +81,7 @@ function Base.parse(::Type{Record}, data::AbstractVector{UInt8})
     # Error early on empty data to not construct buffers
     isempty(data) && throw(ArgumentError("Cannot parse empty string as FASTA record"))
 
-    record = Record(Vector{UInt8}(undef, sizeof(data)), 0, 0, 0)
+    record = unsafe_new_record(Vector{UInt8}(undef, sizeof(data)), Int32(0), Int32(0), 0)
     stream = NoopStream(IOBuffer(data), bufsize=sizeof(data))
     cs, _, found = readrecord!(stream, record, (1, 1))
     
@@ -114,7 +126,7 @@ function Base.:(==)(record1::Record, record2::Record)
 end
 
 function Base.copy(record::Record)
-    return Record(
+    return unsafe_new_record(
         record.data[1:filled(record)],
         record.identifier_len,
         record.description_len,

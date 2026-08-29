@@ -1,5 +1,9 @@
 @testset "Record" begin
 
+@testset "Raw construction is internal" begin
+    @test_throws MethodError Record(UInt8[], Int32(0), Int32(1), 0)
+end
+
 # Only using empty records here
 @testset "Basic properties" begin
     # Equality
@@ -145,7 +149,7 @@ end
 
 # Get sequence as String/StringView
 @testset "Get sequence" begin
-    record = Record(codeunits("ab cAACCAAGGTTKKKMMMM"), 2, 4, 10)
+    record = Record("ab c", "AACCAAGGTT")
     @test sequence(String, record) == "AACCAAGGTT"
     @test sequence(String, record, 1:0) == ""
     @test sequence(String, record, 1:3) == "AAC"
@@ -189,7 +193,9 @@ end
         ">AA\nG",
     ])
     # Same as previous, but with noncoding data
-    push!(records, Record(codeunits("AAGGGG"), 2, 2, 1))
+    record = Record("AA", "G")
+    append!(record.data, codeunits("GGG"))
+    push!(records, record)
 
     @test hash(first(records)) == hash(first(records))
     @test hash(records[2]) != hash(Record("A", "TG"))

@@ -168,7 +168,7 @@ import .FASTQ: FASTQ, quality, quality_scores, quality_header!, QualityEncoding,
 function FASTA.Record(record::FASTQ.Record)
     slen = seqsize(record)
     dlen = record.description_len
-    FASTA.Record(record.data[1:slen+dlen], record.identifier_len, dlen, slen)
+    FASTA.unsafe_new_record(record.data[1:slen+dlen], record.identifier_len, dlen, slen)
 end
 
 """
