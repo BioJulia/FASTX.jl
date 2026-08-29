@@ -357,7 +357,7 @@ end
 """
     faidx(io::IO)::Index
 
-Read a `FASTA.Index` from `io`.
+Index the FASTA data read from `io` and return a `FASTA.Index`.
 
 See also: [`Index`](@ref)
 
