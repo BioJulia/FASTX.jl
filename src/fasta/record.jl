@@ -164,11 +164,10 @@ end
 
 
 
-# TODO: Base's hash does not hash all elements. Do we have a better implementation?
 function Base.hash(record::Record, h::UInt)
     # The description length is informative of the record's content
     # in a way that the sequence length and identifier length isn't.
     # I.e. you could have ">A\nAG" vs ">AA\nG"
     h = hash(record.description_len, h)
-    hash(view(record.data, filled(record)), h)
+    hash(view(record.data, 1:filled(record)), h)
 end
