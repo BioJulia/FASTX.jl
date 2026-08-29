@@ -38,8 +38,14 @@ Here:
 
 ## The `FASTARecord`
 FASTA records are, by design, very lax in what they can contain.
-They can contain almost arbitrary byte sequences, including invalid unicode, and trailing whitespace on their sequence lines, which will be interpreted as part of the sequence.
+They can contain almost arbitrary byte sequences, including invalid Unicode, and trailing whitespace on their sequence lines, which will be interpreted as part of the sequence.
 If you want to have more certainty about the format, you can either check the content of the sequences with a regex, or (preferably), convert them to the desired `BioSequence` type.
+
+FASTX treats sequence positions as one-based byte positions and assumes ASCII
+sequence symbols. In particular, `FASTA.Writer(width=...)` wraps after `width`
+bytes—not Unicode characters—and may split a multi-byte UTF-8 symbol. For
+multi-byte text, first obtain `sequence(String, record)` and perform
+character-oriented work on a sequence constructed from that `String`.
 
 ```@docs
 FASTA.Record
@@ -48,7 +54,7 @@ FASTA.Record
 ## `FASTAReader` and `FASTAWriter`
 `FASTAWriter` can optionally be passed the keyword `width` to control the line width.
 If this is zero or negative, it will write all record sequences on a single line.
-Else, it will wrap lines to the given maximal width.
+Else, it will wrap lines to the given maximal width in bytes.
 
 ### Reference:
 ```@docs

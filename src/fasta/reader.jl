@@ -158,9 +158,14 @@ end
 """
     extract(reader::Reader, name::AbstractString, range::Union{Nothing, UnitRange})
 
-Extract a subsequence given by index `range` from the sequence `named` in a
-`Reader` with an index. Returns a `String`.
+Extract a subsequence given by `range` from the sequence `named` in a `Reader`
+with an index. `range` contains one-based byte positions, not Unicode character
+positions. Returns a `String`.
 If `range` is nothing (the default value), return the entire sequence.
+
+FASTX sequences are byte-oriented and intended for ASCII symbols. To work with
+multi-byte text symbols, first materialize the complete result as a `String`,
+then derive a character-oriented sequence from that string.
 """
 function extract(
     reader::Reader,

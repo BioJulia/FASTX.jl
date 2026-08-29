@@ -30,6 +30,17 @@ function Base.copyto!(dest::LongSequence, src::Record)
     return copyto!(dest, 1, src, 1, seqsize(src))
 end
 
+"""
+    copyto!(dest::LongSequence, doff, src::FASTX.Record, soff, N)
+
+Copy `N` sequence bytes from record `src` into `dest`. `soff` is a one-based
+byte offset in `src`, not a Unicode character position. FASTX record sequences
+are byte-oriented and intended for ASCII symbols.
+
+For text containing multi-byte symbols, first materialize
+`sequence(String, src)` and derive a character-oriented sequence from that
+`String` before indexing it.
+"""
 function Base.copyto!(dest::LongSequence, doff, src::Record, soff, N)
     N < 0 && throw(ArgumentError("Number of elements to copy must be non-negative."))
     iszero(N) && return dest
