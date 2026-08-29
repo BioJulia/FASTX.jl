@@ -210,6 +210,34 @@ function Base.write(io::IO, index::Index)
     n
 end
 
+# FAI stores the offset and width of nonempty sequence lines.  The general
+# FASTA parser is intentionally more permissive: it accepts leading whitespace
+# and empty sequence lines, neither of which can be represented in an FAI
+# index.  Keep the FAI grammar separate so those layouts are rejected rather
+# than producing incorrect offsets.
+index_fasta_machine = let
+    hspace = re"[ \t\v]"
+    newline = let
+        lf = onenter!(re"\n", :countline)
+        Re.opt('\r') * lf
+    end
+
+    identifier = onexit!(onenter!(Re.rep(Re.any() \ Re.space()), :mark), :identifier)
+    description = onexit!(identifier * Re.opt(hspace * re"[^\r\n]*"), :description)
+    header = re">" * description
+    sequence_line = onexit!(onenter!(re"[^\n\r>]+", :mark), :seqline)
+
+    # In contrast to the general FASTA machine, every indexed sequence line
+    # must have at least one byte. This also requires each indexed record to
+    # contain a sequence line.
+    sequence = Re.rep1(sequence_line * newline)
+    sequence_eof = Re.rep(sequence_line * newline) * sequence_line
+    record = onexit!(header * newline * sequence, :record)
+    record_eof = onexit!(header * newline * sequence_eof, :record)
+
+    Automa.compile(Re.rep(record) * Re.opt(record_eof))
+end
+
 index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
@@ -219,6 +247,7 @@ index_fasta_actions = Dict(
     # Not used in fai files, the newline byte is consistent within one record
     # and since this is the first newline in a record, we set it here
     :description => quote
+        record_open = true
         uses_rn_newline = byte == UInt8('\r')
         no_more_seqlines = false
         # +1 for > symbol, +1 for newline, +1 if \r is used
@@ -248,6 +277,7 @@ index_fasta_actions = Dict(
         end
     end,
     :record => quote
+        record_open = false
         record_count += 1
         
         names[identifier] = record_count
@@ -278,18 +308,20 @@ initcode = quote
     # (which is the case if its shorter than the previous)
     no_more_seqlines = false
     record_count = 0
+    record_open = false
 end
 
 returncode = quote
     if cs < 0
         throw_parser_error(data, p, linenum)
     end
+    record_open && error("FASTA records must contain a nonempty sequence line to index")
     return Index(names, lengths, offsets, encoded_linebases)
 end
 
 Automa.generate_reader(
     :faidx_,
-    machine,
+    index_fasta_machine,
     actions = index_fasta_actions,
     context = CONTEXT,
     initcode = initcode,
