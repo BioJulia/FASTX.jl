@@ -191,8 +191,11 @@ function extract(
     (start_lineind_z, start_lineoff_z) = divrem(first(checked_range) - 1, linebases)
     start_offset = start_lineind_z * linewidth + start_lineoff_z
 
-    (stop_lineind_z, stop_lineoff_z) = divrem(last(checked_range), linebases)
-    stop_offset = stop_lineind_z * linewidth + stop_lineoff_z
+    # `stop_offset` is exclusive.  Derive it from the zero-based position of
+    # the final requested base so a range ending at a line boundary does not
+    # include (and require) the following line terminator.
+    (stop_lineind_z, stop_lineoff_z) = divrem(last(checked_range) - 1, linebases)
+    stop_offset = stop_lineind_z * linewidth + stop_lineoff_z + 1
 
     until_first_newline = linebases - start_lineoff_z
     buffer = Vector{UInt8}(undef, stop_offset - start_offset)

@@ -140,6 +140,7 @@ index_actions = Dict{Symbol, Expr}(
             push!(vectors[2], num)
         # Number of basepairs per line obviously cannot exceed the sequence length.
         elseif nnum == 3
+            num == 0 && error("FAI indexes require at least one base per sequence line on line ", string(linenum))
             if num > vectors[1][end]
                 error("Bases per line exceed sequence length on line ", string(linenum))
             end

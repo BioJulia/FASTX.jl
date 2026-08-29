@@ -18,6 +18,7 @@ INDEX_BAD_LINEWIDTH_1 = "abc\t100\t5\t15\t15"
 INDEX_BAD_LINEWIDTH_2 = "abc\t100\t5\t15\t18"
 
 INDEX_ZERO_OFFSET = "abc\t100\t5\t15\t16\ndef\t6\t0\t1\t2"
+INDEX_ZERO_LINEBASES = "abc\t0\t5\t0\t1"
 
 function test_same_index(a::Index, b::Index)
     @test a.names == b.names
@@ -45,7 +46,8 @@ end
         INDEX_BAD_LINEBASES,
         INDEX_BAD_LINEWIDTH_1,
         INDEX_BAD_LINEWIDTH_2,
-        INDEX_ZERO_OFFSET
+        INDEX_ZERO_OFFSET,
+        INDEX_ZERO_LINEBASES,
     ]
         @test_throws ErrorException Index(IOBuffer(bad_index))
     end
@@ -179,6 +181,14 @@ BADFNA_UNPARSEABLE = "dfklgjs\r\r\r\r\n\n\n\n"
         @test_throws Exception faidx(IOBuffer(bad_case))
     end
     @test_throws Exception faidx(IOBuffer(BADFNA_UNPARSEABLE))
+end
+
+@testset "Extraction at final line boundary" begin
+    for data in (">A\nAC", ">A\nAC\n")
+        reader = Reader(IOBuffer(data), index=faidx(IOBuffer(data)))
+        @test extract(reader, "A") == "AC"
+        @test extract(reader, "A", 1:2) == "AC"
+    end
 end
 
 @testset "Reader with index" begin
