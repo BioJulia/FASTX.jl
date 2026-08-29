@@ -1,5 +1,9 @@
 @testset "Record" begin
 
+@testset "Raw construction is internal" begin
+    @test_throws MethodError Record(UInt8[], Int32(0), Int32(1), UInt(0))
+end
+
 # Only using empty records here
 @testset "Basic properties" begin
     # Equality of empty records

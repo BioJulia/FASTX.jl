@@ -44,6 +44,18 @@ mutable struct Record
 
     # Top bit stores whether the description is repeated after the +
     has_description_seq_len::UInt
+
+    # Internal constructor that bypasses Record's public constructors. Callers must ensure that
+    # `0 <= identifier_len <= description_len` and that
+    # `description_len + 2 * seqsize <= length(data)`.
+    global function unsafe_new_record(
+        data::Vector{UInt8},
+        identifier_len::Int32,
+        description_len::Int32,
+        has_description_seq_len::UInt,
+    )
+        new(data, identifier_len, description_len, has_description_seq_len)
+    end
 end
 
 @inline seqsize(record::Record)::Int = (record.has_description_seq_len & (typemax(Int) % UInt)) % Int
@@ -87,7 +99,7 @@ end
 
 Create the default FASTQ record.
 """
-Record() = Record(UInt8[], 0, 0, 0)
+Record() = unsafe_new_record(UInt8[], Int32(0), Int32(0), UInt(0))
 
 function Base.empty!(record::Record)
     # Do not truncate the underlying data buffer
@@ -101,7 +113,7 @@ function Base.parse(::Type{Record}, data::AbstractVector{UInt8})
     # Error early on empty data to not construct buffers
     isempty(data) && throw(ArgumentError("Cannot parse empty string as FASTQ record"))
 
-    record = Record(Vector{UInt8}(undef, sizeof(data)), 0, 0, 0)
+    record = unsafe_new_record(Vector{UInt8}(undef, sizeof(data)), Int32(0), Int32(0), UInt(0))
     stream = NoopStream(IOBuffer(data), bufsize=sizeof(data))
     cs, _, found = readrecord!(stream, record, (1, 1))
     
@@ -170,7 +182,7 @@ function Base.:(==)(record1::Record, record2::Record)
 end
 
 function Base.copy(record::Record)
-    return Record(
+    return unsafe_new_record(
         record.data[1:filled(record)],
         record.identifier_len,
         record.description_len,
