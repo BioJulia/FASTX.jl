@@ -181,6 +181,8 @@ end
 
 # Includes "unique"
 @testset "Hashing" begin
+    @test hash(Record()) isa UInt
+
     records = map(i -> parse(Record, i), [
         ">A\n\n",
         ">A\nAG",
@@ -190,6 +192,7 @@ end
     push!(records, Record(codeunits("AAGGGG"), 2, 2, 1))
 
     @test hash(first(records)) == hash(first(records))
+    @test hash(records[2]) != hash(Record("A", "TG"))
     @test hash(records[end]) == hash(records[end-1])
     @test isequal(records[end], records[end-1])
     @test !isequal(records[3], records[2])

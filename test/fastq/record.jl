@@ -274,9 +274,12 @@ end
 end
 
 @testset "Hashing" begin
+    @test hash(Record()) isa UInt
+
     records = map(i -> parse(Record, i), TEST_RECORD_STRINGS)
     @test hash(records[1]) != hash(records[2])
     @test hash(records[1]) == hash(records[3])
+    @test hash(Record("A", "AG", "!!")) != hash(Record("A", "TG", "!!"))
     @test !isequal(records[1], records[2])
     @test isequal(records[1], records[3])
 

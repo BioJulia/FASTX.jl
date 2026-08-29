@@ -341,5 +341,5 @@ end
 
 function Base.hash(record::Record, h::UInt)
     h = hash(record.description_len, h)
-    hash(view(record.data, filled(record)), h)
+    hash(view(record.data, 1:filled(record)), h)
 end
