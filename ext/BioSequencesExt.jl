@@ -31,8 +31,9 @@ function Base.copyto!(dest::LongSequence, src::Record)
 end
 
 function Base.copyto!(dest::LongSequence, doff, src::Record, soff, N)
-    # This check is here to prevent boundserror when indexing src.sequence
+    N < 0 && throw(ArgumentError("Number of elements to copy must be non-negative."))
     iszero(N) && return dest
+    checkbounds(1:seqsize(src), soff:soff + N - 1)
     return copyto!(dest, doff, src.data, Int(src.description_len) + soff, N)
 end
 

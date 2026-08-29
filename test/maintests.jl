@@ -106,6 +106,18 @@
                 end
             end
         end
+
+        @testset "source bounds" begin
+            # FASTQ stores qualities directly after sequence bytes, so an
+            # out-of-range source copy could otherwise consume quality data.
+            record = FASTQ.Record("name", "AC", "GT")
+            destination = LongDNA{4}(undef, 1)
+
+            @test_throws BoundsError copyto!(destination, 1, record, 0, 1)
+            @test_throws BoundsError copyto!(destination, 1, record, 3, 1)
+            @test_throws ArgumentError copyto!(destination, 1, record, 1, -1)
+            @test copyto!(destination, 2, record, 3, 0) === destination
+        end
     end
 
     @testset "Convert FASTQ to FASTA" begin
