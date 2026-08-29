@@ -50,7 +50,9 @@ true
 ```
 
 Note that the restrictions on FASTA files for indexing are stricter than Julia's FASTA parser,
-so not all FASTA files that can be read can be indexed:
+so not all FASTA files that can be read can be indexed. In particular, each indexed
+record must contain a nonempty sequence line; empty sequences cannot be represented
+by a FASTX.jl FAI index:
 
 ```jldoctest
 julia> str = ">\0\n\0";
