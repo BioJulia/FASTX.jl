@@ -19,6 +19,7 @@ INDEX_BAD_LINEWIDTH_2 = "abc\t100\t5\t15\t18"
 
 INDEX_ZERO_OFFSET = "abc\t100\t5\t15\t16\ndef\t6\t0\t1\t2"
 INDEX_ZERO_LINEBASES = "abc\t0\t5\t0\t1"
+INDEX_DUPLICATE_NAME = "abc\t100\t5\t15\t16\nabc\t6\t200\t1\t2"
 
 function test_same_index(a::Index, b::Index)
     @test a.names == b.names
@@ -48,6 +49,7 @@ end
         INDEX_BAD_LINEWIDTH_2,
         INDEX_ZERO_OFFSET,
         INDEX_ZERO_LINEBASES,
+        INDEX_DUPLICATE_NAME,
     ]
         @test_throws ErrorException Index(IOBuffer(bad_index))
     end
