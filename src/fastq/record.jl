@@ -260,6 +260,8 @@ end
 Get the ASCII quality of `record` at positions `part` as type `T`.
 If not passed, `T` defaults to `StringView`.
 If not passed, `part` defaults to the entire quality string.
+Positions in `part` are one-based byte positions, aligned with the
+byte-oriented positions of the record sequence.
 
 # Examples
 ```jldoctest
@@ -317,6 +319,8 @@ Get an iterator of PHRED base quality scores of `record` at positions `part`.
 This iterator is corrupted if the record is mutated.
 By default, `part` is the whole sequence.
 By default, the encoding is PHRED33 Sanger encoding, but may be specified with a `QualityEncoding` object
+Positions in `part` are one-based byte positions, aligned with the
+byte-oriented positions of the record sequence.
 """
 function quality_scores(record::Record, encoding::QualityEncoding, part::UnitRange{<:Integer}=1:seqsize(record))
     start, stop = first(part), last(part)

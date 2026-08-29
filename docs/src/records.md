@@ -65,6 +65,28 @@ julia> seqsize(record)
 6
 ```
 
+## Byte-oriented sequence positions
+
+FASTX stores and addresses record sequences as raw bytes. It assumes sequence
+symbols are ASCII; it does not interpret sequence text as UTF-8. Therefore, the
+optional `part` passed to `sequence`, the source offset passed to `copyto!` when
+copying from a record to a `BioSequence`, and the range passed to indexed FASTA
+`extract` are all one-based byte positions. A byte range can split a multi-byte
+UTF-8 symbol and yield invalid text.
+
+If your data deliberately uses multi-byte text symbols, first materialize the
+record sequence as a `String`, then build or index a character-oriented
+sequence from that string:
+
+```julia
+text = sequence(String, record)
+characters = collect(text)
+characters[2:3]
+```
+
+`FASTA.Writer(width=...)` likewise wraps after `width` bytes, rather than after
+`width` Unicode characters.
+
 ### Reference:
 ```@docs
 identifier

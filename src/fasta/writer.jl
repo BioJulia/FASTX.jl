@@ -16,7 +16,9 @@ See also: [`FASTA.Record`](@ref), [`FASTA.Reader`](@ref)
 
 # Arguments
 * `output`: Data sink to write to
-* `width`: Wrapping width of sequence characters. If < 1, no wrapping.
+* `width`: Wrapping width in sequence bytes. If < 1, no wrapping. FASTX
+  sequences are byte-oriented and intended for ASCII symbols, so this is not a
+  Unicode character width and can split a multi-byte UTF-8 symbol.
 
 # Examples
 ```

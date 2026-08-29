@@ -50,7 +50,15 @@ Get the sequence of `record`.
 
 `S` can be either a subtype of `BioSequences.BioSequence`, `AbstractString` or `String`.
 If elided, `S` defaults to an `AbstractString` subtype.
-If `part` argument is given, it returns the specified part of the sequence.
+If `part` is given, it returns that part of the sequence. `part` is a one-based
+range of byte positions (not Unicode character positions). FASTX record
+sequences are byte-oriented and are intended for ASCII sequence symbols. Thus,
+a range can split a multi-byte UTF-8 symbol.
+
+For character-oriented handling of text with multi-byte symbols, first
+materialize the sequence as a `String` (for example,
+`text = sequence(String, record)`), then derive or index a character-oriented
+sequence from `text`.
 
 See also: [`identifier`](@ref), [`description`](@ref)
 
@@ -73,6 +81,8 @@ function sequence end
 
 Get the number of bytes in the sequence of a `Record`.
 Note that in the presence of non-ASCII characters, this may differ from `length(sequence(record))`.
+This is also the coordinate system used by sequence ranges and other operations
+that address positions in a record sequence.
 
 See also: [`sequence`](@ref)
 

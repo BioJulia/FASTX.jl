@@ -146,7 +146,8 @@ julia> description(record)
 ```
 
 * Extract a sequence directly without loading the whole record into memory.
-  This is useful for huge sequences like chromosomes
+  This is useful for huge sequences like chromosomes. The extraction range uses
+  one-based byte positions, not Unicode character positions.
 ```jldoctest
 julia> extract(reader, "seq1", 3:5)
 "GAA"
