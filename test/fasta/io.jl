@@ -170,6 +170,11 @@ end
 end
 
 @testset "Writer width" begin
+    writer = Writer(IOBuffer(); width=Int32(5))
+    @test writer.width === 5
+    close(writer)
+    @test_throws InexactError Writer(IOBuffer(); width=typemax(Int128))
+
     header = "some data here"
     for width in (-10, 5, 25, 50)
         for seqlen in [width-1, width, 3*width, 3*width+3, 75, 200]
