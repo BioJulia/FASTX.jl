@@ -44,7 +44,12 @@ machine = let
     record = onexit!(header * newline * sequence, :record)
     record_eof = onexit!(header * newline * sequence_eof, :record)
 
-    fasta = Re.rep(space) * Re.rep(record) * Re.opt(record_eof)
+    # Comment lines (starting with ';', as in the original Pearson FASTA format)
+    # are allowed before the first record and ignored.
+    # NB: Keep this consistent with the index machine in index.jl.
+    comment = re";[^\r\n]*" * newline
+
+    fasta = Re.rep(space | comment) * Re.rep(record) * Re.opt(record_eof)
     
     Automa.compile(fasta)
 end

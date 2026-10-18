@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+* Skip comment lines (starting with `;`) before the first FASTA record in the reader, `validate_fasta` and `faidx`
+
 ## [2.1.4]
 * Add Base.print(::IO, ::Index)
 * Touch up documentation

@@ -237,12 +237,20 @@ index_fasta_machine = let
     record = onexit!(header * newline * sequence, :record)
     record_eof = onexit!(header * newline * sequence_eof, :record)
 
-    Automa.compile(Re.rep(record) * Re.opt(record_eof))
+    # Comment lines (starting with ';') before the first record are skipped,
+    # as in the FASTA reader machine.
+    comment = onexit!(onenter!(re";[^\r\n]*", :mark), :comment) * newline
+
+    Automa.compile(Re.rep(comment) * Re.rep(record) * Re.opt(record_eof))
 end
 
 index_fasta_actions = Dict(
     :mark => :(@mark),
     :countline => :(linenum += 1),
+    # Skipped comment line: count its bytes, +1 for newline, +1 if \r is used
+    :comment => quote
+        offset += p - @markpos() + (byte == UInt8('\r')) + 1
+    end,
     :identifier => quote
         identifier = unsafe_string(pointer(data, @markpos), p - @markpos)
     end,
