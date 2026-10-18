@@ -36,6 +36,9 @@ Here:
 * The `description` is `"chrI chromosome 1"`, containing the identifier
 * The sequence is the DNA sequence `"CCACA..."`
 
+Lines starting with `;` before the first record are comments, as in the original
+(Pearson) FASTA format, and are skipped by the reader and the indexer.
+
 ## The `FASTARecord`
 FASTA records are, by design, very lax in what they can contain.
 They can contain almost arbitrary byte sequences, including invalid Unicode, and trailing whitespace on their sequence lines, which will be interpreted as part of the sequence.

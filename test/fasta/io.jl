@@ -71,6 +71,20 @@ end
     @test_throws Exception Reader(collect, IOBuffer(bad))
 end
 
+@testset "Leading comment lines" begin
+    # ';' lines before the first record are comments (original Pearson FASTA)
+    for data in (";comment\n;\n>A desc\nAC\n>B\nGG", ";comment\r\n\n>A desc\r\nAC\r\n>B\r\nGG\r\n")
+        @test validate_fasta(IOBuffer(data)) === nothing
+        recs = Reader(collect, IOBuffer(data))
+        @test map(identifier, recs) == ["A", "B"]
+        @test map(description, recs) == ["A desc", "B"]
+        @test map(sequence, recs) == ["AC", "GG"]
+    end
+    # Other text before the first record is still invalid
+    @test validate_fasta(IOBuffer("text\n>A\nAC")) !== nothing
+    @test_throws Exception Reader(collect, IOBuffer("text\n>A\nAC"))
+end
+
 @testset "Writer basics" begin
     function test_writer(records, regex::Regex)
         buffer = IOBuffer()

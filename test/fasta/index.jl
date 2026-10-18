@@ -185,6 +185,15 @@ BADFNA_UNPARSEABLE = "dfklgjs\r\r\r\r\n\n\n\n"
     @test_throws Exception faidx(IOBuffer(BADFNA_UNPARSEABLE))
 end
 
+@testset "Index with leading comment lines" begin
+    data = ";comment\n;\n>A\nACGT\nAC\n>B\nGGGG\n"
+    index = faidx(IOBuffer(data))
+    test_same_index(index, Index(IOBuffer("A\t6\t14\t4\t5\nB\t4\t25\t4\t5")))
+    reader = Reader(IOBuffer(data), index=index)
+    @test extract(reader, "A") == "ACGTAC"
+    @test extract(reader, "B", 2:3) == "GG"
+end
+
 @testset "Extraction at final line boundary" begin
     for data in (">A\nAC", ">A\nAC\n")
         reader = Reader(IOBuffer(data), index=faidx(IOBuffer(data)))
